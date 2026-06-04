@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/card';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 
 interface ImageUploadProps {
   onChange: (file: File) => Promise<void>;
@@ -61,8 +61,8 @@ export const ImageUpload = ({
     <div className="space-y-4">
       {/* Preview */}
       {previewUrl || selectedFile ? (
-        <Card className="bg-dark-800">
-          <CardContent className="flex items-center justify-center p-6">
+        <Card padding="lg" className="bg-dark-800">
+          <div className="flex items-center justify-center p-6">
             {previewUrl ? (
               <img
                 src={previewUrl}
@@ -78,13 +78,13 @@ export const ImageUpload = ({
                 style={{ maxHeight: '200px', objectFit: 'contain' }}
               />
             )}
-          </CardContent>
+          </div>
         </Card>
       ) : (
-        <Card className="bg-dark-800">
-          <CardContent className="flex items-center justify-center p-6 text-dark-400">
+        <Card padding="lg" className="bg-dark-800">
+          <div className="flex items-center justify-center p-6 text-dark-400">
             No image selected
-          </CardContent>
+          </div>
         </Card>
       )}
 

@@ -12,9 +12,7 @@ import {
   FileText,
   Clock,
   Camera,
-  Calendar,
   Bell,
-  Smartphone,
   Eye,
   EyeOff,
   CheckCircle,
@@ -281,10 +279,6 @@ export default function Profile() {
       </div>
     );
   }
-
-  const filledCount = fields.filter(
-    (f) => !!user[f.key as keyof typeof user],
-  ).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">

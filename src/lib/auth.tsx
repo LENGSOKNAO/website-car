@@ -27,7 +27,7 @@ export interface AuthUser {
   is_dealer: boolean
   dealer_name: string | null
   role: string
-  roles: { id: number | string; name: string; guard_name: string; created_at?: string; updated_at?: string; pivot?: any }[]
+  roles: any[]
 }
 
 interface AuthContextType {
@@ -82,22 +82,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const res = await api.me()
         let userData: AuthUser | null = null
-        if (res && res.data) {
-          if (hasUserIdentifiers(res.data)) {
-            const user = createUserFromData(res.data)
+        const d: any = res?.data
+        if (d) {
+          if (hasUserIdentifiers(d)) {
+            const user = createUserFromData(d)
             if (user) userData = user
-          } else if (res.data.data && hasUserIdentifiers(res.data.data)) {
-            const user = createUserFromData(res.data.data)
+          } else if (d.data && hasUserIdentifiers(d.data)) {
+            const user = createUserFromData(d.data)
             if (user) userData = user
-          } else if (Array.isArray(res.data.data) && res.data.data.length > 0 && hasUserIdentifiers(res.data.data[0])) {
-            const user = createUserFromData(res.data.data[0])
+          } else if (Array.isArray(d.data) && d.data.length > 0 && hasUserIdentifiers(d.data[0])) {
+            const user = createUserFromData(d.data[0])
             if (user) userData = user
-          } else if (Array.isArray(res.data.data) && res.data.data.length > 0 &&
-                   res.data.data[0].other_user && hasUserIdentifiers(res.data.data[0].other_user)) {
-            const user = createUserFromData(res.data.data[0].other_user)
+          } else if (Array.isArray(d.data) && d.data.length > 0 &&
+                   d.data[0].other_user && hasUserIdentifiers(d.data[0].other_user)) {
+            const user = createUserFromData(d.data[0].other_user)
             if (user) userData = user
-          } else if (res.data.data && typeof res.data.data === 'object' && !Array.isArray(res.data.data) && hasUserIdentifiers(res.data.data)) {
-            const user = createUserFromData(res.data.data)
+          } else if (d.data && typeof d.data === 'object' && !Array.isArray(d.data) && hasUserIdentifiers(d.data)) {
+            const user = createUserFromData(d.data)
             if (user) userData = user
           }
         }
@@ -113,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           }
         }
-      } catch (error) {
+      } catch (error: any) {
         if (error.message && (error.message.includes('401') || error.message.includes('403'))) {
           localStorage.removeItem('token')
           setUser(null)
@@ -140,53 +141,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshUser])
 
   const login = async (email: string, password: string) => {
-    try {
-      const res = await api.login(email, password)
-      if (res === null || res === undefined) {
-        throw new Error('Login response is null or undefined from server')
-      }
-      if (!res.data) {
-        throw new Error('Login response.data is null or undefined from server')
-      }
-      const { token, user: userData } = res.data
-      if (!token) throw new Error('No token received from login')
-      if (!userData) throw new Error('No user received from login')
-      localStorage.setItem('token', token)
-      setUser(userData)
-    } catch (error) {
-      throw error
-    }
+    const res = await api.login(email, password)
+    if (!res?.data) throw new Error('Invalid login response')
+    const { token, user: userData } = res.data as any
+    if (!token) throw new Error('No token received')
+    if (!userData) throw new Error('No user received')
+    localStorage.setItem('token', token)
+    setUser(userData)
   }
 
   const register = async (data: { full_name: string; email: string; password: string; password_confirmation: string }) => {
-    try {
-      const res = await api.register(data)
-      if (res === null || res === undefined) {
-        throw new Error('Register response is null or undefined from server')
-      }
-      if (!res.data) {
-        throw new Error('Register response.data is null or undefined from server')
-      }
-      const { token, user: userData } = res.data
-      if (!token) throw new Error('No token received from registration')
-      if (!userData) throw new Error('No user received from registration')
-      localStorage.setItem('token', token)
-      setUser(userData)
-    } catch (error) {
-      throw error
-    }
+    const res = await api.register(data)
+    if (!res?.data) throw new Error('Invalid register response')
+    const { token, user: userData } = res.data as any
+    if (!token) throw new Error('No token received')
+    if (!userData) throw new Error('No user received')
+    localStorage.setItem('token', token)
+    setUser(userData)
   }
 
   const updateProfile = async (data: { full_name?: string; phone?: string | null; location?: string | null; avatar_url?: string | null }) => {
     const res = await api.updateProfile(data)
-    if (res?.data) {
+    const d: any = res?.data
+    if (d) {
       let userData: AuthUser | null = null
-      if (hasUserIdentifiers(res.data)) {
-        userData = createUserFromData(res.data)
-      } else if (res.data.user && hasUserIdentifiers(res.data.user)) {
-        userData = createUserFromData(res.data.user)
-      } else if (res.data.data && hasUserIdentifiers(res.data.data)) {
-        userData = createUserFromData(res.data.data)
+      if (hasUserIdentifiers(d)) {
+        userData = createUserFromData(d)
+      } else if (d.user && hasUserIdentifiers(d.user)) {
+        userData = createUserFromData(d.user)
+      } else if (d.data && hasUserIdentifiers(d.data)) {
+        userData = createUserFromData(d.data)
       }
       if (userData) setUser(userData)
     }
