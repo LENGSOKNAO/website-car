@@ -164,7 +164,7 @@ export default function Header() {
             </div>
           </nav>
 
-            <div className="hidden md:flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <Link to="/search" className="p-1.5 text-[#5C5E62] hover:text-black transition-colors duration-[333ms]">
                 <Search className="w-5 h-5" />
               </Link>
@@ -175,41 +175,40 @@ export default function Header() {
                     </DropdownMenuTrigger>
 <DropdownMenuContent className="w-56 right-0 mt-2 z-50 bg-white/90 backdrop-blur-md rounded-xl shadow-lg border border-white/20">
                        <DropdownMenuItem className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center" onClick={() => navigate('/profile')}>
-                         <User className="w-4 h-4 mr-2" />
-                         Profile
-                       </DropdownMenuItem>
-                       <DropdownMenuItem className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center" onClick={() => navigate('/orders')}>
-                         <List className="w-4 h-4 mr-2" />
-                         Orders
-                       </DropdownMenuItem>
-                       <DropdownMenuItem className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center" onClick={() => navigate('/messages')}>
-                         <MessageSquare className="w-4 h-4 mr-2" />
-                         Messages
-                       </DropdownMenuItem>
-                       <DropdownMenuItem className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center" onClick={() => navigate('/cart')}>
-                         <ShoppingBag className="w-4 h-4 mr-2" />
-                         Bag
-                       </DropdownMenuItem>
-                       <DropdownMenuItem className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center" onClick={() => navigate('/wishlist')}>
-                         <Heart className="w-4 h-4 mr-2" />
-                         Wishlist
-                       </DropdownMenuItem>
-                       <DropdownMenuItem onClick={logout} className="px-3 py-2 text-red-500 hover:bg-red-50 flex items-center">
-                         <LogOut className="w-4 h-4 mr-2" />
-                         Sign Out
-                       </DropdownMenuItem>
-                     </DropdownMenuContent>
+                          <User className="w-4 h-4 mr-2" />
+                          Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center" onClick={() => navigate('/orders')}>
+                          <List className="w-4 h-4 mr-2" />
+                          Orders
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center" onClick={() => navigate('/messages')}>
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          Messages
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center" onClick={() => navigate('/cart')}>
+                          <ShoppingBag className="w-4 h-4 mr-2" />
+                          Bag
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center" onClick={() => navigate('/wishlist')}>
+                          <Heart className="w-4 h-4 mr-2" />
+                          Wishlist
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={logout} className="px-3 py-2 text-red-500 hover:bg-red-50 flex items-center">
+                          <LogOut className="w-4 h-4 mr-2" />
+                          Sign Out
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
                   <Link to="/login" className="p-1.5 text-[#5C5E62] hover:text-black transition-colors duration-[333ms] rounded-[4px]">
                     <CircleUser className="w-5 h-5" />
                   </Link>
                 )}
-            </div>
-
-          <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 -mr-2 text-[#5C5E62] hover:text-black transition-colors">
+              <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 -mr-2 text-[#5C5E62] hover:text-black transition-colors">
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
+          </div>
         </div>
       </div>
 
