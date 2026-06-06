@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { MapPin, Gauge, Heart, Car, Loader } from 'lucide-react'
 import type { CarListing } from '@/lib/types'
-import { formatPrice, cn } from '@/lib/utils'
+import { formatPrice, cn, imageUrl } from '@/lib/utils'
 import Badge from '@/components/ui/Badge'
 
 interface CarCardProps {
@@ -44,7 +44,7 @@ export default function CarCard({ listing, layout = 'grid', index = 0, isSaved, 
                   <Loader className="w-6 h-6 text-dark-500 animate-spin" />
                 </div>
               )}
-              <img src={img.image_url} alt="" onLoad={() => setImgLoaded(true)} className={cn('w-full h-full object-cover group-hover:scale-105 transition-transform duration-700', !imgLoaded && 'hidden')} />
+              <img src={imageUrl(img.image_url)} alt="" onLoad={() => setImgLoaded(true)} className={cn('w-full h-full object-cover group-hover:scale-105 transition-transform duration-700', !imgLoaded && 'hidden')} />
             </>
           ) : (
             <div className="w-full h-full flex items-center justify-center"><Car className="w-12 h-12 text-dark-700" /></div>

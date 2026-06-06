@@ -59,6 +59,15 @@ export function getInitials(name: string): string {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
+const API_BASE = 'https://admin-car-beta.vercel.app'
+
+export function imageUrl(url: string | null | undefined): string {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  if (url.startsWith('/')) return `${API_BASE}${url}`
+  return `${API_BASE}/${url}`
+}
+
 export function getStatusColor(status: string): string {
   const map: Record<string, string> = {
     new: 'bg-blue-100 text-blue-700',

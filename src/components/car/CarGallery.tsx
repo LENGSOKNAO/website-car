@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, Loader } from 'lucide-react'
 import type { ListingImage } from '@/lib/types'
-import { cn } from '@/lib/utils'
+import { cn, imageUrl } from '@/lib/utils'
 
 interface CarGalleryProps {
   images: ListingImage[]
@@ -29,7 +29,7 @@ export default function CarGallery({ images, title }: CarGalleryProps) {
           </div>
         )}
         <img
-          src={images[activeIndex].image_url}
+          src={imageUrl(images[activeIndex].image_url)}
           alt=""
           onLoad={() => setMainLoaded(true)}
           className={cn('w-full h-full object-cover', !mainLoaded && 'hidden')}
@@ -71,7 +71,7 @@ export default function CarGallery({ images, title }: CarGalleryProps) {
                 i === activeIndex ? 'border-blue-600 opacity-100' : 'border-transparent opacity-60 hover:opacity-80'
               }`}
             >
-              <img src={img.image_url} alt="" className="w-full h-full object-cover" />
+              <img src={imageUrl(img.image_url)} alt="" className="w-full h-full object-cover" />
             </button>
           ))}
         </div>

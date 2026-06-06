@@ -166,5 +166,19 @@ export const api = {
     request<Offer[]>("/offers"),
   conversations: () =>
     request<Conversation[]>("/conversations"),
+  listings: (params: Record<string, string | number | undefined | null | boolean>) => {
+    const query = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== null && v !== '')
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+      .join('&')
+    return request<any>(`/listings?${query}`)
+  },
+  listing: (id: string) => request<any>(`/listings/${id}`),
+  makes: () => request<any[]>('/makes'),
+  models: (makeId: string) => request<any[]>(`/makes/${makeId}/models`),
+  sendInquiry: (data: { listing_id: string; message: string; phone_number?: string }) =>
+    request<any>('/inquiries', { method: 'POST', body: JSON.stringify(data) }),
+  makeOffer: (data: { listing_id: string; offered_price: number }) =>
+    request<any>('/offers', { method: 'POST', body: JSON.stringify(data) }),
   upload: (file: File) => uploadFile(file),
 };

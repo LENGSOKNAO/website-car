@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { cn, getInitials } from '@/lib/utils'
+import { cn, getInitials, imageUrl } from '@/lib/utils'
 import Skeleton from '@/components/ui/Skeleton'
 
 interface AvatarProps {
@@ -19,7 +19,7 @@ export default function Avatar({ src, name, size = 'md', className, status }: Av
           <Skeleton className={cn('rounded-full', sizes[size])} />
         )}
         <img
-          src={src}
+          src={imageUrl(src)}
           alt=""
           onLoad={() => setLoaded(true)}
           onError={() => setErred(true)}

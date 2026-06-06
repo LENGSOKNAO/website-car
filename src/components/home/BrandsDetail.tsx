@@ -20,7 +20,7 @@ export default function BrandsDetail() {
 
         <div className="space-y-5">
           {BRAND_PAGES.map((brand, i) => {
-            const images = brand.slider.images || []
+            const slide = brand.slider[0]
             return (
               <motion.div
                 key={brand.slug}
@@ -34,9 +34,9 @@ export default function BrandsDetail() {
                   className="group flex flex-col sm:flex-row rounded-sm overflow-hidden border border-gray-200 bg-gray-50 hover:shadow-md transition-all duration-300"
                 >
                   <div className="sm:w-72 h-48 sm:h-auto shrink-0 overflow-hidden">
-                    {images[0] && (
+                    {slide && (
                       <img
-                        src={images[0]}
+                        src={slide.image}
                         alt={brand.name}
                         className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                       />
@@ -48,8 +48,8 @@ export default function BrandsDetail() {
                         <div className="w-8 h-[2px] rounded-full" style={{ backgroundColor: brand.color }} />
                         <span className="text-xs font-bold text-gray-900 tracking-wider uppercase">{brand.name}</span>
                       </div>
-                      <p className="text-xs text-gray-500 italic mb-2">&ldquo;{brand.slider.tagline}&rdquo;</p>
-                      <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">{brand.slider.description}</p>
+                      <p className="text-xs text-gray-500 italic mb-2">&ldquo;{slide?.tagline}&rdquo;</p>
+                      <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">{slide?.description}</p>
                     </div>
                     <div className="mt-4 flex flex-wrap items-center gap-6">
                       {brand.stats.map(stat => (
