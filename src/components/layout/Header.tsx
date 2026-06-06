@@ -148,19 +148,14 @@ export default function Header() {
 
           <nav className="hidden md:flex items-center absolute left-1/2 -translate-x-1/2">
             <div className="flex items-center gap-1">
-              {brandRoutes.map((brand) => {
-                const isActive = location.pathname === brand.route
-                return (
-                  <Link key={brand.slug} to={brand.route}
-                    className={cn(
-                      'block px-4 py-1.5 text-sm font-medium rounded-[4px] transition-all duration-[333ms]',
-                      isActive ? 'text-black' : 'text-[#5C5E62] hover:text-black'
-                    )}
-                  >
-                    {brand.name === 'Nissan GT-R' ? 'GT-R' : brand.name}
-                  </Link>
-                )
-              })}
+              <Link to="/seller/admin"
+                className={cn(
+                  'block px-4 py-1.5 text-sm font-medium rounded-[4px] transition-all duration-[333ms]',
+                  location.pathname === '/seller/admin' ? 'text-black' : 'text-[#5C5E62] hover:text-black'
+                )}
+              >
+                Seller
+              </Link>
             </div>
           </nav>
 
@@ -248,31 +243,13 @@ export default function Header() {
       {mobileOpen && (
         <div className="md:hidden bg-white border-t border-gray-100">
           <div className="px-4 py-3 space-y-0.5">
-            {brandRoutes.map((brand) => {
-              const page = BRAND_PAGES.find(p => p.slug === brand.slug)
-              const isActive = location.pathname === brand.route
-              return (
-                <div key={brand.slug}>
-                  <Link to={brand.route}
-                    className={cn(
-                      'block px-4 py-3 text-sm font-medium rounded-[4px] transition-colors',
-                      isActive ? 'text-black' : 'text-[#5C5E62] hover:text-black'
-                    )}>
-                    {brand.name}
-                  </Link>
-                  {page && (
-                    <div className="pl-4 pb-1 space-y-0.5">
-                      {page.models.map(model => (
-                        <Link key={model} to={`/listings?make=${brand.slug}&model=${model.toLowerCase().replace(/\s+/g, '-')}`}
-                          className="block px-4 py-2 text-xs text-[#5C5E62] hover:text-black">
-                          {model}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+            <Link to="/seller/admin"
+              className={cn(
+                'block px-4 py-3 text-sm font-medium rounded-[4px] transition-colors',
+                location.pathname === '/seller/admin' ? 'text-black' : 'text-[#5C5E62] hover:text-black'
+              )}>
+              Seller
+            </Link>
             <Link to="/search" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#5C5E62] hover:text-black">
               <Search className="w-4 h-4" /> Search
             </Link>
