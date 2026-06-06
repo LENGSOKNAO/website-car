@@ -125,12 +125,12 @@ export default function Header() {
 
   useEffect(() => {
     api.users().then((res: any) => {
-      const data = res?.data?.data || res?.data || []
-      const list = Array.isArray(data) ? data : []
+      const raw = res?.data?.data ?? res?.data ?? res ?? []
+      const list = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : []
       setSellers(list.filter((u: any) => {
-        const roleName = u.role || u.type || ''
-        const hasRole = u.roles?.some((r: any) => (r.name || r).toLowerCase() === 'seller')
-        return roleName.toLowerCase() === 'seller' || roleName.toLowerCase() === 'dealer' || u.is_dealer || hasRole
+        const roleName = (u.role || u.type || '').toLowerCase()
+        const hasRole = u.roles?.some((r: any) => (typeof r === 'string' ? r : r.name || '').toLowerCase() === 'seller')
+        return roleName === 'seller' || roleName === 'dealer' || u.is_dealer || hasRole
       }))
     }).catch(() => {})
   }, [])
