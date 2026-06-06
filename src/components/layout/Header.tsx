@@ -148,19 +148,13 @@ export default function Header() {
 
           <nav className="hidden md:flex items-center absolute left-1/2 -translate-x-1/2">
             <div className="flex items-center gap-1">
-              {isAuthenticated && user ? (
+              {isAuthenticated && user && (user.role === 'seller' || user.roles?.includes('seller')) ? (
                 <Link to="/seller/admin"
                   className="block px-4 py-1.5 text-sm font-medium text-black hover:text-blue-600 transition-colors"
                 >
                   {user.full_name}
                 </Link>
-              ) : (
-                <Link to="/login"
-                  className="block px-4 py-1.5 text-sm font-medium rounded-[4px] text-[#5C5E62] hover:text-black transition-all duration-[333ms]"
-                >
-                  Sign In
-                </Link>
-              )}
+              ) : null}
             </div>
           </nav>
 
@@ -248,19 +242,13 @@ export default function Header() {
       {mobileOpen && (
         <div className="md:hidden bg-white border-t border-gray-100">
           <div className="px-4 py-3 space-y-0.5">
-            {isAuthenticated && user ? (
+            {isAuthenticated && user && (user.role === 'seller' || user.roles?.includes('seller')) ? (
               <Link to="/seller/admin"
                 className="block px-4 py-3 text-sm font-medium text-black hover:text-blue-600 transition-colors"
               >
                 {user.full_name}
               </Link>
-            ) : (
-              <Link to="/login"
-                className="block px-4 py-3 text-sm font-medium text-[#5C5E62] hover:text-black transition-colors"
-              >
-                Sign In
-              </Link>
-            )}
+            ) : null}
             <Link to="/search" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#5C5E62] hover:text-black">
               <Search className="w-4 h-4" /> Search
             </Link>
