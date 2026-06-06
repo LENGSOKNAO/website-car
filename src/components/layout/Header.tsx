@@ -146,33 +146,31 @@ export default function Header() {
             </span>
           </Link>
 
-          <div className="flex items-center justify-center flex-1">
-            <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 text-[#5C5E62] hover:text-black transition-colors">
-              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-            <nav className="hidden md:flex items-center">
-              <div className="flex items-center gap-1">
-                {brandRoutes.map((brand) => {
-                  const isActive = location.pathname === brand.route
-                  return (
-                    <Link key={brand.slug} to={brand.route}
-                      className={cn(
-                        'block px-4 py-1.5 text-sm font-medium rounded-[4px] transition-all duration-[333ms]',
-                        isActive ? 'text-black' : 'text-[#5C5E62] hover:text-black'
-                      )}
-                    >
-                      {brand.name === 'Nissan GT-R' ? 'GT-R' : brand.name}
-                    </Link>
-                  )
-                })}
-              </div>
-            </nav>
-          </div>
+          <nav className="hidden md:flex items-center absolute left-1/2 -translate-x-1/2">
+            <div className="flex items-center gap-1">
+              {brandRoutes.map((brand) => {
+                const isActive = location.pathname === brand.route
+                return (
+                  <Link key={brand.slug} to={brand.route}
+                    className={cn(
+                      'block px-4 py-1.5 text-sm font-medium rounded-[4px] transition-all duration-[333ms]',
+                      isActive ? 'text-black' : 'text-[#5C5E62] hover:text-black'
+                    )}
+                  >
+                    {brand.name === 'Nissan GT-R' ? 'GT-R' : brand.name}
+                  </Link>
+                )
+              })}
+            </div>
+          </nav>
 
           <div className="flex items-center gap-2 shrink-0">
             <Link to="/search" className="p-1.5 text-[#5C5E62] hover:text-black transition-colors duration-[333ms]">
               <Search className="w-5 h-5" />
             </Link>
+            <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 text-[#5C5E62] hover:text-black transition-colors">
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
             {isAuthenticated && user ? (
               <DropdownMenu className="relative">
                 <DropdownMenuTrigger className="flex items-center gap-2 p-1.5 text-[#5C5E62] hover:text-black transition-colors duration-[333ms] rounded-[4px]">
