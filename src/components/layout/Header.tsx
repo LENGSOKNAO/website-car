@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Menu, X, CircleUser, Search, ChevronDown, User, List, MessageSquare, ShoppingBag, LogOut, Heart } from 'lucide-react'
 import { useAuth } from '@/lib/auth'
 import { APP_NAME, BRANDS, BRAND_PAGES } from '@/lib/constants'
+import { api } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import Avatar from '@/components/ui/Avatar'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
@@ -112,6 +113,7 @@ export default function Header() {
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [hoveredCat, setHoveredCat] = useState<string | null>(null)
+  const [sellers, setSellers] = useState<any[]>([])
   const location = useLocation()
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
@@ -120,6 +122,18 @@ export default function Header() {
    }
 
   useEffect(() => { setMobileOpen(false); setHoveredCat(null) }, [location])
+
+  useEffect(() => {
+    api.users().then((res: any) => {
+      const data = res?.data?.data || res?.data || []
+      const list = Array.isArray(data) ? data : []
+      setSellers(list.filter((u: any) => {
+        const roleName = u.role || u.type || ''
+        const hasRole = u.roles?.some((r: any) => (r.name || r).toLowerCase() === 'seller')
+        return roleName.toLowerCase() === 'seller' || roleName.toLowerCase() === 'dealer' || u.is_dealer || hasRole
+      }))
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setHoveredCat(null) }
@@ -147,12 +161,12 @@ export default function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center absolute left-1/2 -translate-x-1/2">
-            <div className="flex items-center gap-1">
-              {isAuthenticated && user ? (
-                <span className="block px-4 py-1.5 text-sm font-medium text-black">
-                  {user.full_name}
+            <div className="flex items-center gap-3">
+              {sellers.filter(s => s.id !== user?.id).map(seller => (
+                <span key={seller.id} className="block px-3 py-1.5 text-sm font-medium text-black">
+                  {seller.full_name}
                 </span>
-              ) : null}
+              ))}
             </div>
           </nav>
 
@@ -240,11 +254,11 @@ export default function Header() {
       {mobileOpen && (
         <div className="md:hidden bg-white border-t border-gray-100">
           <div className="px-4 py-3 space-y-0.5">
-            {isAuthenticated && user ? (
-              <span className="block px-4 py-3 text-sm font-medium text-black">
-                {user.full_name}
+            {sellers.filter(s => s.id !== user?.id).map(seller => (
+              <span key={seller.id} className="block px-4 py-3 text-sm font-medium text-black">
+                {seller.full_name}
               </span>
-            ) : null}
+            ))}
             <Link to="/search" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#5C5E62] hover:text-black">
               <Search className="w-4 h-4" /> Search
             </Link>

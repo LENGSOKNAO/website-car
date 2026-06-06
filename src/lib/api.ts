@@ -180,5 +180,9 @@ export const api = {
     request<any>('/inquiries', { method: 'POST', body: JSON.stringify(data) }),
   makeOffer: (data: { listing_id: string; offered_price: number }) =>
     request<any>('/offers', { method: 'POST', body: JSON.stringify(data) }),
+  users: (params?: Record<string, string>) => {
+    const query = params ? '?' + new URLSearchParams(params).toString() : ''
+    return request<any>(`/users${query}`)
+  },
   upload: (file: File) => uploadFile(file),
 };
