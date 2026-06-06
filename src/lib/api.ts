@@ -185,4 +185,6 @@ export const api = {
     return request<any>(`/users${query}`)
   },
   upload: (file: File) => uploadFile(file),
+  heroes: () => request<any[]>('/heroes'),
+  sliders: () => request<any[]>('/web/sliders'),
 };
