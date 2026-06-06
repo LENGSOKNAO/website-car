@@ -148,13 +148,11 @@ export default function Header() {
 
           <nav className="hidden md:flex items-center absolute left-1/2 -translate-x-1/2">
             <div className="flex items-center gap-1">
-              {isAuthenticated && user ? (
+              {isAuthenticated && user && user.role === 'seller' ? (
                 <span className="block px-4 py-1.5 text-sm font-medium text-black">
                   {user.full_name}
                 </span>
               ) : null}
-            </div>
-          </nav>
 
           <div className="flex items-center gap-2 shrink-0">
             <Link to="/search" className="p-1.5 text-[#5C5E62] hover:text-black transition-colors duration-[333ms]">
@@ -240,7 +238,7 @@ export default function Header() {
       {mobileOpen && (
         <div className="md:hidden bg-white border-t border-gray-100">
           <div className="px-4 py-3 space-y-0.5">
-            {isAuthenticated && user ? (
+            {isAuthenticated && user && user.role === 'seller' ? (
               <span className="block px-4 py-3 text-sm font-medium text-black">
                 {user.full_name}
               </span>
