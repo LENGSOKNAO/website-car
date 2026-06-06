@@ -153,6 +153,8 @@ export default function Header() {
                   {user.full_name}
                 </span>
               ) : null}
+            </div>
+          </nav>
 
           <div className="flex items-center gap-2 shrink-0">
             <Link to="/search" className="p-1.5 text-[#5C5E62] hover:text-black transition-colors duration-[333ms]">
