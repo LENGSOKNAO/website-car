@@ -120,13 +120,13 @@ export default function Header() {
               {sellers
                 .filter((s) => s.id !== user?.id)
                 .map((seller) => (
-                  <button
+                    <button
                     key={seller.id}
                     onClick={() => {
+                      const path = `/${encodeURIComponent(seller.full_name.toLowerCase())}`;
+                      if (location.pathname === path) return;
                       setNavigating(true);
-                      requestAnimationFrame(() =>
-                        navigate(`/${encodeURIComponent(seller.full_name.toLowerCase())}`)
-                      );
+                      requestAnimationFrame(() => navigate(path));
                     }}
                     className={cn(
                       "block px-3 py-1.5 text-sm font-medium rounded-[4px] transition-colors",
@@ -338,11 +338,11 @@ export default function Header() {
                 <button
                   key={seller.id}
                   onClick={() => {
+                    const path = `/${encodeURIComponent(seller.full_name.toLowerCase())}`;
+                    if (location.pathname === path) return;
                     setNavigating(true);
                     setMobileOpen(false);
-                    requestAnimationFrame(() =>
-                      navigate(`/${encodeURIComponent(seller.full_name.toLowerCase())}`)
-                    );
+                    requestAnimationFrame(() => navigate(path));
                   }}
                   className="block w-full text-left px-4 py-3 text-sm font-medium text-black hover:text-blue-600 transition-colors"
                 >   
