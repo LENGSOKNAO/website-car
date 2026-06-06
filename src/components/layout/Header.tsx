@@ -163,9 +163,11 @@ export default function Header() {
           <nav className="hidden md:flex items-center absolute left-1/2 -translate-x-1/2">
             <div className="flex items-center gap-3">
               {sellers.filter(s => s.id !== user?.id).map(seller => (
-                <span key={seller.id} className="block px-3 py-1.5 text-sm font-medium text-black">
+                <Link key={seller.id} to="/seller/admin"
+                  className="block px-3 py-1.5 text-sm font-medium text-black hover:text-blue-600 transition-colors"
+                >
                   {seller.full_name}
-                </span>
+                </Link>
               ))}
             </div>
           </nav>
@@ -255,9 +257,11 @@ export default function Header() {
         <div className="md:hidden bg-white border-t border-gray-100">
           <div className="px-4 py-3 space-y-0.5">
             {sellers.filter(s => s.id !== user?.id).map(seller => (
-              <span key={seller.id} className="block px-4 py-3 text-sm font-medium text-black">
+              <Link key={seller.id} to="/seller/admin"
+                className="block px-4 py-3 text-sm font-medium text-black hover:text-blue-600 transition-colors"
+              >
                 {seller.full_name}
-              </span>
+              </Link>
             ))}
             <Link to="/search" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#5C5E62] hover:text-black">
               <Search className="w-4 h-4" /> Search
