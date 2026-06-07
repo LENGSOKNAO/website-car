@@ -2,17 +2,58 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import ButtonBlue from "../ui/ButtonBlue";
 import ButtonWhite from "../ui/ButtonWhite";
 import type { BrandData } from "@/lib/constants";
+import { api } from "@/lib/api";
+
+interface BoxTenItem {
+  badge: string;
+  title: string;
+  description: string;
+  image: string;
+}
 
 const DRAG_MULTIPLIER = 2;
 
 export default function BrandTenSlider({ data }: { data: BrandData }) {
-   const { boxTen, slider, name, slug, route } = data;
+   const { slider, name, slug, route } = data;
+   const [boxTen, setBoxTen] = useState<BoxTenItem[]>([]);
    const originalCount = boxTen.length;
    const sliderImages: string[] = [];
 
    for (let i = 0; i < slider.length * 2; i++) {
      sliderImages.push(slider[i % slider.length].image);
    }
+
+   useEffect(() => {
+    api.boxTen().then((res: any) => {
+      const raw = res?.data?.data ?? res?.data ?? res ?? [];
+      const list = Array.isArray(raw) ? raw : [];
+      const brandName = data.name.toLowerCase();
+      const filtered = list.filter((s: any) => {
+        const badge = (s.badge || "").toLowerCase();
+        const un = (s.user?.name || "").toLowerCase();
+        return (
+          badge === brandName ||
+          un === brandName ||
+          un === data.slug.toLowerCase()
+        );
+      });
+      if (filtered.length === 0) {
+        const loose = list.filter((s: any) => {
+          const badge = (s.badge || "").toLowerCase();
+          const un = (s.user?.name || "").toLowerCase();
+          return (
+            badge.includes(brandName) ||
+            brandName.includes(badge) ||
+            un.includes(brandName) ||
+            brandName.includes(un)
+          );
+        });
+        setBoxTen(loose);
+      } else {
+        setBoxTen(filtered);
+      }
+    }).catch(() => {});
+  }, [data.name]);
 
    const sliderRef = useRef<HTMLDivElement>(null);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -157,8 +198,10 @@ export default function BrandTenSlider({ data }: { data: BrandData }) {
      [currentIndex, scrollToIndex, sliderImages.length],
    );
 
-    return (
-      <div className={`relative select-none bg-white overflow-hidden pb-10 ${isInView ? 'animate-slideUp' : ''}`} ref={containerRef}>
+    if (boxTen.length === 0) return null;
+
+     return (
+       <div className={`relative select-none bg-white overflow-hidden pb-10 ${isInView ? 'animate-slideUp' : ''}`} ref={containerRef}>
          <style>{`
            @keyframes slideUp {
             from { 
@@ -221,16 +264,16 @@ export default function BrandTenSlider({ data }: { data: BrandData }) {
                        <div className="max-w-2xl">
                          <div className="flex items-center gap-3 mb-3">
                            <span className="w-10 h-[3px] bg-white rounded-full" />
-                           <span className="text-white/70 text-[11px] font-semibold tracking-[0.25em] uppercase">
-                             {e.name}
-                           </span>
-                         </div>
-                         <h3 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-2 tracking-tight leading-[1.1]">
-                           {e.name}
-                         </h3>
-                         <p className="text-sm md:text-base text-white/70 font-medium mb-1">
-                           {e.tagline}
-                         </p>
+                            <span className="text-white/70 text-[11px] font-semibold tracking-[0.25em] uppercase">
+                              {e.badge}
+                            </span>
+                          </div>
+                          <h3 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white mb-2 tracking-tight leading-[1.1]">
+                            {e.badge}
+                          </h3>
+                          <p className="text-sm md:text-base text-white/70 font-medium mb-1">
+                            {e.title}
+                          </p>
                          <p className="text-xs md:text-sm text-white/50 mb-6 line-clamp-2 max-w-xl leading-relaxed">
                            {e.description}
                          </p>

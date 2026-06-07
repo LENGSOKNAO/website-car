@@ -1,6 +1,6 @@
 import type { SavedListing, Inquiry, Offer, Conversation } from "./types";
 
-const API_BASE = "https://admin-car-beta.vercel.app/api/v1";
+const API_BASE = "/api/v1";
 
 function getToken(): string | null {
   return localStorage.getItem("token");
@@ -22,7 +22,12 @@ async function request<T>(
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers,
+    redirect: 'manual',
   });
+
+  if (response.type === 'opaqueredirect' || response.status === 0) {
+    throw new Error('Unauthorized');
+  }
 
   const text = await response.text();
 
@@ -187,4 +192,9 @@ export const api = {
   upload: (file: File) => uploadFile(file),
   heroes: () => request<any[]>('/heroes'),
   sliders: () => request<any[]>('/web/sliders'),
+  boxTrips: () => request<any[]>('/web/boxTrips'),
+  boxOne: () => request<any[]>('/web/boxOne'),
+  boxRight: () => request<any[]>('/web/boxRight'),
+  boxLeft: () => request<any[]>('/web/boxLeft'),
+  boxTen: () => request<any[]>('/web/boxTen'),
 };

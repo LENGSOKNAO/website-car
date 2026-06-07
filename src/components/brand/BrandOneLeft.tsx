@@ -1,10 +1,49 @@
 import type { BrandData } from "@/lib/constants";
 import ButtonBlue from "../ui/ButtonBlue";
 import { useEffect, useState, useRef } from "react";
+import { api } from "@/lib/api";
+
+interface BoxLeftItem {
+  badge: string;
+  image: string;
+}
 
 export default function BrandOneLeft({ data }: { data: BrandData }) {
   const ref = useRef();
   const [isInView, setIsInView] = useState(false);
+  const [items, setItems] = useState<BoxLeftItem[]>([]);
+
+  useEffect(() => {
+    api.boxLeft().then((res: any) => {
+      const raw = res?.data?.data ?? res?.data ?? res ?? [];
+      const list = Array.isArray(raw) ? raw : [];
+      const brandName = data.name.toLowerCase();
+      const filtered = list.filter((s: any) => {
+        const badge = (s.badge || "").toLowerCase();
+        const un = (s.user?.name || "").toLowerCase();
+        return (
+          badge === brandName ||
+          un === brandName ||
+          un === data.slug.toLowerCase()
+        );
+      });
+      if (filtered.length === 0) {
+        const loose = list.filter((s: any) => {
+          const badge = (s.badge || "").toLowerCase();
+          const un = (s.user?.name || "").toLowerCase();
+          return (
+            badge.includes(brandName) ||
+            brandName.includes(badge) ||
+            un.includes(brandName) ||
+            brandName.includes(un)
+          );
+        });
+        setItems(loose);
+      } else {
+        setItems(filtered);
+      }
+    }).catch(() => {});
+  }, [data.name]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -23,6 +62,8 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
     return () => observer.disconnect();
   }, []);
 
+  if (items.length === 0) return null;
+
   return (
     <section className={`relative overflow-hidden ${isInView ? 'animate-slideUp' : ''}`} ref={ref}>
        <style>{`
@@ -40,7 +81,7 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
            animation: slideUp 1s ease-out forwards;
          }
        `}</style>
-      {data.boxLeft.map((banner, index) => (
+      {items.map((banner, index) => (
         <div className={index > 0 ? "tb-8" : ""} key={index}>
           <div className="absolute top-0 left-1/4 w-[500px] h-[500px] blur-[150px] pointer-events-none " />
           <div className="mx-auto px-4 sm:px-8 lg:px-16 xl:px-24 max-w-full">
@@ -49,7 +90,7 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
                 <div className="absolute inset-0">
                   <img
                     src={banner.image}
-                    alt={banner.name}
+                    alt={banner.badge}
                     className="w-full h-full object-cover"
                   />
                   <div
@@ -65,7 +106,7 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
               <div className="flex-[1] p-10 md:p-14 lg:p-20 flex flex-col justify-center relative z-10">
                 <div className="w-14 h-1 mb-8" />
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] mb-4">
-                  {banner.name}
+                  {banner.badge}
                 </p>
                 <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
                   Engineered to
@@ -73,7 +114,7 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
                   <span>Inspire</span>
                 </h2>
                 <p className="mt-6 text-base md:text-lg text-black leading-relaxed max-w-lg">
-                  Every {banner.name} is a masterpiece of design and
+                  Every {banner.badge} is a masterpiece of design and
                   engineering. From the roar of the engine to the curve of the
                   chassis — experience automotive excellence at its finest.
                 </p>

@@ -71,10 +71,6 @@ export default function App() {
                 element={<BrandPage />}
               />
             ))}
-            <Route path="/tesla" element={<BrandPage />} />
-            <Route path="/bmw" element={<BrandPage />} />
-            <Route path="/gtr" element={<BrandPage />} />
-            <Route path="/porsche" element={<BrandPage />} />
             <Route path="/listings" element={<Listings />} />
             <Route path="/listings/:id" element={<ListingDetail />} />
             <Route path="/financing" element={<Financing />} />

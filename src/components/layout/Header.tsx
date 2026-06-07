@@ -31,19 +31,17 @@ export default function Header() {
   const [hoveredCat, setHoveredCat] = useState<string | null>(null);
   const [sellers, setSellers] = useState<any[]>([]);
   const [heroes, setHeroes] = useState<any[]>([]);
-  const [navigating, setNavigating] = useState(false);
+  const [openHeroId, setOpenHeroId] = useState<string | null>(null);
   const location = useLocation();
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const handleNavigateToSettings = () => {
-    setNavigating(true);
     navigate("/profile");
   };
 
   useEffect(() => {
     setMobileOpen(false);
     setHoveredCat(null);
-    setNavigating(false);
   }, [location]);
 
   useEffect(() => {
@@ -91,22 +89,30 @@ export default function Header() {
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
   const brandRoutes = BRANDS.map((b) => {
     const bp = BRAND_PAGES.find((p) => p.slug === b.slug);
     return { ...b, route: bp?.route || `/listings?make=${b.slug}` };
   });
 
-  const pageSlug = decodeURIComponent(location.pathname.split("/")[1] || "").toLowerCase();
-  const currentSeller = sellers.find((s) => s.full_name.toLowerCase() === pageSlug) ?? null;
+  const pageSlug = decodeURIComponent(
+    location.pathname.split("/")[1] || "",
+  ).toLowerCase();
+  const currentSeller = sellers.find((s) => s.full_name === pageSlug) ?? null;
   const currentSellerId = currentSeller?.id ?? null;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white">
-      {navigating && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500 z-50">
-          <div className="h-full bg-blue-400 animate-pulse" style={{ width: '60%' }} />
-        </div>
-      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 md:h-16">
           <Link to="/" className="shrink-0">
@@ -120,14 +126,9 @@ export default function Header() {
               {sellers
                 .filter((s) => s.id !== user?.id)
                 .map((seller) => (
-                    <button
+                  <Link
                     key={seller.id}
-                    onClick={() => {
-                      const path = `/${encodeURIComponent(seller.full_name.toLowerCase())}`;
-                      if (location.pathname === path) return;
-                      setNavigating(true);
-                      requestAnimationFrame(() => navigate(path));
-                    }}
+                    to={`/${encodeURIComponent(seller.full_name)}`}
                     className={cn(
                       "block px-3 py-1.5 text-sm font-medium rounded-[4px] transition-colors",
                       currentSellerId === seller.id
@@ -136,7 +137,7 @@ export default function Header() {
                     )}
                   >
                     {seller.full_name}
-                  </button>
+                  </Link>
                 ))}
             </div>
           </nav>
@@ -144,7 +145,7 @@ export default function Header() {
           <div className="flex items-center gap-2 shrink-0">
             <Link
               to="/search"
-              className="p-1.5 text-[#5C5E62] hover:text-black transition-colors duration-[333ms]"
+              className="hidden md:block p-1.5 text-[#5C5E62] hover:text-black transition-colors duration-[333ms]"
             >
               <Search className="w-5 h-5" />
             </Link>
@@ -159,8 +160,8 @@ export default function Header() {
               )}
             </button>
             {isAuthenticated && user ? (
-              <DropdownMenu className="relative">
-                <DropdownMenuTrigger className="flex items-center gap-2 p-1.5 text-[#5C5E62] hover:text-black transition-colors duration-[333ms] rounded-[4px]">
+              <DropdownMenu>
+                <DropdownMenuTrigger className="hidden md:flex items-center gap-2 p-1.5 text-[#5C5E62] hover:text-black transition-colors duration-[333ms] rounded-[4px]">
                   <Avatar
                     name={user.full_name || "User"}
                     src={user.avatar_url}
@@ -216,7 +217,7 @@ export default function Header() {
             ) : (
               <Link
                 to="/login"
-                className="p-1.5 text-[#5C5E62] hover:text-black transition-colors duration-[333ms] rounded-[4px]"
+                className="hidden md:block p-1.5 text-[#5C5E62] hover:text-black transition-colors duration-[333ms] rounded-[4px]"
               >
                 <CircleUser className="w-5 h-5" />
               </Link>
@@ -298,126 +299,98 @@ export default function Header() {
         })()}
 
       {mobileOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100">
-          <div className="px-4 py-3 space-y-0.5">
-            {brandRoutes.map((brand) => {
-              const bp = BRAND_PAGES.find((p) => p.slug === brand.slug);
-              const isActive = location.pathname === brand.route;
-              return (
-                <div key={brand.slug}>
-                  <Link
-                    to={brand.route}
-                    className={cn(
-                      "block px-4 py-3 text-sm font-medium rounded-[4px] transition-colors",
-                      isActive
-                        ? "text-black"
-                        : "text-[#5C5E62] hover:text-black",
-                    )}
-                  >
-                    {brand.name}
-                  </Link>
-                  {bp && (
-                    <div className="pl-4 pb-1 space-y-0.5">
-                      {bp.models.map((model) => (
-                        <Link
-                          key={model}
-                          to={`/listings?make=${brand.slug}&model=${model.toLowerCase().replace(/\s+/g, "-")}`}
-                          className="block px-4 py-2 text-xs text-[#5C5E62] hover:text-black"
-                        >
-                          {model}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+        <div className="md:hidden fixed inset-0 top-14 md:top-16 bg-white z-40 flex flex-col">
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-0.5">
             {sellers
               .filter((s) => s.id !== user?.id)
-              .map((seller) => (
-                <button
-                  key={seller.id}
-                  onClick={() => {
-                    const path = `/${encodeURIComponent(seller.full_name.toLowerCase())}`;
-                    if (location.pathname === path) return;
-                    setNavigating(true);
-                    setMobileOpen(false);
-                    requestAnimationFrame(() => navigate(path));
-                  }}
-                  className="block w-full text-left px-4 py-3 text-sm font-medium text-black hover:text-blue-600 transition-colors"
-                >   
-                  {seller.full_name}
-                </button>
-              ))}
-            <hr className="border-gray-100 my-3" />
+              .map((seller) => {
+                const sellerHeroes = heroes
+                  .filter((h) => h.seller_id === seller.id && h.is_active)
+                  .sort((a, b) => a.sort_order - b.sort_order);
+                return (
+                  <div key={seller.id}>
+                    <Link
+                      to={`/${encodeURIComponent(seller.full_name)}`}
+                      className="block px-4 py-3 text-sm font-medium text-black hover:text-blue-600 transition-colors"
+                    >
+                      {seller.full_name}
+                    </Link>
+                    {sellerHeroes.length > 0 && (
+                      <div className="pl-4 pb-2 space-y-0.5">
+                        {sellerHeroes.map((hero) => {
+                          const isHeroOpen = openHeroId === hero.id;
+                          const items = Array.isArray(hero.subtitle)
+                            ? hero.subtitle
+                            : [];
+                          return (
+                            <div key={hero.id}>
+                              <button
+                                onClick={() =>
+                                  setOpenHeroId(isHeroOpen ? null : hero.id)
+                                }
+                                className="block w-full text-left px-4 py-2 text-xs font-semibold text-[#5C5E62] uppercase tracking-wide hover:text-black"
+                              >
+                                {hero.title}
+                              </button>
+                              {isHeroOpen && items.length > 0 && (
+                                <div className="pl-4 space-y-0.5">
+                                  {items.map((item: any, i: number) => (
+                                    <div
+                                      key={i}
+                                      className="px-4 py-1.5 text-xs text-[#5C5E62]"
+                                    >
+                                      {item.text_more || item.text}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+          </div>
+          <div className="shrink-0 border-t border-gray-200 px-4 py-2 flex flex-row items-stretch gap-1">
             <Link
               to="/search"
-              className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#5C5E62] hover:text-black"
+              className="flex flex-1 items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium text-[#5C5E62] hover:text-black hover:bg-gray-50 rounded-lg transition-colors"
             >
-              <Search className="w-4 h-4" /> Search
+              <Search className="w-4 h-4" />
+              <span>Search</span>
             </Link>
-            <hr className="border-gray-100 my-3" />
             {isAuthenticated && user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#5C5E62] hover:text-black w-full text-left">
-                  <Avatar
-                    name={user.full_name || "User"}
-                    src={user.avatar_url}
-                    size="sm"
-                    className="w-4 h-4"
-                  />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 mt-2 z-50 bg-white/90 backdrop-blur-md rounded-xl shadow-lg border border-white/20">
-                  <DropdownMenuItem
-                    className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center"
-                    onClick={() => navigate("/profile")}
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center"
-                    onClick={() => navigate("/orders")}
-                  >
-                    <List className="w-4 h-4 mr-2" />
-                    Orders
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center"
-                    onClick={() => navigate("/messages")}
-                  >
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Messages
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center"
-                    onClick={() => navigate("/cart")}
-                  >
-                    <ShoppingBag className="w-4 h-4 mr-2" />
-                    Bag
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center"
-                    onClick={() => navigate("/wishlist")}
-                  >
-                    <Heart className="w-4 h-4 mr-2" />
-                    Wishlist
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={logout}
-                    className="px-3 py-2 text-red-500 hover:bg-red-50 flex items-center"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Link
+                to="/profile"
+                className="flex flex-1 items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium text-[#5C5E62] hover:text-black hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <Avatar
+                  name={user.full_name || "User"}
+                  src={user.avatar_url}
+                  size="sm"
+                  className="w-5 h-5"
+                />
+                <span>{user.full_name || "User"}</span>
+                <span
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    logout();
+                  }}
+                  className="text-red-500 hover:text-red-600 text-xs font-medium"
+                >
+                  Sign Out
+                </span>
+              </Link>
             ) : (
               <Link
                 to="/login"
-                className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#5C5E62] hover:text-black"
+                className="flex flex-1 items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium text-[#5C5E62] hover:text-black hover:bg-gray-50 rounded-lg transition-colors"
               >
                 <CircleUser className="w-4 h-4" />
+                <span>Sign In</span>
               </Link>
             )}
           </div>
