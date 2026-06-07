@@ -3,6 +3,7 @@ import ButtonBlue from "../ui/ButtonBlue";
 import ButtonWhite from "../ui/ButtonWhite";
 import { useEffect, useState, useRef } from "react";
 import { api } from "@/lib/api";
+import { imageUrl } from "@/lib/utils";
 
 interface BoxRightItem {
   badge: string;
@@ -107,7 +108,7 @@ export default function BrandBox({ data }: { data: BrandData }) {
               <div className="flex-[1.5] min-h-[350px] rounded-sm lg:min-h-full relative overflow-hidden">
                 <div className="absolute inset-0">
                   <img
-                    src={e.image}
+                    src={imageUrl(e.image)}
                     alt={e.badge}
                     className="w-full h-full object-cover"
                   />

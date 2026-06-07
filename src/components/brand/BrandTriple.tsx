@@ -2,6 +2,7 @@ import type { BrandData } from "@/lib/constants";
 import ButtonWhite from "../ui/ButtonWhite";
 import { useEffect, useState, useRef } from "react";
 import { api } from "@/lib/api";
+import { imageUrl } from "@/lib/utils";
 
 interface BoxTripItem {
   badge: string;
@@ -12,7 +13,7 @@ interface BoxTripItem {
 }
 
 export default function BrandTriple({ data }: { data: BrandData }) {
-  const ref = useRef();
+  const ref = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
   const [items, setItems] = useState<BoxTripItem[]>([]);
 
@@ -88,7 +89,7 @@ export default function BrandTriple({ data }: { data: BrandData }) {
         <div key={index} className="group">
           <section className="relative h-[740px] w-full overflow-hidden rounded-sm">
             <img
-              src={e.image}
+              src={imageUrl(e.image)}
               alt={e.badge}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             />

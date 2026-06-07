@@ -128,7 +128,7 @@ export default function Header() {
                 .map((seller) => (
                   <Link
                     key={seller.id}
-                    to={`/${encodeURIComponent(seller.full_name)}`}
+                    to={`/${encodeURIComponent(seller.full_name.toLowerCase())}`}
                     className={cn(
                       "block px-3 py-1.5 text-sm font-medium rounded-[4px] transition-colors",
                       currentSellerId === seller.id

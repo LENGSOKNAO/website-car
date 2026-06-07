@@ -3,6 +3,7 @@ import ButtonBlue from "../ui/ButtonBlue";
 import ButtonWhite from "../ui/ButtonWhite";
 import type { BrandData } from "@/lib/constants";
 import { api } from "@/lib/api";
+import { imageUrl } from "@/lib/utils";
 
 interface BoxTenItem {
   badge: string;
@@ -248,7 +249,7 @@ export default function BrandTenSlider({ data }: { data: BrandData }) {
                  >
                    <div className="relative h-[520px]  lg:h-[620px] rounded-sm  overflow-hidden bg-white shadow-2xl shadow-black/10 ring-1 ring-black/[0.06] transition-shadow duration-500">
                      <img
-                       src={e.image}
+                       src={imageUrl(e.image)}
                        alt={`${name} ${(index % originalCount) + 1}`}
                        loading="lazy"
                        className="w-full h-full object-cover pointer-events-none transition-transform duration-700 hover:scale-105"

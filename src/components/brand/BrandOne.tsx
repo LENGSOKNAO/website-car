@@ -2,6 +2,7 @@ import type { BrandData } from "@/lib/constants";
 import ButtonBlue from "../ui/ButtonBlue";
 import { useEffect, useState, useRef } from "react";
 import { api } from "@/lib/api";
+import { imageUrl } from "@/lib/utils";
 
 interface BoxOneItem {
   badge: string;
@@ -10,7 +11,7 @@ interface BoxOneItem {
 }
 
 export default function BrandOne({ data }: { data: BrandData }) {
-  const ref = useRef();
+  const ref = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
   const [items, setItems] = useState<BoxOneItem[]>([]);
 
@@ -86,7 +87,7 @@ export default function BrandOne({ data }: { data: BrandData }) {
         <div className={index > 0 ? "pb-5" : ""} key={index}>
           <div className="absolute inset-0">
             <img
-              src={banner.image}
+              src={imageUrl(banner.image)}
               alt={banner.badge}
               className="absolute inset-0 w-full h-full object-cover"
             />

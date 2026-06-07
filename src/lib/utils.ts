@@ -61,9 +61,12 @@ export function getInitials(name: string): string {
 
 const API_BASE = 'https://admin-car-beta.vercel.app'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export function imageUrl(url: string | null | undefined): string {
   if (!url) return ''
   if (url.startsWith('http://') || url.startsWith('https://')) return url
+  if (UUID_RE.test(url)) return `${API_BASE}/api/files/${url}`
   if (url.startsWith('/')) return `${API_BASE}${url}`
   return `${API_BASE}/${url}`
 }

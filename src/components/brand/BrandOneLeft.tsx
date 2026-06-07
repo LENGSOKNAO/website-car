@@ -2,6 +2,7 @@ import type { BrandData } from "@/lib/constants";
 import ButtonBlue from "../ui/ButtonBlue";
 import { useEffect, useState, useRef } from "react";
 import { api } from "@/lib/api";
+import { imageUrl } from "@/lib/utils";
 
 interface BoxLeftItem {
   badge: string;
@@ -9,7 +10,7 @@ interface BoxLeftItem {
 }
 
 export default function BrandOneLeft({ data }: { data: BrandData }) {
-  const ref = useRef();
+  const ref = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
   const [items, setItems] = useState<BoxLeftItem[]>([]);
 
@@ -89,7 +90,7 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
               <div className="flex-[1.5] min-h-[350px] lg:min-h-full rounded-sm relative overflow-hidden">
                 <div className="absolute inset-0">
                   <img
-                    src={banner.image}
+                    src={imageUrl(banner.image)}
                     alt={banner.badge}
                     className="w-full h-full object-cover"
                   />

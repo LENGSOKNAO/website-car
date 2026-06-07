@@ -49,7 +49,7 @@ export default function BrandSlider({ data }: { data: BrandData }) {
   const prev = () => setCurrent((p) => (p - 1 + slides.length) % slides.length);
   const next = () => setCurrent((p) => (p + 1) % slides.length);
 
-  const ref = useRef();
+  const ref = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
 
   useEffect(() => {
