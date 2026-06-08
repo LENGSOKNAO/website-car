@@ -34,14 +34,24 @@ export default function BrandsSection() {
   const doubled = [...sellers, ...sellers]
 
   return (
-    <section className="py-20 relative overflow-hidden">
+    <section className="py-20 relative overflow-hidden border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+        >
+          <p className="text-xs text-white/30 uppercase tracking-widest mb-2">Our Network</p>
+          <h2 className="text-2xl md:text-3xl font-bold text-white">Trusted Sellers</h2>
+        </motion.div>
+      </div>
       <div
         className="overflow-hidden"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
         <motion.div
-          className="flex gap-12 md:gap-16 items-center"
+          className="flex gap-14 md:gap-20 items-center"
           animate={paused ? { x: 0 } : { x: ['0%', '-50%'] }}
           transition={paused ? {} : { duration: 50, ease: 'linear', repeat: Infinity }}
         >
@@ -53,14 +63,16 @@ export default function BrandsSection() {
                 to={`/listings?seller_id=${seller.id}`}
                 className="flex flex-col items-center gap-3 shrink-0 group"
               >
-                {seller.avatar_url && (
-                  <img
-                    src={imageUrl(seller.avatar_url)}
-                    alt={name}
-                    className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover ring-2 ring-white/10 group-hover:ring-blue-400/50 transition-all duration-500"
-                  />
-                )}
-                <span className="text-sm md:text-base text-white/40 group-hover:text-white transition-colors whitespace-nowrap">
+                <div className="relative">
+                  {seller.avatar_url && (
+                    <img
+                      src={imageUrl(seller.avatar_url)}
+                      alt={name}
+                      className="w-20 h-20 md:w-28 md:h-28 rounded-full object-cover ring-2 ring-white/10 group-hover:ring-blue-400/50 transition-all duration-500"
+                    />
+                  )}
+                </div>
+                <span className="text-sm md:text-base font-medium text-white/40 group-hover:text-white/90 transition-colors whitespace-nowrap">
                   {name}
                 </span>
               </Link>
