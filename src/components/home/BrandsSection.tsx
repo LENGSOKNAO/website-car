@@ -53,18 +53,12 @@ export default function BrandsSection() {
                 to={`/listings?seller_id=${seller.id}`}
                 className="flex flex-col items-center gap-3 shrink-0 group"
               >
-                {seller.avatar_url ? (
+                {seller.avatar_url && (
                   <img
                     src={imageUrl(seller.avatar_url)}
                     alt={name}
                     className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover ring-2 ring-white/10 group-hover:ring-blue-400/50 transition-all duration-500"
                   />
-                ) : (
-                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/5 ring-2 ring-white/10 group-hover:ring-blue-400/50 flex items-center justify-center transition-all duration-500">
-                    <span className="text-lg md:text-xl font-bold text-white/40 group-hover:text-white/70">
-                      {name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-                    </span>
-                  </div>
                 )}
                 <span className="text-sm md:text-base text-white/40 group-hover:text-white transition-colors whitespace-nowrap">
                   {name}
