@@ -9,7 +9,7 @@ export default function BrandsSection() {
   const [paused, setPaused] = useState(false)
 
   useEffect(() => {
-    api.users({ is_dealer: 'true' })
+    api.users()
       .then((res: any) => {
         const raw = res?.data?.data ?? res?.data ?? res ?? []
         setSellers(Array.isArray(raw) ? raw : [])
