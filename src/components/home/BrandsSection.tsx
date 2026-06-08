@@ -8,8 +8,9 @@ export default function BrandsSection() {
   useEffect(() => {
     const fetchSellers = async () => {
       try {
-        const res = await api.sliders()
-        const raw = (res as any)?.data?.data ?? (res as any)?.data ?? res ?? []
+        const res = await fetch('/api/v1/web/sliders')
+        const json = await res.json()
+        const raw = json?.data?.data ?? json?.data ?? json ?? []
         const list = Array.isArray(raw) ? raw : []
         const map = new Map<string, any>()
         for (const s of list) {
