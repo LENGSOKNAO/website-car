@@ -9,10 +9,11 @@ export default function BrandsSection() {
   const [paused, setPaused] = useState(false)
 
   useEffect(() => {
-    api.users()
+    api.users({ role: 'seller' })
       .then((res: any) => {
         const raw = res?.data?.data ?? res?.data ?? res ?? []
-        setSellers(Array.isArray(raw) ? raw : [])
+        const list = Array.isArray(raw) ? raw : []
+        setSellers(list.filter((u: any) => u.role === 'seller'))
       })
       .catch(() => {})
   }, [])
