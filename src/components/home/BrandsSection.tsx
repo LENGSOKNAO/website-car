@@ -9,14 +9,30 @@ export default function BrandsSection() {
   const [paused, setPaused] = useState(false)
 
   useEffect(() => {
-    api.users()
-      .then((res: any) => {
-        const raw = res?.data?.data ?? res?.data ?? res ?? []
+    const fetchSellers = async () => {
+      try {
+        const res = await api.users()
+        const raw = (res as any)?.data?.data ?? (res as any)?.data ?? res ?? []
         const list = Array.isArray(raw) ? raw : []
         const filtered = list.filter((u: any) => u.role === 'seller' || u.is_dealer)
-        setSellers(filtered.length > 0 ? filtered : list)
-      })
-      .catch(() => {})
+        if (filtered.length > 0) { setSellers(filtered); return }
+        if (list.length > 0) { setSellers(list); return }
+      } catch { /* ignore */ }
+      try {
+        const res = await api.sliders()
+        const raw = (res as any)?.data?.data ?? (res as any)?.data ?? res ?? []
+        const list = Array.isArray(raw) ? raw : []
+        const map = new Map<string, any>()
+        for (const s of list) {
+          const u = s.user
+          if (u?.id && !map.has(u.id)) {
+            map.set(u.id, { ...u, avatar_url: u.avatar_url ?? u.avatar ?? u.image })
+          }
+        }
+        if (map.size > 0) setSellers(Array.from(map.values()))
+      } catch { /* ignore */ }
+    }
+    fetchSellers()
   }, [])
 
   const doubled = [...sellers, ...sellers]
