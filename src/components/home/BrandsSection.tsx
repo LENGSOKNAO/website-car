@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { Store } from 'lucide-react'
 import { api } from '@/lib/api'
 import { imageUrl } from '@/lib/utils'
 
@@ -64,12 +65,16 @@ export default function BrandsSection() {
                 className="flex flex-col items-center gap-3 shrink-0 group"
               >
                 <div className="relative">
-                  {seller.avatar_url && (
+                  {seller.avatar_url ? (
                     <img
                       src={imageUrl(seller.avatar_url)}
                       alt={name}
                       className="w-20 h-20 md:w-28 md:h-28 rounded-full object-cover ring-2 ring-white/10 group-hover:ring-blue-400/50 transition-all duration-500"
                     />
+                  ) : (
+                    <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-white/5 ring-2 ring-white/10 group-hover:ring-white/20 flex items-center justify-center transition-all duration-500">
+                      <Store className="w-8 h-8 md:w-10 md:h-10 text-white/20 group-hover:text-white/40 transition-colors" />
+                    </div>
                   )}
                 </div>
                 <span className="text-sm md:text-base font-medium text-white/40 group-hover:text-white/90 transition-colors whitespace-nowrap">
