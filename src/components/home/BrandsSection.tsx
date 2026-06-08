@@ -1,25 +1,23 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { BRANDS, BRAND_PAGES } from '@/lib/constants'
-
-const logoUrls: Record<string, string> = {
-  tesla: 'https://cdn.simpleicons.org/tesla/black',
-  bmw: 'https://cdn.simpleicons.org/bmw/black',
-  bugatti: 'https://cdn.simpleicons.org/bugatti/black',
-  nissan: 'https://cdn.simpleicons.org/nissan/black',
-  porsche: 'https://cdn.simpleicons.org/porsche/black',
-}
+import { api } from '@/lib/api'
+import { imageUrl } from '@/lib/utils'
 
 export default function BrandsSection() {
+  const [sellers, setSellers] = useState<any[]>([])
   const [paused, setPaused] = useState(false)
 
-  const logos = BRANDS.map((brand) => {
-    const pageData = BRAND_PAGES.find((p) => p.slug === brand.slug)
-    return { ...brand, route: pageData?.route ?? `/${brand.slug}` }
-  })
+  useEffect(() => {
+    api.users({ is_dealer: 'true' })
+      .then((res: any) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? []
+        setSellers(Array.isArray(raw) ? raw : [])
+      })
+      .catch(() => {})
+  }, [])
 
-  const doubled = [...logos, ...logos]
+  const doubled = [...sellers, ...sellers]
 
   return (
     <section className="py-16 bg-gray-50 relative overflow-hidden">
@@ -33,17 +31,28 @@ export default function BrandsSection() {
           animate={paused ? { x: 0 } : { x: ['0%', '-50%'] }}
           transition={paused ? {} : { duration: 30, ease: 'linear', repeat: Infinity }}
         >
-          {doubled.map((brand, i) => (
+          {doubled.map((seller, i) => (
             <Link
-              key={`${brand.slug}-${i}`}
-              to={brand.route}
-              className="block shrink-0"
+              key={`${seller.id}-${i}`}
+              to={`/listings?seller_id=${seller.id}`}
+              className="flex flex-col items-center gap-2 shrink-0 group"
             >
-              <img
-                src={logoUrls[brand.slug]}
-                alt={brand.name}
-                className="h-14 md:h-20 object-contain hover:scale-110 transition-transform duration-500"
-              />
+              {seller.avatar_url ? (
+                <img
+                  src={imageUrl(seller.avatar_url)}
+                  alt={seller.full_name}
+                  className="w-14 h-14 md:w-20 md:h-20 rounded-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+              ) : (
+                <div className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-gray-200 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                  <span className="text-sm md:text-base font-semibold text-gray-600">
+                    {seller.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <span className="text-xs md:text-sm text-gray-500 group-hover:text-gray-900 transition-colors whitespace-nowrap">
+                {seller.full_name}
+              </span>
             </Link>
           ))}
         </motion.div>
