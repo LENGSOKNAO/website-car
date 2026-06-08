@@ -26,7 +26,7 @@ export default function BrandsSection() {
         for (const s of list) {
           const u = s.user
           if (u?.id && !map.has(u.id)) {
-            map.set(u.id, { ...u, avatar_url: u.avatar_url ?? u.avatar ?? u.image })
+            map.set(u.id, { ...u, full_name: u.full_name ?? u.name, avatar_url: u.avatar_url ?? u.avatar ?? u.image })
           }
         }
         if (map.size > 0) setSellers(Array.from(map.values()))
@@ -55,9 +55,9 @@ export default function BrandsSection() {
               to={`/listings?seller_id=${seller.id}`}
               className="flex flex-col items-center gap-2 shrink-0 group"
             >
-              <Avatar name={seller.full_name} src={seller.avatar_url} size="lg" />
+              <Avatar name={seller.full_name ?? seller.name ?? 'Seller'} src={seller.avatar_url} size="lg" />
               <span className="text-xs md:text-sm text-gray-500 group-hover:text-gray-900 transition-colors whitespace-nowrap">
-                {seller.full_name}
+                {seller.full_name ?? seller.name ?? 'Seller'}
               </span>
             </Link>
           ))}
