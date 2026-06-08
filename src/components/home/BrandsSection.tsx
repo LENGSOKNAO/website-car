@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ChevronRight } from 'lucide-react'
 import { api } from '@/lib/api'
-import Avatar from '@/components/ui/Avatar'
+import { imageUrl } from '@/lib/utils'
 
 export default function BrandsSection() {
   const [sellers, setSellers] = useState<any[]>([])
@@ -41,62 +40,45 @@ export default function BrandsSection() {
   const doubled = [...sellers, ...sellers]
 
   return (
-    <section className="py-20 bg-dark-950 relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-        >
-          <p className="text-xs text-dark-400 uppercase tracking-widest mb-2">
-            Trusted Partners
-          </p>
-          <h2 className="text-2xl md:text-3xl font-bold text-white">
-            Our Verified Sellers
-          </h2>
-        </motion.div>
-      </div>
-
+    <section className="py-24 relative overflow-hidden">
       <div
         className="overflow-hidden"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
         <motion.div
-          className="flex gap-6 items-stretch"
+          className="flex gap-10 md:gap-16 items-center"
           animate={paused ? { x: 0 } : { x: ['0%', '-50%'] }}
-          transition={paused ? {} : { duration: 45, ease: 'linear', repeat: Infinity }}
+          transition={paused ? {} : { duration: 60, ease: 'linear', repeat: Infinity }}
         >
           {doubled.map((seller, i) => {
             const name = seller.full_name ?? seller.name ?? 'Seller'
+            const avatarSrc = seller.avatar_url ? imageUrl(seller.avatar_url) : ''
             return (
               <Link
                 key={`${seller.id}-${i}`}
                 to={`/listings?seller_id=${seller.id}`}
-                className="group shrink-0"
+                className="flex flex-col items-center gap-4 shrink-0 group"
               >
-                <div className="w-44 md:w-52 bg-dark-900 border border-dark-800 rounded-xl p-5 hover:border-blue-500/30 transition-all duration-300">
-                  <div className="flex flex-col items-center text-center gap-3">
-                    <div className="relative">
-                      <Avatar name={name} src={seller.avatar_url} size="lg" />
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-dark-900" />
+                <div className="relative">
+                  {avatarSrc ? (
+                    <img
+                      src={avatarSrc}
+                      alt={name}
+                      className="w-24 h-24 md:w-28 md:h-28 rounded-full object-cover ring-2 ring-white/10 group-hover:ring-blue-400/50 transition-all duration-500"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 md:w-28 md:h-28 rounded-full bg-white/5 ring-2 ring-white/10 group-hover:ring-blue-400/50 flex items-center justify-center transition-all duration-500">
+                      <span className="text-xl md:text-2xl font-bold text-white/40 group-hover:text-white/70 transition-colors">
+                        {name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors leading-tight">
-                        {seller.dealer_name || name}
-                      </p>
-                      {seller.dealer_name && (
-                        <p className="text-xs text-dark-400 mt-0.5">{name}</p>
-                      )}
-                      {seller.location && (
-                        <p className="text-xs text-dark-400 mt-1">{seller.location}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                      View Listings <ChevronRight className="w-3 h-3" />
-                    </div>
-                  </div>
+                  )}
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-[3px] border-white/5" />
                 </div>
+                <span className="text-base md:text-lg font-medium text-white/60 group-hover:text-white transition-colors whitespace-nowrap">
+                  {seller.dealer_name || name}
+                </span>
               </Link>
             )
           })}
