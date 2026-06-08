@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { api } from '@/lib/api'
-import { imageUrl } from '@/lib/utils'
+import Avatar from '@/components/ui/Avatar'
 
 export default function BrandsSection() {
   const [sellers, setSellers] = useState<any[]>([])
@@ -37,19 +37,7 @@ export default function BrandsSection() {
               to={`/listings?seller_id=${seller.id}`}
               className="flex flex-col items-center gap-2 shrink-0 group"
             >
-              {seller.avatar_url ? (
-                <img
-                  src={imageUrl(seller.avatar_url)}
-                  alt={seller.full_name}
-                  className="w-14 h-14 md:w-20 md:h-20 rounded-full object-cover group-hover:scale-110 transition-transform duration-500"
-                />
-              ) : (
-                <div className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-gray-200 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                  <span className="text-sm md:text-base font-semibold text-gray-600">
-                    {seller.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()}
-                  </span>
-                </div>
-              )}
+              <Avatar name={seller.full_name} src={seller.avatar_url} size="lg" />
               <span className="text-xs md:text-sm text-gray-500 group-hover:text-gray-900 transition-colors whitespace-nowrap">
                 {seller.full_name}
               </span>
