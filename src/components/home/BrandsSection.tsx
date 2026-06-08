@@ -1,42 +1,25 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { api } from '@/lib/api'
+
 export default function BrandsSection() {
   const [sellers, setSellers] = useState<any[]>([])
 
   useEffect(() => {
-    const fetchSellers = async () => {
-      try {
-        const res = await fetch('/api/v1/web/sliders')
-        const text = await res.text()
-        console.log('sliders response:', text.slice(0, 500))
-        const json = JSON.parse(text)
-        const raw = json?.data?.data ?? json?.data ?? json ?? []
+    api.sliders()
+      .then((res: any) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? []
         const list = Array.isArray(raw) ? raw : []
-        if (list.length > 0) {
-          const map = new Map<string, any>()
-          for (const s of list) {
-            const u = s.user
-            if (u?.id && !map.has(u.id)) {
-              map.set(u.id, { ...u, full_name: u.full_name ?? u.name })
-            }
+        const map = new Map<string, any>()
+        for (const s of list) {
+          const u = s.user
+          if (u?.id && !map.has(u.id)) {
+            map.set(u.id, { ...u, full_name: u.full_name ?? u.name })
           }
-          if (map.size > 0) { setSellers(Array.from(map.values())); return }
         }
-      } catch { /* ignore */ }
-      try {
-        const res = await fetch('/api/v1/users')
-        const text = await res.text()
-        console.log('users response:', text.slice(0, 500))
-        const json = JSON.parse(text)
-        const raw = json?.data?.data ?? json?.data ?? json ?? []
-        const list = Array.isArray(raw) ? raw : []
-        if (list.length > 0) {
-          const filtered = list.filter((u: any) => u.role === 'seller' || u.is_dealer)
-          setSellers(filtered.length > 0 ? filtered : list)
-        }
-      } catch { /* ignore */ }
-    }
-    fetchSellers()
+        if (map.size > 0) { setSellers(Array.from(map.values())); return }
+      })
+      .catch(() => {})
   }, [])
 
   if (sellers.length === 0) return null
