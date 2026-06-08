@@ -2,40 +2,47 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Search, ArrowRight, Star, ChevronRight, ChevronLeft } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import img1 from '@/assets/slider/gtr/2024-nissan-gt-r-sports-car-light-green-side-profile-view.webp'
-import img2 from '@/assets/slider/tesla/Homepage-Card-Model-3-Desktop-US_PR_MX.avif'
-import img3 from '@/assets/slider/tesla/Homepage-Vehicle-Card-Model-Y-Desktop-US-Snow.avif'
-import img4 from '@/assets/slider/bugati/tourbillon-modelpage-02-scrollvideo-desktop.jpg'
-import img5 from '@/assets/slider/bmw/X5-xDrive-40i-BMW-MAY-2026-OFFERS_16to7.webp'
-
-const SLIDES = [
-  { src: img1, brand: 'Nissan GT-R', model: 'Godzilla' },
-  { src: img2, brand: 'Tesla', model: 'Model 3' },
-  { src: img3, brand: 'Tesla', model: 'Model Y' },
-  { src: img4, brand: 'Bugatti', model: 'Tourbillon' },
-  { src: img5, brand: 'BMW', model: 'X5' },
-]
+import { cn, imageUrl } from '@/lib/utils'
+import { api } from '@/lib/api'
 
 export default function HeroSection() {
+  const [slides, setSlides] = useState<any[]>([])
   const [current, setCurrent] = useState(0)
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrent(p => (p + 1) % SLIDES.length), 4000)
-    return () => clearInterval(timer)
+    api.sliders()
+      .then((res: any) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? []
+        const list = Array.isArray(raw) ? raw : []
+        const sellerMap = new Map<string, any>()
+        for (const s of list) {
+          const key = s.user?.id ?? s.seller_id ?? s.id
+          if (!sellerMap.has(key)) {
+            sellerMap.set(key, s)
+          }
+        }
+        setSlides(Array.from(sellerMap.values()))
+      })
+      .catch(() => {})
   }, [])
 
-  const prev = () => setCurrent(p => (p - 1 + SLIDES.length) % SLIDES.length)
-  const next = () => setCurrent(p => (p + 1) % SLIDES.length)
+  useEffect(() => {
+    if (slides.length === 0) return
+    const timer = setInterval(() => setCurrent(p => (p + 1) % slides.length), 4000)
+    return () => clearInterval(timer)
+  }, [slides.length])
+
+  const prev = () => setCurrent(p => (p - 1 + slides.length) % slides.length)
+  const next = () => setCurrent(p => (p + 1) % slides.length)
 
   return (
     <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-dark-975">
-      {SLIDES.map((slide, i) => (
-        <div key={i} className={cn(
+      {slides.map((slide, i) => (
+        <div key={slide.id ?? i} className={cn(
           'absolute inset-0 transition-all duration-700',
           i === current ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
         )}>
-          <img src={slide.src} alt={`${slide.brand} ${slide.model}`}
+          <img src={imageUrl(slide.image)} alt={slide.title ?? ''}
             className="w-full h-full object-cover" />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(70deg, black 0%, black 10%, transparent 80%)' }} />
           <div className="absolute inset-0 bg-dark-975/30" />
@@ -132,7 +139,7 @@ export default function HeroSection() {
 
         <div className="absolute bottom-8 right-8 z-10 hidden sm:block">
           <p className="text-xs text-white/70 font-medium bg-black/30 px-2 py-1 rounded-sm">
-            {SLIDES[current].brand} — {SLIDES[current].model}
+            {slides[current]?.badge ?? slides[current]?.title ?? ''}
           </p>
         </div>
       </div>
