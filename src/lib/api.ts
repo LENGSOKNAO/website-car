@@ -1,4 +1,4 @@
-import type { SavedListing, Inquiry, Offer, Conversation } from "./types";
+import type { SavedListing, Inquiry, Offer, Conversation, Order } from "./types";
 
 const API_BASE = "/api/v1";
 
@@ -183,8 +183,20 @@ export const api = {
   models: (makeId: string) => request<any[]>(`/makes/${makeId}/models`),
   sendInquiry: (data: { listing_id: string; message: string; phone_number?: string }) =>
     request<any>('/inquiries', { method: 'POST', body: JSON.stringify(data) }),
-  makeOffer: (data: { listing_id: string; offered_price: number }) =>
+  makeOffer: (data: { listing_id: string; offered_price: number; payment_method: 'finance' | 'cash'; down_payment?: number; loan_term?: number; accessories?: { id: string; name: string; price: number }[] }) =>
     request<any>('/offers', { method: 'POST', body: JSON.stringify(data) }),
+  orders: (params?: Record<string, string | number | undefined | null | boolean>) => {
+    const query = params ? '?' + new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
+        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+    ).toString() : ''
+    return request<any>(`/orders${query}`)
+  },
+  order: (id: string) => request<any>(`/orders/${id}`),
+  createOrder: (data: { listing_id: string; offer_id?: string; payment_method: string; notes?: string }) =>
+    request<any>('/orders', { method: 'POST', body: JSON.stringify(data) }),
+  payInstallment: (orderId: string, data: { month_number: number; transaction_id: string }) =>
+    request<any>(`/orders/${orderId}/pay-installment`, { method: 'POST', body: JSON.stringify(data) }),
   users: (params?: Record<string, string>) => {
     const query = params ? '?' + new URLSearchParams(params).toString() : ''
     return request<any>(`/users${query}`)

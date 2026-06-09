@@ -111,6 +111,14 @@ body {
   box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.1);
 }
 
+.card-hover {
+  transition: all 0.3s ease;
+}
+.card-hover:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.15);
+}
+
 .img-zoom { overflow: hidden; }
 .img-zoom img {
   transition: transform 0.5s ease;

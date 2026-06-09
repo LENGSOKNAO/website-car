@@ -72,7 +72,6 @@ export default function App() {
               />
             ))}
             <Route path="/listings" element={<Listings />} />
-            <Route path="/listings/:id" element={<ListingDetail />} />
             <Route path="/financing" element={<Financing />} />
             <Route path="/trade-in" element={<TradeIn />} />
             <Route path="/sell" element={<SellCar />} />
@@ -89,6 +88,7 @@ export default function App() {
             <Route path="/seller/admin" element={<SellerAdmin />} />
             <Route path="*" element={<NotFound />} />
           </Route>
+          <Route path="/listings/:id" element={<ListingDetail />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

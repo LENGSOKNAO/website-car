@@ -1,89 +1,74 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { MapPin, Gauge, Heart, Car, Loader } from 'lucide-react'
-import type { CarListing } from '@/lib/types'
-import { formatPrice, cn, imageUrl } from '@/lib/utils'
-import Badge from '@/components/ui/Badge'
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Car, Loader, ChevronDown } from "lucide-react";
+import type { CarListing } from "@/lib/types";
+import { formatPrice, cn, imageUrl } from "@/lib/utils";
 
 interface CarCardProps {
-  listing: CarListing
-  layout?: 'grid' | 'list'
-  index?: number
-  isSaved?: boolean
-  onSave?: (id: string) => void
+  listing: CarListing;
+  index?: number;
 }
 
-export default function CarCard({ listing, layout = 'grid', index = 0, isSaved, onSave }: CarCardProps) {
-  const img = listing.primary_image || listing.images?.[0]
-  const [imgLoaded, setImgLoaded] = useState(false)
-  const isNew = listing.condition?.toLowerCase() === 'new'
-  const isCertified = listing.condition?.toLowerCase() === 'certified pre-owned'
-  const discount = listing.original_price ? Math.round((1 - listing.price / listing.original_price) * 100) : 0
+export default function CarCard({ listing, index = 0 }: CarCardProps) {
+  const img = listing.primary_image || listing.images?.[0];
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const price = Number(listing.price);
+  const origPrice = listing.original_price
+    ? Number(listing.original_price)
+    : null;
 
-  const Wrap = layout === 'grid' ? motion.div : motion.div
-  const delay = index * 0.04
+  const delay = index * 0.04;
 
   return (
-    <Wrap
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ delay }}
-      className={cn(
-        'group rounded-2xl border bg-dark-975 overflow-hidden card-hover-dark',
-        layout === 'grid' ? 'border-dark-800' : 'border-dark-800'
-      )}
+      className="relative h-screen w-full bg-white"
     >
-      <Link to={`/listings/${listing.id}`} className={layout === 'list' ? 'flex' : 'block'}>
-        {/* Image */}
-        <div className={cn('relative overflow-hidden bg-dark-900', layout === 'grid' ? 'aspect-[4/3]' : 'w-72 h-full min-h-[180px]')}>
-          {img ? (
-            <>
-              {!imgLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-dark-900">
-                  <Loader className="w-6 h-6 text-dark-500 animate-spin" />
-                </div>
-              )}
-              <img src={imageUrl(img.image_url)} alt="" onLoad={() => setImgLoaded(true)} className={cn('w-full h-full object-cover group-hover:scale-105 transition-transform duration-700', !imgLoaded && 'hidden')} />
-            </>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center"><Car className="w-12 h-12 text-dark-700" /></div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-dark-975 via-transparent to-transparent" />
-          <div className="absolute top-3 left-3 flex gap-2">
-            {isNew && <Badge variant="success">New</Badge>}
-            {isCertified && <Badge variant="info">Certified</Badge>}
-            {listing.condition === 'used' && <Badge>Used</Badge>}
-            {discount > 0 && <Badge variant="premium">-{discount}%</Badge>}
-          </div>
-          <div className="absolute bottom-3 left-3">
-            <span className="text-lg font-bold text-white">{formatPrice(listing.price)}</span>
-          </div>
-          {onSave && (
-            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSave(listing.id) }}
-              className={cn('absolute top-3 right-3 p-2 rounded-xl backdrop-blur-sm transition-all', isSaved ? 'bg-red-500/20 text-red-400' : 'bg-dark-975/60 text-dark-400 hover:text-white')}>
-              <Heart className={cn('w-4 h-4', isSaved && 'fill-red-400')} />
-            </button>
-          )}
-        </div>
-
-        {/* Info */}
-        <div className={layout === 'grid' ? 'p-4' : 'p-5 flex-1 flex flex-col justify-center'}>
-          <h3 className="text-sm font-semibold text-white truncate group-hover:text-blue-400 transition-colors">
-            {listing.year} {listing.make?.name} {listing.model?.name}
-          </h3>
-          {listing.location && (
-            <p className="flex items-center gap-1 text-xs text-dark-500 mt-1"><MapPin className="w-3 h-3" /> {listing.location}</p>
-          )}
-          <div className="flex items-center gap-3 mt-2">
-            {listing.mileage && (
-              <span className="text-xs text-dark-400 flex items-center gap-1"><Gauge className="w-3 h-3" />{listing.mileage.toLocaleString()} mi</span>
+      <Link to={`/listings/${listing.id}`} className="block h-full">
+        {img ? (
+          <>
+            {!imgLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
+                <Loader className="w-10 h-10 text-gray-300 animate-spin" />
+              </div>
             )}
-            {listing.fuel_type && <span className="text-xs text-dark-400">{listing.fuel_type}</span>}
-            {listing.transmission && <span className="text-xs text-dark-400">{listing.transmission}</span>}
+            <img
+              src={imageUrl(img.image_url)}
+              alt=""
+              onLoad={() => setImgLoaded(true)}
+              className={cn(
+                "w-full h-full object-cover",
+                !imgLoaded && "hidden",
+              )}
+            />
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-50">
+            <Car className="w-20 h-20 text-gray-300" />
+          </div>
+        )}
+
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/90 to-transparent pb-16 pt-32">
+          <div className="flex flex-col items-center text-center px-8">
+            <h2 className="text-2xl md:text-4xl font-medium text-gray-00">
+              {listing.model?.name}
+            </h2>
+
+            <button className="mt-6 px-20 py-3 rounded-sm bg-blue-500 text-white text-sm font-medium hover:bg-blue-400 cursor-pointer transition-colors">
+              Order Now
+            </button>
           </div>
         </div>
       </Link>
-    </Wrap>
-  )
+
+      {index === 0 && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 animate-bounce">
+          <ChevronDown className="w-5 h-5 text-gray-300" />
+        </div>
+      )}
+    </motion.div>
+  );
 }

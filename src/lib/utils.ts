@@ -59,7 +59,7 @@ export function getInitials(name: string): string {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
-const API_BASE = 'https://admin-car-beta.vercel.app'
+const API_BASE = 'https://store-car-seven.vercel.app'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 

@@ -22,7 +22,7 @@ const socials = [
 ];
 
 const shopLinks = [
-  { label: "Browse Cars", href: "/listings" },
+  { label: "Find a Vehicle", href: "/listings" },
   { label: "New Cars", href: "/listings?condition=new" },
   { label: "Used Cars", href: "/listings?condition=used" },
   { label: "Certified Pre-Owned", href: "/listings?condition=certified" },

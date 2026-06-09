@@ -65,7 +65,7 @@ export default function SearchPage() {
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="min-h-screen bg-white">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="min-h-screen">
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
           <div className="relative">
@@ -76,7 +76,7 @@ export default function SearchPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Search make, model, or keyword..."
-              className="w-full pl-12 pr-12 py-3.5 text-sm bg-gray-50 border border-gray-200 rounded-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 focus:bg-white transition-all"
+              className="w-full pl-12 pr-12 py-3.5 text-sm bg-white border border-gray-200 rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-500/40 transition-all"
             />
             {input && (
               <button type="button" onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600">
@@ -107,13 +107,13 @@ export default function SearchPage() {
               <p className="text-gray-500 text-sm mt-1">Type a make, model, or keyword to find your perfect car.</p>
             </div>
           ) : loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="aspect-[4/3] rounded-sm bg-gray-100 animate-pulse" />
+                <div key={i} className="h-72 md:h-80 rounded-2xl bg-gray-100 animate-pulse" />
               ))}
             </div>
           ) : listings.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {listings.map((listing, i) => (
                 <CarCard key={listing.id} listing={listing} index={i} isSaved={savedIds.has(listing.id)} onSave={handleSave} />
               ))}

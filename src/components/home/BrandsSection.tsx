@@ -69,30 +69,35 @@ export default function BrandsSection() {
           {doubled.map((seller, i) => {
             const name =
               seller.dealer_name || seller.full_name || seller.name || "Seller";
-            return (
-              <Link
-                key={`${seller.id}-${i}`}
-                to={`/${encodeURIComponent(seller.full_name.toLowerCase())}`}
-                className="flex flex-col items-center gap-3 shrink-0 group"
-              >
-                <div className="relative">
-                  {seller.avatar_url ? (
-                    <img
-                      src={imageUrl(seller.avatar_url)}
-                      alt={name}
-                      className="w-20 h-20 md:w-28 md:h-28 rounded-full object-cover ring-2 ring-white/10 group-hover:ring-blue-400/50 transition-all duration-500"
-                    />
-                  ) : (
-                    <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-white/5 ring-2 ring-white/10 group-hover:ring-white/20 flex flex-col items-center justify-center gap-1 transition-all duration-500">
-                      <Store className="w-6 h-6 md:w-8 md:h-8 text-white/20 group-hover:text-white/40 transition-colors" />
-                      <span className="text-[10px] md:text-xs font-medium text-white/40 group-hover:text-white/70 transition-colors leading-tight text-center px-1">
-                        {name}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </Link>
-            );
+          return (
+            <Link
+              key={`${seller.id}-${i}`}
+              to={`/${encodeURIComponent(seller.full_name.toLowerCase())}`}
+              className="flex flex-col items-center gap-3 shrink-0 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-lg"
+            >
+              <div className="relative">
+                {seller.avatar_url ? (
+                  <img
+                    src={imageUrl(seller.avatar_url)}
+                    alt={name}
+                    className="w-20 h-20 md:w-28 md:h-28 rounded-full object-cover ring-2 ring-white/10 group-hover:ring-blue-400/50 transition-all duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-gray-100 group-hover:shadow-[0_8px_20px_rgba(0,0,0,0.08)] group-hover:border-gray-200 group-hover:-translate-y-0.5 group-hover:scale-105 flex flex-col items-center justify-center gap-1 transition-all duration-300">
+                    <Store className="w-6 h-6 md:w-8 md:h-8 text-gray-400 group-hover:text-gray-600 transition-colors duration-300" />
+                    <span className="text-[10px] md:text-xs font-medium text-gray-500 group-hover:text-gray-700 transition-colors text-center px-1">
+                      {seller.full_name}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Optional: Add name below for better UX */}
+              {/* <span className="text-xs text-gray-500 group-hover:text-gray-700 transition-colors">
+      {seller.full_name}
+    </span> */}
+            </Link>
+          );
           })}
         </motion.div>
       </div>

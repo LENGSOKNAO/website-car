@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/v1/:path*", "destination": "https://admin-car-beta.vercel.app/api/v1/:path*" },
+    { "source": "/api/v1/:path*", "destination": "https://store-car-seven.vercel.app/api/v1/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

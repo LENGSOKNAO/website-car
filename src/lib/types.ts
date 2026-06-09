@@ -106,6 +106,10 @@ export interface Offer {
   message: string | null
   status: string
   expires_at: string | null
+  payment_method: 'finance' | 'cash' | null
+  down_payment: number | null
+  loan_term: number | null
+  accessories: { id: string; name: string; price: number }[] | null
   listing: CarListing
   created_at: string
 }
@@ -132,6 +136,17 @@ export interface Message {
   created_at: string
 }
 
+export interface OrderInstallment {
+  id: string
+  order_id: string
+  month_number: number
+  amount: number
+  due_at: string
+  paid_at: string | null
+  status: 'pending' | 'paid' | 'overdue'
+  transaction_id: string | null
+}
+
 export interface Order {
   id: string
   buyer_id: string
@@ -145,7 +160,15 @@ export interface Order {
   notes: string | null
   placed_at: string
   completed_at: string | null
+  payment_method: 'finance' | 'cash' | null
+  down_payment: number | null
+  loan_term: number | null
+  monthly_payment: number | null
+  accessories: { id: string; name: string; price: number }[] | null
+  next_payment_due_at: string | null
   items: OrderItem[]
+  installments: OrderInstallment[]
+  seller: SellerProfile
 }
 
 export interface OrderItem {
