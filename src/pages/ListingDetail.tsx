@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   MapPin,
@@ -147,6 +147,7 @@ const offerAccessories: Accessory[] = [
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [listing, setListing] = useState<CarListing | null>(null);
   const [loading, setLoading] = useState(true);
   const [showOffer, setShowOffer] = useState(false);
@@ -304,30 +305,38 @@ export default function ListingDetail() {
 
   async function handleOffer(e: React.FormEvent) {
     e.preventDefault();
-    const totalPrice = offerNumeric + accessoryTotal;
-    const selectedAccessoryObjects = selectedAccessories.map((id) => {
-      const acc = offerAccessories.find((a) => a.id === id);
-      return acc ? { id: acc.id, name: acc.name, price: acc.price } : null;
-    }).filter(Boolean);
-    const offerData = {
+    const selectedAccessoryObjects = selectedAccessories
+      .map((id) => {
+        const acc = offerAccessories.find((a) => a.id === id);
+        return acc ? { id: acc.id, name: acc.name, price: acc.price } : null;
+      })
+      .filter(
+        (x): x is { id: string; name: string; price: number } => x !== null,
+      );
+    const orderData: Record<string, unknown> = {
       listing_id: d.id,
-      offered_price: totalPrice,
+      price: offerNumeric,
       payment_method: paymentMethod,
-      down_payment: paymentMethod === "finance" ? downPayment : totalPrice,
-      loan_term: paymentMethod === "finance" ? loanTerm : null,
-      accessories: selectedAccessoryObjects,
     };
+    if (paymentMethod === "finance") {
+      orderData.down_payment = downPayment;
+      orderData.loan_term = loanTerm;
+    }
+    if (selectedAccessoryObjects.length > 0) {
+      orderData.accessories = selectedAccessoryObjects;
+    }
     setSubmitting(true);
     setError("");
     try {
-      await api.makeOffer(offerData);
-      setSuccess("Offer submitted! Waiting for seller response.");
+      await api.createOrder(orderData as any);
+      setSuccess("Order placed! Redirecting...");
       setOfferPrice("");
       setShowOffer(false);
       setSelectedAccessories([]);
       setDownPayment(0);
+      setTimeout(() => navigate("/orders"), 1500);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Failed to place order");
     } finally {
       setSubmitting(false);
     }
@@ -538,7 +547,7 @@ export default function ListingDetail() {
                     className="w-full justify-center gap-2 bg-gray-900 text-white hover:bg-gray-800 rounded-sm"
                   >
                     <DollarSign className="w-4 h-4" />
-                    <span>Make Offer</span>
+                    <span>Buy Now</span>
                   </Button>
                 </div>
               ) : (
@@ -547,7 +556,7 @@ export default function ListingDetail() {
                     <DollarSign className="w-5 h-5 text-gray-400" />
                   </div>
                   <p className="text-sm text-gray-600 mb-3">
-                    Sign in to save vehicles or make offers
+                    Sign in to save vehicles or place orders
                   </p>
                   <Link
                     to="/login"

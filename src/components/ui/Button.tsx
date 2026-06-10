@@ -13,6 +13,7 @@ const variants: Record<string, string> = {
   ghost: 'text-gray-500 hover:text-gray-900 hover:bg-gray-100',
   danger: 'bg-red-600 text-white hover:bg-red-500',
   outline: 'border border-gray-300 text-gray-700 hover:border-gray-400 hover:text-gray-900',
+  dark: 'bg-gray-900 text-white hover:bg-gray-800 active:bg-gray-700',
 }
 
 const sizes: Record<string, string> = {

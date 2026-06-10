@@ -193,8 +193,15 @@ export const api = {
     return request<any>(`/orders${query}`)
   },
   order: (id: string) => request<any>(`/orders/${id}`),
-  createOrder: (data: { listing_id: string; offer_id?: string; payment_method: string; notes?: string }) =>
-    request<any>('/orders', { method: 'POST', body: JSON.stringify(data) }),
+  createOrder: (data: {
+    listing_id: string;
+    price: number;
+    payment_method: 'finance' | 'cash';
+    down_payment?: number;
+    loan_term?: number;
+    accessories?: { id: string; name: string; price: number }[];
+    message?: string;
+  }) => request<any>('/orders', { method: 'POST', body: JSON.stringify(data) }),
   payInstallment: (orderId: string, data: { month_number: number; transaction_id: string }) =>
     request<any>(`/orders/${orderId}/pay-installment`, { method: 'POST', body: JSON.stringify(data) }),
   users: (params?: Record<string, string>) => {
