@@ -44,6 +44,7 @@ export default function Messages() {
     msg: any;
     x: number;
     y: number;
+    menuWidth: number;
   } | null>(null);
 
   useEffect(() => {
@@ -580,7 +581,7 @@ export default function Messages() {
 
           <div
           className={cn(
-            "flex-1 flex flex-col bg-gray-50",
+            "flex-1 flex flex-col bg-gray-50 ",
             !selectedConv && !selectedUser && !sellerParam && "hidden md:flex",
           )}
         >
@@ -649,21 +650,32 @@ export default function Messages() {
                           )}
 onDoubleClick={(e) => {
                              if (isMine) {
+                               const menuWidth = 120;
+                               const x = e.clientX + menuWidth > window.innerWidth
+                                 ? window.innerWidth - menuWidth - 10
+                                 : e.clientX;
                                setActionMenu({
                                  msg,
-                                 x: e.clientX,
+                                 x,
                                  y: e.clientY,
+                                 menuWidth,
                                });
                              }
                            }}
                            onContextMenu={(e) => {
                              e.preventDefault();
-                             if (isMine)
+                             if (isMine) {
+                               const menuWidth = 120;
+                               const x = e.clientX + menuWidth > window.innerWidth
+                                 ? window.innerWidth - menuWidth - 10
+                                 : e.clientX;
                                setActionMenu({
                                  msg,
-                                 x: e.clientX,
+                                 x,
                                  y: e.clientY,
+                                 menuWidth,
                                });
+                             }
                            }}
                         >
                           {isEditing ? (
@@ -720,7 +732,11 @@ onDoubleClick={(e) => {
                             data-action-menu
                             className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]"
                             style={{
-                              left: actionMenu.x,
+                              left: actionMenu.x + actionMenu.menuWidth > (typeof window !== 'undefined' ? window.innerWidth : 1920)
+                                ? undefined,
+                              right: actionMenu.x + actionMenu.menuWidth > (typeof window !== 'undefined' ? window.innerWidth : 1920)
+                                ? (typeof window !== 'undefined' ? window.innerWidth : 1920) - actionMenu.x
+                                : undefined,
                               top: actionMenu.y,
                             }}
                             onClick={(e) => e.stopPropagation()}
