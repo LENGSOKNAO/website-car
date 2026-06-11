@@ -385,12 +385,14 @@ export default function Messages() {
                     const isEditing = editingId === msg.id;
                     return (
                       <div key={msg.id} className={cn("flex", isMine ? "justify-end" : "justify-start")}>
-                        <div className={cn(
-                          "max-w-[75%] px-3.5 py-2.5 rounded-lg text-sm relative",
-                          isMine
-                            ? "bg-gray-900 text-white rounded-br-sm"
-                            : "bg-white border border-gray-200 text-gray-900 rounded-bl-sm",
-                        )}>
+                        <div
+                          className={cn(
+                            "max-w-[75%] px-3.5 py-2.5 rounded-lg text-sm relative group",
+                            isMine
+                              ? "bg-gray-900 text-white rounded-br-sm"
+                              : "bg-white border border-gray-200 text-gray-900 rounded-bl-sm",
+                          )}
+                        >
                           {isEditing ? (
                             <div className="flex items-center gap-2">
                               <input
@@ -424,7 +426,7 @@ export default function Messages() {
                                   {msg.edited_at && <span className="ml-1">&middot; Edited</span>}
                                 </p>
                                 {isMine && (
-                                  <div className="flex items-center gap-1 ml-auto">
+                                  <div className="flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                                     <button
                                       onClick={() => handleEdit(msg)}
                                       className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
