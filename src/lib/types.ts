@@ -131,7 +131,7 @@ export interface Message {
   id: string
   conversation_id: string
   sender_id: string
-  message: string
+  content: string
   read_at: string | null
   created_at: string
 }

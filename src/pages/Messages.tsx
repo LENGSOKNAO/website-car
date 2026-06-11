@@ -620,26 +620,19 @@ export default function Messages() {
                         )}
                       </div>
                     </div>
-                    {conv.last_message &&
+{conv.last_message &&
                       String(conv.last_message.sender_id) !==
                         String(user?.id) && (
-                        <p className="text-xs text-gray-500 truncate mt-0.5">
-                          {/* {conv.last_message?.message || conv.subject || "No messages"} */}
-                          {messages.map((e) => (
-                            <div className="">{e.message}</div>
-                          ))}
-                        </p>
-                      )}
+                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                        {conv.last_message?.content || conv.subject || "No messages"}
+                      </p>
+                    )}
                     {conv.listing && (
                       <p className="text-[10px] text-blue-500 mt-0.5 truncate">
                         {conv.listing.make?.name || ""}{" "}
                         {conv.listing.model?.name || ""}
                       </p>
                     )}
-
-                    <p className="text-xs text-gray-500 truncate mt-0.5">
-                      {conv.last_message?.message || conv.subject || "No messages"}
-                    </p>
                   </div>
                 </button>
               ))}
