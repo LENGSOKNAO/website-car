@@ -34,10 +34,11 @@ export default function Messages() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [showActionsStates, setShowActionsStates] = useState<Record<string, boolean>>({});
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedMsgForAction, setSelectedMsgForAction] = useState<any>(null);
+  const [actionMenu, setActionMenu] = useState<{
+    msg: any;
+    x: number;
+    y: number;
+  } | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [allUsers, setAllUsers] = useState<any[]>([]);
@@ -50,15 +51,17 @@ export default function Messages() {
   const listingParam = searchParams.get("listing");
 
   useEffect(() => {
-    if (!isAuthenticated) { setLoading(false); return; }
-    api.conversations()
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+    api
+      .conversations()
       .then((res) => {
         const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        setConversations(Array.isArray(raw)
-          ? raw
-          : Array.isArray(raw?.data)
-            ? raw.data
-            : []);
+        setConversations(
+          Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [],
+        );
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -66,14 +69,13 @@ export default function Messages() {
 
   useEffect(() => {
     if (isAuthenticated && allUsers.length === 0) {
-      api.users()
+      api
+        .users()
         .then((res) => {
           const raw = res?.data?.data ?? res?.data ?? res ?? [];
-          setAllUsers(Array.isArray(raw)
-            ? raw
-            : Array.isArray(raw?.data)
-              ? raw.data
-              : []);
+          setAllUsers(
+            Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [],
+          );
         })
         .catch(() => {});
     }
@@ -82,7 +84,8 @@ export default function Messages() {
   useEffect(() => {
     if (selectedConv) {
       setMsgLoading(true);
-      api.conversationMessages(selectedConv)
+      api
+        .conversationMessages(selectedConv)
         .then((res) => {
           const raw = res?.data?.data ?? res?.data ?? res ?? [];
           const fetched = Array.isArray(raw)
@@ -91,7 +94,7 @@ export default function Messages() {
               ? raw.data
               : [];
           setMessages((prev) => {
-            const existing = new Set(prev.map(m => m.id));
+            const existing = new Set(prev.map((m) => m.id));
             const merged = [...prev];
             for (const m of fetched) {
               if (!existing.has(m.id)) merged.push(m);
@@ -118,14 +121,21 @@ export default function Messages() {
 
   useEffect(() => {
     clearTimeout(searchTimer.current);
-    if (!searchQuery.trim()) { setSearchResults([]); setSearching(false); return; }
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
     setSearching(true);
     searchTimer.current = setTimeout(() => {
       const q = searchQuery.trim().toLowerCase();
-      setSearchResults(allUsers.filter((u: any) =>
-        String(u.id) !== String(user?.id) &&
-        (u.full_name ?? u.name ?? u.email ?? "").toLowerCase().includes(q)
-      ));
+      setSearchResults(
+        allUsers.filter(
+          (u: any) =>
+            String(u.id) !== String(user?.id) &&
+            (u.full_name ?? u.name ?? u.email ?? "").toLowerCase().includes(q),
+        ),
+      );
       setSearching(false);
     }, 200);
     return () => clearTimeout(searchTimer.current);
@@ -150,11 +160,9 @@ export default function Messages() {
           setSearchResults([]);
           const convRes = await api.conversations();
           const raw = convRes?.data?.data ?? convRes?.data ?? convRes ?? [];
-          setConversations(Array.isArray(raw)
-            ? raw
-            : Array.isArray(raw?.data)
-              ? raw.data
-              : []);
+          setConversations(
+            Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [],
+          );
         }
         setInput("");
       } catch (e: any) {
@@ -164,12 +172,15 @@ export default function Messages() {
     } else if (selectedConv) {
       setSending(true);
       try {
-        const res = await api.replyConversation(selectedConv, { content: input.trim() });
-        const msg = res?.data?.data ?? res?.data;
-        if (msg) setMessages((prev) => {
-          if (prev.some(m => m.id === msg.id)) return prev;
-          return [...prev, msg];
+        const res = await api.replyConversation(selectedConv, {
+          content: input.trim(),
         });
+        const msg = res?.data?.data ?? res?.data;
+        if (msg)
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === msg.id)) return prev;
+            return [...prev, msg];
+          });
         setInput("");
       } catch (e: any) {
         console.error("Reply error:", e?.message || e);
@@ -179,9 +190,8 @@ export default function Messages() {
   }
 
   async function handleEdit(msg: any) {
-    setSelectedMsgForAction(msg);
+    setEditingId(msg.id);
     setEditContent(msg.content);
-    setShowEditDialog(true);
   }
 
   async function saveEdit(msgId: string) {
@@ -189,14 +199,10 @@ export default function Messages() {
       const res = await api.editMessage(msgId, { content: editContent.trim() });
       const updated = res?.data?.data ?? res?.data ?? res;
       if (updated) {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === msgId ? updated : m))
-        );
+        setMessages((prev) => prev.map((m) => (m.id === msgId ? updated : m)));
       }
       setEditingId(null);
       setEditContent("");
-      setShowEditDialog(false);
-      setSelectedMsgForAction(null);
     } catch (e: any) {
       console.error("Edit error:", e?.message || e);
     }
@@ -205,35 +211,32 @@ export default function Messages() {
   async function cancelEdit() {
     setEditingId(null);
     setEditContent("");
-    setShowEditDialog(false);
-    setSelectedMsgForAction(null);
   }
 
-  async function handleDelete(msg: any) {
-    setSelectedMsgForAction(msg);
-    setShowDeleteDialog(true);
-  }
-
-  async function confirmDelete() {
-    if (!selectedMsgForAction) return;
-    setDeletingId(selectedMsgForAction.id);
+  async function handleDelete(msgId: string) {
+    if (!window.confirm("Delete this message?")) return;
+    setDeletingId(msgId);
     try {
-      await api.deleteMessage(selectedMsgForAction.id);
-      setMessages((prev) => prev.filter((m) => m.id !== selectedMsgForAction.id));
+      await api.deleteMessage(msgId);
+      setMessages((prev) => prev.filter((m) => m.id !== msgId));
     } catch (e: any) {
       console.error("Delete error:", e?.message || e);
     }
     setDeletingId(null);
-    setShowDeleteDialog(false);
-    setSelectedMsgForAction(null);
   }
 
-  function getUserName(u: any) { return u?.full_name || u?.name || "Unknown"; }
-  function getUserAvatar(u: any) { return u?.avatar_url || u?.avatar || null; }
+  function getUserName(u: any) {
+    return u?.full_name || u?.name || "Unknown";
+  }
+  function getUserAvatar(u: any) {
+    return u?.avatar_url || u?.avatar || null;
+  }
 
   function handleSelectUser(u: any) {
     const existing = conversations.find(
-      (c) => String(c.sender_id) === String(u.id) || String(c.receiver_id) === String(u.id),
+      (c) =>
+        String(c.sender_id) === String(u.id) ||
+        String(c.receiver_id) === String(u.id),
     );
     if (existing) {
       setSelectedConv(existing.id);
@@ -252,8 +255,15 @@ export default function Messages() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center px-6">
           <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Sign in to view messages</h2>
-          <Link to="/login" className="inline-flex items-center px-6 py-2.5 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-full transition-colors">Sign In</Link>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Sign in to view messages
+          </h2>
+          <Link
+            to="/login"
+            className="inline-flex items-center px-6 py-2.5 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-full transition-colors"
+          >
+            Sign In
+          </Link>
         </div>
       </div>
     );
@@ -273,10 +283,12 @@ export default function Messages() {
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        <div className={cn(
-          "w-full md:w-80 lg:w-96 border-r border-gray-200 bg-white flex flex-col shrink-0",
-          selectedConv && "hidden md:flex",
-        )}>
+        <div
+          className={cn(
+            "w-full md:w-80 lg:w-96 border-r border-gray-200 bg-white flex flex-col shrink-0",
+            selectedConv && "hidden md:flex",
+          )}
+        >
           <div className="p-3 border-b border-gray-100">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -295,17 +307,28 @@ export default function Messages() {
 
           {searchQuery.trim() && searchResults.length > 0 ? (
             <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
-              <div className="px-4 py-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Search Results</div>
+              <div className="px-4 py-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                Search Results
+              </div>
               {searchResults.map((u: any) => (
                 <button
                   key={u.id}
                   onClick={() => handleSelectUser(u)}
                   className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
                 >
-                  <Avatar name={getUserName(u)} src={getUserAvatar(u)} size="sm" className="w-10 h-10 shrink-0" />
+                  <Avatar
+                    name={getUserName(u)}
+                    src={getUserAvatar(u)}
+                    size="sm"
+                    className="w-10 h-10 shrink-0"
+                  />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{getUserName(u)}</p>
-                    <p className="text-xs text-gray-500 truncate">{u.email || ""}</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">
+                      {getUserName(u)}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {u.email || ""}
+                    </p>
                   </div>
                   <Plus className="w-4 h-4 text-gray-400 shrink-0" />
                 </button>
@@ -331,33 +354,57 @@ export default function Messages() {
             <div className="flex-1 flex items-center justify-center p-6 text-center">
               <div>
                 <MessageSquare className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-                <p className="text-sm text-gray-500">No conversations yet. Search for users above.</p>
+                <p className="text-sm text-gray-500">
+                  No conversations yet. Search for users above.
+                </p>
               </div>
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
               {conversations.map((conv) => {
-                const other = String(conv.sender_id) === String(user?.id) ? conv.receiver : conv.sender;
+                const other =
+                  String(conv.sender_id) === String(user?.id)
+                    ? conv.receiver
+                    : conv.sender;
                 return (
                   <button
                     key={conv.id}
-                    onClick={() => { setSelectedConv(conv.id); setSelectedUser(null); }}
+                    onClick={() => {
+                      setSelectedConv(conv.id);
+                      setSelectedUser(null);
+                    }}
                     className={cn(
                       "w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-gray-50",
                       selectedConv === conv.id && "bg-blue-50",
                     )}
                   >
-                    <Avatar name={getUserName(other) || "U"} src={getUserAvatar(other)} size="sm" className="w-10 h-10 shrink-0 mt-0.5" />
+                    <Avatar
+                      name={getUserName(other) || "U"}
+                      src={getUserAvatar(other)}
+                      size="sm"
+                      className="w-10 h-10 shrink-0 mt-0.5"
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{getUserName(other)}</p>
+                        <p className="text-sm font-semibold text-gray-900 truncate">
+                          {getUserName(other)}
+                        </p>
                         {conv.last_message?.created_at && (
-                          <span className="text-[10px] text-gray-400 shrink-0">{formatDateRelative(conv.last_message.created_at)}</span>
+                          <span className="text-[10px] text-gray-400 shrink-0">
+                            {formatDateRelative(conv.last_message.created_at)}
+                          </span>
                         )}
                       </div>
-                       <p className="text-xs text-gray-500 truncate mt-0.5">{conv.last_message?.message || conv.subject || "No messages"}</p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                        {conv.last_message?.message ||
+                          conv.subject ||
+                          "No messages"}
+                      </p>
                       {conv.listing && (
-                        <p className="text-[10px] text-blue-500 mt-0.5 truncate">{conv.listing.make?.name || ""} {conv.listing.model?.name || ""}</p>
+                        <p className="text-[10px] text-blue-500 mt-0.5 truncate">
+                          {conv.listing.make?.name || ""}{" "}
+                          {conv.listing.model?.name || ""}
+                        </p>
                       )}
                     </div>
                   </button>
@@ -367,21 +414,41 @@ export default function Messages() {
           )}
         </div>
 
-        <div className={cn(
-          "flex-1 flex flex-col bg-gray-50",
-          !selectedConv && !selectedUser && !sellerParam && "hidden md:flex",
-        )}>
+        <div
+          className={cn(
+            "flex-1 flex flex-col bg-gray-50",
+            !selectedConv && !selectedUser && !sellerParam && "hidden md:flex",
+          )}
+        >
           {otherUser ? (
             <>
               <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 shrink-0">
-                <button onClick={() => { setSelectedConv(null); setSelectedUser(null); setMessages([]); }} className="md:hidden p-1 -ml-1 text-gray-500 hover:text-gray-700">
+                <button
+                  onClick={() => {
+                    setSelectedConv(null);
+                    setSelectedUser(null);
+                    setMessages([]);
+                  }}
+                  className="md:hidden p-1 -ml-1 text-gray-500 hover:text-gray-700"
+                >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <Avatar name={getUserName(otherUser) || "U"} src={getUserAvatar(otherUser)} size="sm" className="w-8 h-8" />
+                <Avatar
+                  name={getUserName(otherUser) || "U"}
+                  src={getUserAvatar(otherUser)}
+                  size="sm"
+                  className="w-8 h-8"
+                />
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">{getUserName(otherUser)}</p>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {getUserName(otherUser)}
+                  </p>
                   {selectedConvData?.listing && (
-                    <p className="text-[11px] text-gray-500">{selectedConvData.listing.make?.name || ""} {selectedConvData.listing.model?.name || ""} &middot; {selectedConvData.listing.year || ""}</p>
+                    <p className="text-[11px] text-gray-500">
+                      {selectedConvData.listing.make?.name || ""}{" "}
+                      {selectedConvData.listing.model?.name || ""} &middot;{" "}
+                      {selectedConvData.listing.year || ""}
+                    </p>
                   )}
                 </div>
               </div>
@@ -393,14 +460,22 @@ export default function Messages() {
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="flex items-center justify-center py-12 text-center">
-                    <p className="text-sm text-gray-400">Send a message to start the conversation.</p>
+                    <p className="text-sm text-gray-400">
+                      Send a message to start the conversation.
+                    </p>
                   </div>
                 ) : (
                   messages.map((msg) => {
                     const isMine = String(msg.sender_id) === String(user?.id);
                     const isEditing = editingId === msg.id;
                     return (
-                      <div key={msg.id} className={cn("flex", isMine ? "justify-end" : "justify-start")}>
+                      <div
+                        key={msg.id}
+                        className={cn(
+                          "flex",
+                          isMine ? "justify-end" : "justify-start",
+                        )}
+                      >
                         <div
                           className={cn(
                             "max-w-[75%] px-3.5 py-2.5 rounded-lg text-sm relative",
@@ -408,13 +483,17 @@ export default function Messages() {
                               ? "bg-gray-900 text-white rounded-br-sm"
                               : "bg-white border border-gray-200 text-gray-900 rounded-bl-sm",
                           )}
-                          onDoubleClick={() => isMine && handleEdit(msg)}
+                          onDoubleClick={() =>
+                            isMine && setActionMenu({ msg, x: 0, y: 0 })
+                          }
                           onContextMenu={(e) => {
                             e.preventDefault();
-                            if (isMine) {
-                              e.preventDefault();
-                              handleEdit(msg);
-                            }
+                            if (isMine)
+                              setActionMenu({
+                                msg,
+                                x: e.clientX,
+                                y: e.clientY,
+                              });
                           }}
                         >
                           {isEditing ? (
@@ -422,13 +501,17 @@ export default function Messages() {
                               <input
                                 type="text"
                                 value={editContent}
-                                onChange={(e) => setEditContent(e.target.value)}
+                                onChange={(e) =>
+                                  setEditContent(e.target.value)
+                                }
                                 className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded bg-white text-gray-900 focus:outline-none focus:border-blue-500"
                                 autoFocus
                               />
                               <button
                                 onClick={() => saveEdit(msg.id)}
-                                disabled={!editContent.trim() || deletingId === msg.id}
+                                disabled={
+                                  !editContent.trim() || deletingId === msg.id
+                                }
                                 className="p-1.5 text-green-500 hover:bg-green-50 rounded"
                               >
                                 <Check className="w-4 h-4" />
@@ -444,15 +527,62 @@ export default function Messages() {
                             <>
                               <p className="leading-relaxed">{msg.content}</p>
                               <div className="flex items-center gap-1 mt-1">
-                                <p className={cn("text-[10px]", isMine ? "text-gray-400" : "text-gray-400")}>
+                                <p
+                                  className={cn(
+                                    "text-[10px]",
+                                    isMine
+                                      ? "text-gray-400"
+                                      : "text-gray-400",
+                                  )}
+                                >
                                   {formatDateRelative(msg.created_at)}
-                                  {msg.read_at && isMine && <span className="ml-1">&middot; Read</span>}
-                                  {msg.edited_at && <span className="ml-1">&middot; Edited</span>}
+                                  {msg.read_at && isMine && (
+                                    <span className="ml-1">
+                                      &middot; Read
+                                    </span>
+                                  )}
+                                  {msg.edited_at && (
+                                    <span className="ml-1">
+                                      &middot; Edited
+                                    </span>
+                                  )}
                                 </p>
                               </div>
                             </>
                           )}
                         </div>
+                        {isMine && actionMenu?.msg?.id === msg.id && (
+                          <div
+                            className="absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]"
+                            style={
+                              transform: "translateX(-50%) translateY(0)"
+                            }
+                            onClick={() => setActionMenu(null)}
+                          >
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(actionMenu.msg);
+                                setActionMenu(null);
+                              }}
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                              Edit
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(actionMenu.msg.id);
+                                setActionMenu(null);
+                              }}
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Delete
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })
@@ -460,13 +590,20 @@ export default function Messages() {
                 <div ref={bottomRef} />
               </div>
 
-              <form onSubmit={handleSend} className="bg-white border-t border-gray-200 px-4 py-3 shrink-0">
+              <form
+                onSubmit={handleSend}
+                className="bg-white border-t border-gray-200 px-4 py-3 shrink-0"
+              >
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder={selectedUser && !selectedConv ? "Send a message to start..." : "Type a message..."}
+                    placeholder={
+                      selectedUser && !selectedConv
+                        ? "Send a message to start..."
+                        : "Type a message..."
+                    }
                     className="flex-1 px-3.5 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 text-gray-900 placeholder-gray-400"
                   />
                   <button
@@ -474,7 +611,11 @@ export default function Messages() {
                     disabled={!input.trim() || sending}
                     className="shrink-0 w-9 h-9 rounded-lg bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    {sending ? <Loader className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    {sending ? (
+                      <Loader className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               </form>
@@ -483,101 +624,14 @@ export default function Messages() {
             <div className="flex-1 flex items-center justify-center text-center p-6">
               <div>
                 <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-sm text-gray-500">Search for users or select a conversation</p>
+                <p className="text-sm text-gray-500">
+                  Search for users or select a conversation
+                </p>
               </div>
             </div>
           )}
         </div>
       </div>
-
-      {/* Edit Message Dialog */}
-      {showEditDialog && selectedMsgForAction && (
-        <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
-          onClick={() => {
-            setShowEditDialog(false);
-            setSelectedMsgForAction(null);
-          }}
-        >
-          <div
-            className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-semibold mb-4">Edit Message</h3>
-            <textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 resize-none"
-              rows={3}
-              autoFocus
-            />
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={() => {
-                  saveEdit(selectedMsgForAction.id);
-                  setShowEditDialog(false);
-                  setSelectedMsgForAction(null);
-                }}
-                disabled={!editContent.trim() || deletingId === selectedMsgForAction?.id}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                Save
-              </button>
-              <button
-                onClick={() => {
-                  cancelEdit();
-                  setShowEditDialog(false);
-                  setSelectedMsgForAction(null);
-                }}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Message Dialog */}
-      {showDeleteDialog && selectedMsgForAction && (
-        <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
-          onClick={() => {
-            setShowDeleteDialog(false);
-            setSelectedMsgForAction(null);
-          }}
-        >
-          <div
-            className="bg-white rounded-lg p-6 max-w-sm w-full mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-semibold mb-2">Delete Message</h3>
-            <p className="text-gray-600 mb-4">Are you sure you want to delete this message? This action cannot be undone.</p>
-            <div className="flex gap-2 justify-end">
-              <button
-                onClick={() => {
-                  handleDelete(selectedMsgForAction.id);
-                  setShowDeleteDialog(false);
-                  setSelectedMsgForAction(null);
-                }}
-                disabled={deletingId === selectedMsgForAction?.id}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-              >
-                Delete
-              </button>
-              <button
-                onClick={() => {
-                  setShowDeleteDialog(false);
-                  setSelectedMsgForAction(null);
-                }}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
