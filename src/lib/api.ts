@@ -1,4 +1,4 @@
-import type { SavedListing, Inquiry, Offer, Conversation, Order } from "./types";
+import type { SavedListing, Inquiry, Offer, Conversation, Message, Order } from "./types";
 
 const API_BASE = "/api/v1";
 
@@ -46,6 +46,7 @@ async function request<T>(
     throw new Error(message);
   }
 
+  if (!text) return { data: null } as any;
   try {
     const json = JSON.parse(text);
     return { data: json };
@@ -161,8 +162,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ listing_id: listingId }),
     }),
-  unsaveListing: (id: string) =>
-    request<void>(`/saved-listings/${id}`, {
+  unsaveListing: (listingId: string) =>
+    request<void>(`/saved-listings/${listingId}`, {
       method: "DELETE",
     }),
   inquiries: () =>
@@ -171,6 +172,14 @@ export const api = {
     request<Offer[]>("/offers"),
   conversations: () =>
     request<Conversation[]>("/conversations"),
+  conversationMessages: (id: string) =>
+    request<Message[]>(`/conversations/${id}/messages`),
+  sendMessage: (data: { receiver_id: string; listing_id?: string; content: string }) =>
+    request<Message>("/messages/send", { method: "POST", body: JSON.stringify(data) }),
+  replyConversation: (id: string, data: { content: string }) =>
+    request<Message>(`/conversations/${id}/reply`, { method: "POST", body: JSON.stringify(data) }),
+  markConversationRead: (id: string) =>
+    request<void>(`/conversations/${id}/read`, { method: "POST" }),
   listings: (params: Record<string, string | number | undefined | null | boolean>) => {
     const query = Object.entries(params)
       .filter(([, v]) => v !== undefined && v !== null && v !== '')
@@ -186,13 +195,16 @@ export const api = {
   makeOffer: (data: { listing_id: string; offered_price: number; payment_method: 'finance' | 'cash'; down_payment?: number; loan_term?: number; accessories?: { id: string; name: string; price: number }[] }) =>
     request<any>('/offers', { method: 'POST', body: JSON.stringify(data) }),
   orders: (params?: Record<string, string | number | undefined | null | boolean>) => {
-    const query = params ? '?' + new URLSearchParams(
-      Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
-        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
-    ).toString() : ''
+    const query = params ? '?' + Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
+        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join('&') : ''
     return request<any>(`/orders${query}`)
   },
   order: (id: string) => request<any>(`/orders/${id}`),
+  orderInstallments: (orderId: string, params?: Record<string, string | number | undefined | null | boolean>) => {
+    const query = params ? '?' + Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
+        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join('&') : ''
+    return request<any>(`/orders/${orderId}/installments${query}`)
+  },
   createOrder: (data: {
     listing_id: string;
     price: number;
@@ -202,6 +214,8 @@ export const api = {
     accessories?: { id: string; name: string; price: number }[];
     message?: string;
   }) => request<any>('/orders', { method: 'POST', body: JSON.stringify(data) }),
+  updateOrderStatus: (orderId: string, status: string) =>
+    request<any>(`/orders/${orderId}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
   payInstallment: (orderId: string, data: { month_number: number; transaction_id: string }) =>
     request<any>(`/orders/${orderId}/pay-installment`, { method: 'POST', body: JSON.stringify(data) }),
   users: (params?: Record<string, string>) => {

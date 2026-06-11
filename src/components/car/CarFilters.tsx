@@ -61,9 +61,7 @@ export default function CarFilters() {
     if (!isAuthenticated) return
     try {
       if (savedIds.has(listingId)) {
-        const savedRes = await api.savedListings()
-        const found = (Array.isArray(savedRes.data) ? savedRes.data : []).find((s: any) => s.listing_id === listingId)
-        if (found) await api.unsaveListing(found.id)
+        await api.unsaveListing(listingId)
         savedIds.delete(listingId); setSavedIds(new Set(savedIds))
       } else {
         await api.saveListing(listingId); setSavedIds(new Set([...savedIds, listingId]))

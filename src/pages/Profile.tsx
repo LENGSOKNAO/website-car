@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -60,8 +61,6 @@ const quickActions = [
     desc: "Update your personal information",
   },
   { label: "Change Password", icon: Lock, desc: "Update your password" },
-  { label: "My Orders", icon: FileText, desc: "View your order history" },
-  { label: "Recent Activity", icon: Clock, desc: "See your latest actions" },
 ];
 
 const fadeUp = {
@@ -98,6 +97,7 @@ function Toggle({
 }
 
 export default function Profile() {
+  const navigate = useNavigate();
   const { user, updateProfile, changePassword, refreshUser } = useAuth();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -513,7 +513,9 @@ export default function Profile() {
                   onClick={() =>
                     label === "Edit Profile"
                       ? openEditor()
-                      : label === "Change Password" && openPasswordEditor()
+                      : label === "Change Password"
+                        ? openPasswordEditor()
+                        : null
                   }
                   className="flex items-center justify-between w-full px-4 py-3.5 rounded-xl bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors text-left"
                 >

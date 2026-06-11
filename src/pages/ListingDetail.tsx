@@ -33,7 +33,7 @@ import Avatar from "@/components/ui/Avatar";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import { formatPrice, cn } from "@/lib/utils";
-import type { CarListing } from "@/lib/types";
+import type { CarListing, Order } from "@/lib/types";
 
 interface Accessory {
   id: string;
@@ -158,6 +158,7 @@ export default function ListingDetail() {
     "finance",
   );
   const [selectedAccessories, setSelectedAccessories] = useState<string[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [saved, setSaved] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -185,7 +186,8 @@ export default function ListingDetail() {
       api
         .savedListings()
         .then((res) => {
-          const data = res.data || [];
+          const raw = res?.data;
+          const data = Array.isArray(raw) ? raw : raw?.data ?? [];
           const found = (Array.isArray(data) ? data : []).find(
             (s: any) => s.listing_id === id,
           );
@@ -198,6 +200,18 @@ export default function ListingDetail() {
     }
   }, [isAuthenticated, id]);
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      api.orders({ per_page: 50 })
+        .then((res) => {
+          const raw = res?.data;
+          const data = Array.isArray(raw) ? raw : raw?.data ?? [];
+          if (Array.isArray(data)) setOrders(data);
+        })
+        .catch(() => {});
+    }
+  }, [isAuthenticated]);
+
   const accessoryTotal = useMemo(
     () =>
       selectedAccessories.reduce(
@@ -206,6 +220,11 @@ export default function ListingDetail() {
         0,
       ),
     [selectedAccessories],
+  );
+
+  const existingOrder = useMemo(
+    () => orders.find((o) => o.items?.some((item) => item.listing_id === id)),
+    [orders, id],
   );
 
   const offerNumeric = Number(offerPrice) || 0;
@@ -292,13 +311,13 @@ export default function ListingDetail() {
     if (!isAuthenticated) return;
     try {
       if (saved && savedId) {
-        await api.unsaveListing(savedId);
+        await api.unsaveListing(d.id);
         setSaved(false);
         setSavedId(null);
       } else {
         const res = await api.saveListing(d.id);
         setSaved(true);
-        setSavedId(res.data?.id);
+        setSavedId(res?.data?.data?.id ?? res?.data?.id);
       }
     } catch {}
   }
@@ -328,7 +347,11 @@ export default function ListingDetail() {
     setSubmitting(true);
     setError("");
     try {
-      await api.createOrder(orderData as any);
+      const res = await api.createOrder(orderData as any);
+      const createdOrder = res?.data?.data ?? res?.data ?? res;
+      if (createdOrder && createdOrder.id) {
+        setOrders([createdOrder]);
+      }
       setSuccess("Order placed! Redirecting...");
       setOfferPrice("");
       setShowOffer(false);
@@ -526,29 +549,49 @@ export default function ListingDetail() {
               </p>
               {isAuthenticated ? (
                 <div className="space-y-2.5">
-                  <Button
+                  <button
                     onClick={toggleSave}
-                    variant={saved ? "default" : "outline"}
                     className={cn(
-                      "w-full justify-center gap-2 rounded-sm",
-                      saved ? "bg-red-50 border-red-200 text-red-600 hover:bg-red-100" : "",
+                      "w-full flex items-center justify-center gap-2 py-2.5 rounded-sm text-sm font-medium transition-all cursor-pointer",
+                      saved
+                        ? "bg-red-50 border border-red-200 text-red-600 hover:bg-red-100"
+                        : "border border-gray-200 text-gray-700 hover:bg-gray-50",
                     )}
                   >
                     <Heart
                       className={cn(
-                        "w-4 h-4 transition-colors",
+                        "w-4 h-4",
                         saved ? "fill-red-500 text-red-500" : "text-gray-400",
                       )}
                     />
                     {saved ? "Saved" : "Save"}
-                  </Button>
-                  <Button
-                    onClick={() => setShowOffer(!showOffer)}
-                    className="w-full justify-center gap-2 bg-gray-900 text-white hover:bg-gray-800 rounded-sm"
-                  >
-                    <DollarSign className="w-4 h-4" />
-                    <span>Buy Now</span>
-                  </Button>
+                  </button>
+                  {existingOrder ? (
+                    <div className="space-y-2">
+                      <Button
+                        disabled
+                        className="w-full justify-center gap-2 bg-gray-300 text-gray-500 rounded-sm cursor-not-allowed"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Already Ordered</span>
+                      </Button>
+                      <Link
+                        to={`/orders?id=${existingOrder.id}`}
+                        className="flex items-center justify-center gap-1.5 w-full py-2 text-xs text-blue-600 hover:text-blue-500 font-medium transition-colors"
+                      >
+                        View Order #{existingOrder.order_number}
+                        <ChevronRight className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={() => setShowOffer(!showOffer)}
+                      className="w-full justify-center gap-2 bg-gray-900 text-white hover:bg-gray-800 rounded-sm"
+                    >
+                      <DollarSign className="w-4 h-4" />
+                      <span>Buy Now</span>
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-5 bg-gray-50 rounded-lg border border-gray-100">
@@ -883,7 +926,6 @@ export default function ListingDetail() {
               )}
             </div>
 
-           
             {/* Features */}
             {d.features && d.features.length > 0 && (
               <>

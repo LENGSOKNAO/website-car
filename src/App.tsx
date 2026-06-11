@@ -22,6 +22,7 @@ import SellerAdmin from "@/pages/SellerAdmin";
 import Orders from "@/pages/Orders";
 import Messages from "@/pages/Messages";
 import Wishlist from "@/pages/Wishlist";
+import CartPage from "@/pages/Cart";
 import Profile from "@/pages/Profile";
 
 export default function App() {
@@ -84,6 +85,7 @@ export default function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/messages" element={<Messages />} />
+            <Route path="/cart" element={<CartPage />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/seller/admin" element={<SellerAdmin />} />
             <Route path="*" element={<NotFound />} />

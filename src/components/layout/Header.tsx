@@ -1,33 +1,61 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu,
   X,
   CircleUser,
   Search,
   User,
-  List,
-  MessageSquare,
   ShoppingBag,
-  LogOut,
   Heart,
+  MessageSquare,
+  ClipboardList,
+  LogOut,
+  Store,
+  Car,
+  Layout,
+  Image,
+  BarChart3,
+  Users,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { APP_NAME, BRANDS, BRAND_PAGES } from "@/lib/constants";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import Avatar from "@/components/ui/Avatar";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
+import SettingsDrawer from "@/components/layout/SettingsDrawer";
+
+const buyerLinks = [
+  { label: "My Profile", icon: User, path: "/profile" },
+  { label: "Orders", icon: ClipboardList, path: "/orders" },
+  { label: "Wishlist", icon: Heart, path: "/wishlist" },
+  { label: "Messages", icon: MessageSquare, path: "/messages" },
+  { label: "Cart", icon: ShoppingBag, path: "/cart" },
+];
+
+const sellerLinks = [
+  { label: "My Profile", icon: User, path: "/profile" },
+  { label: "My Listings", icon: Car, path: "/seller/listings" },
+  { label: "My Sales", icon: ClipboardList, path: "/seller/sales" },
+  { label: "Messages", icon: MessageSquare, path: "/seller/messages" },
+  { label: "Banner", icon: Image, path: "/seller/banner" },
+  { label: "Heroes", icon: Layout, path: "/seller/heroes" },
+];
+
+const adminLinks = [
+  { label: "Dashboard", icon: BarChart3, path: "/admin" },
+  { label: "Users", icon: Users, path: "/admin/users" },
+  { label: "Sellers", icon: Store, path: "/admin/sellers" },
+  { label: "All Listings", icon: Car, path: "/admin/listings" },
+];
 
 export default function Header() {
   const { logout, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [hoveredCat, setHoveredCat] = useState<string | null>(null);
   const [sellers, setSellers] = useState<any[]>([]);
   const [heroes, setHeroes] = useState<any[]>([]);
@@ -35,14 +63,23 @@ export default function Header() {
   const location = useLocation();
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const handleNavigateToSettings = () => {
-    navigate("/profile");
-  };
-
   useEffect(() => {
     setMobileOpen(false);
     setHoveredCat(null);
+    setProfileOpen(false);
   }, [location]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setHoveredCat(null);
+        setProfileOpen(false);
+        setSettingsOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     api
@@ -82,14 +119,6 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setHoveredCat(null);
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
-
-  useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = "hidden";
     } else {
@@ -111,8 +140,29 @@ export default function Header() {
   const currentSeller = sellers.find((s) => s.full_name === pageSlug) ?? null;
   const currentSellerId = currentSeller?.id ?? null;
 
+  const getUserRole = (u: typeof user) => {
+    if (!u) return "buyer";
+    const roleStr = (u.role || "").toLowerCase();
+    const roleArr = u.roles?.map((r: any) =>
+      typeof r === "string" ? r.toLowerCase() : (r.name || "").toLowerCase(),
+    ) ?? [];
+    if (roleStr === "admin" || roleArr.includes("admin")) return "admin";
+    if (roleStr === "seller" || roleStr === "dealer" || u.is_dealer || roleArr.includes("seller") || roleArr.includes("dealer")) return "seller";
+    return "buyer";
+  };
+
+  const role = getUserRole(user);
+  const isAdmin = role === "admin";
+  const isSeller = role === "seller";
+
+  const profileLinks = isAdmin
+    ? [...adminLinks, ...sellerLinks, ...buyerLinks]
+    : isSeller
+      ? sellerLinks
+      : buyerLinks;
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 md:h-16">
           <Link to="/" className="shrink-0">
@@ -160,66 +210,136 @@ export default function Header() {
               )}
             </button>
             {isAuthenticated && user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger className="hidden md:flex items-center gap-2 p-1.5 text-[#5C5E62] hover:text-black transition-colors duration-[333ms] rounded-[4px]">
+              <>
+                <button
+                  onClick={() => setProfileOpen(true)}
+                  className="hidden md:flex items-center gap-2 p-0.5 rounded-full border-2 border-transparent hover:border-gray-200 transition-all duration-200"
+                >
                   <Avatar
                     name={user.full_name || "User"}
                     src={user.avatar_url}
                     size="sm"
-                    className="w-5 h-5"
+                    className="w-8 h-8"
                   />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 right-0 mt-2 z-50 bg-white/90 backdrop-blur-md rounded-xl shadow-lg border border-white/20">
-                  <DropdownMenuItem
-                    className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center"
-                    onClick={() => navigate("/profile")}
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center"
-                    onClick={() => navigate("/orders")}
-                  >
-                    <List className="w-4 h-4 mr-2" />
-                    Orders
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center"
-                    onClick={() => navigate("/messages")}
-                  >
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Messages
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center"
-                    onClick={() => navigate("/cart")}
-                  >
-                    <ShoppingBag className="w-4 h-4 mr-2" />
-                    Bag
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="px-3 py-2 text-gray-700 hover:bg-gray-100 flex items-center"
-                    onClick={() => navigate("/wishlist")}
-                  >
-                    <Heart className="w-4 h-4 mr-2" />
-                    Wishlist
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={logout}
-                    className="px-3 py-2 text-red-500 hover:bg-red-50 flex items-center"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </button>
+                <AnimatePresence>
+                  {profileOpen && (
+                    <>
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="fixed inset-0 z-50 bg-black/30"
+                        onClick={() => setProfileOpen(false)}
+                      />
+                      <motion.div
+                        initial={{ x: "100%" }}
+                        animate={{ x: 0 }}
+                        exit={{ x: "100%" }}
+                        transition={{ type: "spring", damping: 28, stiffness: 260 }}
+                        className="fixed top-0 right-0 bottom-0 z-50 w-[300px] bg-white shadow-xl flex flex-col"
+                      >
+                        <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Profile</span>
+                            <button
+                              onClick={() => setProfileOpen(false)}
+                              className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-2.5">
+                            <Avatar
+                              name={user.full_name || "U"}
+                              src={user.avatar_url}
+                              size="sm"
+                              className="w-8 h-8 ring-2 ring-gray-100"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-gray-900 truncate">{user.full_name || "User"}</p>
+                              <p className="text-[11px] text-gray-500 truncate">{user.email || ""}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto py-2 px-3 space-y-3">
+                          {isAdmin && (
+                            <div>
+                              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-1">Admin</p>
+                              <div className="space-y-0.5">
+                                {adminLinks.map((item) => {
+                                  const Icon = item.icon;
+                                  return (
+                                    <button key={item.path} onClick={() => { setProfileOpen(false); navigate(item.path); }}
+                                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-gray-100 transition-colors text-left group"
+                                    >
+                                      <Icon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 shrink-0" />
+                                      <span className="font-medium">{item.label}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                          {isSeller && (
+                            <div>
+                              {isAdmin && <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-1">Seller</p>}
+                              <div className="space-y-0.5">
+                                {sellerLinks.map((item) => {
+                                  const Icon = item.icon;
+                                  return (
+                                    <button key={item.path} onClick={() => { setProfileOpen(false); navigate(item.path); }}
+                                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-gray-100 transition-colors text-left group"
+                                    >
+                                      <Icon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 shrink-0" />
+                                      <span className="font-medium">{item.label}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                          {(!isSeller || isAdmin) && (
+                            <div>
+                              {isAdmin && <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-1">Account</p>}
+                              <div className="space-y-0.5">
+                                {buyerLinks.map((item) => {
+                                  const Icon = item.icon;
+                                  return (
+                                    <button key={item.path} onClick={() => { setProfileOpen(false); navigate(item.path); }}
+                                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-gray-100 transition-colors text-left group"
+                                    >
+                                      <Icon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 shrink-0" />
+                                      <span className="font-medium">{item.label}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="px-3 py-2 border-t border-gray-100">
+                          <button
+                            onClick={() => { setProfileOpen(false); logout(); }}
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-red-600 hover:bg-red-50 transition-colors group"
+                          >
+                            <LogOut className="w-4 h-4 shrink-0" />
+                            <span className="font-medium">Sign Out</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </>
             ) : (
               <Link
                 to="/login"
-                className="hidden md:block p-1.5 text-[#5C5E62] hover:text-black transition-colors duration-[333ms] rounded-[4px]"
+                className="hidden md:flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-full transition-all duration-200"
               >
-                <CircleUser className="w-5 h-5" />
+                <CircleUser className="w-4 h-4" />
+                <span>Sign In</span>
               </Link>
             )}
           </div>
@@ -257,16 +377,23 @@ export default function Header() {
                     >
                       <button
                         className={cn(
-                          "h-full px-4 text-xs font-medium transition-colors tracking-wide",
+                          "h-full px-4 text-xs font-medium transition-all tracking-wide relative",
                           isHovered
                             ? "text-black"
                             : "text-[#5C5E62] hover:text-black",
                         )}
                       >
                         {hero.title}
+                        {isHovered && (
+                          <span className="absolute -bottom-[1px] left-4 right-4 h-0.5 bg-black rounded-full" />
+                        )}
                       </button>
                       {isHovered && items.length > 0 && (
-                        <div
+                        <motion.div
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          transition={{ duration: 0.15, ease: "easeOut" }}
                           className="fixed left-0 right-0 top-[104px] bg-white border-b border-gray-100 shadow-lg"
                           onMouseEnter={() => clearTimeout(timeoutRef.current)}
                           onMouseLeave={() => {
@@ -277,18 +404,18 @@ export default function Header() {
                           }}
                         >
                           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                            <div className="space-y-1">
+                            <div className="grid grid-cols-4 gap-2">
                               {items.map((item: any, i: number) => (
                                 <div
                                   key={i}
-                                  className="px-3 py-2 text-sm text-[#5C5E62]"
+                                  className="px-3 py-2.5 text-sm text-[#5C5E62] hover:text-black hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
                                 >
                                   {item.text}
                                 </div>
                               ))}
                             </div>
                           </div>
-                        </div>
+                        </motion.div>
                       )}
                     </div>
                   );
@@ -362,32 +489,22 @@ export default function Header() {
               <span>Search</span>
             </Link>
             {isAuthenticated && user ? (
-              <Link
-                to="/profile"
-                className="flex flex-1 items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium text-[#5C5E62] hover:text-black hover:bg-gray-50 rounded-lg transition-colors"
+              <button
+                onClick={() => { setMobileOpen(false); setSettingsOpen(true); }}
+                className="flex flex-1 items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-50 rounded-lg transition-colors"
               >
                 <Avatar
                   name={user.full_name || "User"}
                   src={user.avatar_url}
                   size="sm"
-                  className="w-5 h-5"
+                  className="w-6 h-6"
                 />
-                <span>{user.full_name || "User"}</span>
-                <span
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    logout();
-                  }}
-                  className="text-red-500 hover:text-red-600 text-xs font-medium"
-                >
-                  Sign Out
-                </span>
-              </Link>
+                <span>Account</span>
+              </button>
             ) : (
               <Link
                 to="/login"
-                className="flex flex-1 items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium text-[#5C5E62] hover:text-black hover:bg-gray-50 rounded-lg transition-colors"
+                className="flex flex-1 items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-50 rounded-lg transition-colors"
               >
                 <CircleUser className="w-4 h-4" />
                 <span>Sign In</span>
@@ -396,6 +513,8 @@ export default function Header() {
           </div>
         </div>
       )}
+
+      <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </header>
   );
 }
