@@ -46,6 +46,16 @@ export default function Messages() {
     y: number;
   } | null>(null);
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (actionMenu && !(e.target as HTMLElement).closest('[data-action-menu]')) {
+        setActionMenu(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [actionMenu]);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -637,18 +647,24 @@ export default function Messages() {
                               ? "bg-gray-900 text-white rounded-br-sm"
                               : "bg-white border border-gray-200 text-gray-900 rounded-bl-sm",
                           )}
-                          onDoubleClick={() =>
-                            isMine && setActionMenu({ msg, x: 0, y: 0 })
-                          }
-                          onContextMenu={(e) => {
-                            e.preventDefault();
-                            if (isMine)
-                              setActionMenu({
-                                msg,
-                                x: e.clientX,
-                                y: e.clientY,
-                              });
-                          }}
+onDoubleClick={(e) => {
+                             if (isMine) {
+                               setActionMenu({
+                                 msg,
+                                 x: e.clientX,
+                                 y: e.clientY,
+                               });
+                             }
+                           }}
+                           onContextMenu={(e) => {
+                             e.preventDefault();
+                             if (isMine)
+                               setActionMenu({
+                                 msg,
+                                 x: e.clientX,
+                                 y: e.clientY,
+                               });
+                           }}
                         >
                           {isEditing ? (
                             <div className="flex items-center gap-2">
@@ -701,11 +717,13 @@ export default function Messages() {
                         </div>
                         {isMine && actionMenu?.msg?.id === msg.id && (
                           <div
-                            className="absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]"
+                            data-action-menu
+                            className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]"
                             style={{
-                              transform: "translateX(-50%) translateY(0)",
+                              left: actionMenu.x,
+                              top: actionMenu.y,
                             }}
-                            onClick={() => setActionMenu(null)}
+                            onClick={(e) => e.stopPropagation()}
                           >
                             <button
                               onClick={(e) => {
