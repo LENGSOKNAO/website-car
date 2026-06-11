@@ -649,9 +649,9 @@ export default function Messages() {
                         )}
                       </div>
                     );
-                   })
-                 </>}
-                 <div ref={bottomRef} />
+                    )}
+                  </>
+                  <div ref={bottomRef} />
               </div>
 
               <form
