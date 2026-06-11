@@ -81,6 +81,14 @@ export default function Messages() {
     return acc;
   }, {});
 
+  const unreadCounts = conversations.reduce((acc: any, conv: any) => {
+    if (conv.last_message && String(conv.last_message.sender_id) !== String(user?.id) && !conv.last_message.read_at) {
+      const otherId = String(conv.sender_id) === String(user?.id) ? conv.receiver_id : conv.sender_id;
+      acc[otherId] = (acc[otherId] || 0) + 1;
+    }
+    return acc;
+  }, {});
+
   const uniqueConversations = Object.values(groupedConversations);
 
   useEffect(() => {
@@ -562,11 +570,18 @@ export default function Messages() {
                       <p className="text-sm font-semibold text-gray-900 truncate">
                         {getUserName(conv.other)}
                       </p>  
-                      {conv.last_message?.created_at && (
-                        <span className="text-[10px] text-gray-400 shrink-0">
-                          {formatDateRelative(conv.last_message.created_at)}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {unreadCounts[conv.otherId] > 0 && (
+                          <span className="bg-blue-600 text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
+                            {unreadCounts[conv.otherId] > 99 ? "99+" : unreadCounts[conv.otherId]}
+                          </span>
+                        )}
+                        {conv.last_message?.created_at && (
+                          <span className="text-[10px] text-gray-400 shrink-0">
+                            {formatDateRelative(conv.last_message.created_at)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <p className="text-xs text-gray-500 truncate mt-0.5">
                       {conv.last_message?.message || conv.subject || "No messages"}
@@ -578,8 +593,7 @@ export default function Messages() {
                     )}
                   </div>
                   </button>
-                );
-              })}
+              ))}
               {typingUsers.length > 0 && (
                 <div className="flex justify-start px-2">
                   <div className="flex items-center gap-1 text-xs text-gray-500 bg-white border border-gray-200 rounded-lg px-3 py-1.5">
