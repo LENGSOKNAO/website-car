@@ -435,6 +435,40 @@ export default function Messages() {
                             </>
                           )}
                         </div>
+                        {isMine && actionMenu?.msg?.id === msg.id && (
+                          <div
+                            className="absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]"
+                            style={{ 
+                              left: '50%', 
+                              bottom: '-40px', 
+                              transform: 'translateX(-50%) translateY(0)'
+                            }}
+                            onClick={() => setActionMenu(null)}
+                          >
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEdit(actionMenu.msg);
+                                setActionMenu(null);
+                              }}
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                              Edit
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(actionMenu.msg.id);
+                                setActionMenu(null);
+                              }}
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Delete
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })
@@ -471,41 +505,6 @@ export default function Messages() {
           )}
         </div>
       </div>
-
-      {actionMenu && (
-        <div
-          className="absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]"
-          style={{ 
-            right: '20px', 
-            bottom: '20px', 
-            transform: 'translateY(0)'
-          }}
-          onClick={() => setActionMenu(null)}
-        >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit(actionMenu.msg);
-              setActionMenu(null);
-            }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-          >
-            <Edit className="w-3.5 h-3.5" />
-            Edit
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(actionMenu.msg.id);
-              setActionMenu(null);
-            }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            Delete
-          </button>
-        </div>
-      )}
     </div>
   );
 }
