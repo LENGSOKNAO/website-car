@@ -34,6 +34,7 @@ export default function Messages() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [actionMenu, setActionMenu] = useState<{ msg: any; x: number; y: number } | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [allUsers, setAllUsers] = useState<any[]>([]);
@@ -387,11 +388,16 @@ export default function Messages() {
                       <div key={msg.id} className={cn("flex", isMine ? "justify-end" : "justify-start")}>
                         <div
                           className={cn(
-                            "max-w-[75%] px-3.5 py-2.5 rounded-lg text-sm relative group",
+                            "max-w-[75%] px-3.5 py-2.5 rounded-lg text-sm relative",
                             isMine
                               ? "bg-gray-900 text-white rounded-br-sm"
                               : "bg-white border border-gray-200 text-gray-900 rounded-bl-sm",
                           )}
+                          onDoubleClick={() => isMine && setActionMenu({ msg, x: 0, y: 0 })}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            if (isMine) setActionMenu({ msg, x: e.clientX, y: e.clientY });
+                          }}
                         >
                           {isEditing ? (
                             <div className="flex items-center gap-2">
@@ -425,25 +431,6 @@ export default function Messages() {
                                   {msg.read_at && isMine && <span className="ml-1">&middot; Read</span>}
                                   {msg.edited_at && <span className="ml-1">&middot; Edited</span>}
                                 </p>
-                                {isMine && (
-                                  <div className="flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                                    <button
-                                      onClick={() => handleEdit(msg)}
-                                      className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                                      title="Edit"
-                                    >
-                                      <Edit className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDelete(msg.id)}
-                                      disabled={deletingId === msg.id}
-                                      className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                                      title="Delete"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                )}
                               </div>
                             </>
                           )}
@@ -484,6 +471,40 @@ export default function Messages() {
           )}
         </div>
       </div>
+
+      {actionMenu && (
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
+          onClick={() => setActionMenu(null)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl p-2 min-w-[150px]"
+            onClick={(e) => e.stopPropagation()}
+            style={{ left: actionMenu.x, top: actionMenu.y, position: 'absolute' }}
+          >
+            <button
+              onClick={() => {
+                handleEdit(actionMenu.msg);
+                setActionMenu(null);
+              }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded flex items-center gap-2"
+            >
+              <Edit className="w-4 h-4" />
+              Edit
+            </button>
+            <button
+              onClick={() => {
+                handleDelete(actionMenu.msg.id);
+                setActionMenu(null);
+              }}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 rounded text-red-600 flex items-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
