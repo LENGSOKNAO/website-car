@@ -245,6 +245,56 @@ export default function Messages() {
     };
   }, [selectedConv, user?.id]);
 
+  // Real-time conversation list updates (new messages from any conversation)
+  useEffect(() => {
+    if (!user?.id || !window.Echo) return;
+
+    const echo = window.Echo;
+    const channel = echo.private(`App.Models.User.${user.id}`);
+
+    channel.listen(".MessageCreated", (e: any) => {
+      const msg = e.message ?? e;
+      if (msg) {
+        // Update conversations list with new message
+        setConversations((prev) => {
+          const existing = prev.find((c) => c.id === msg.conversation_id);
+          if (existing) {
+            return prev.map((c) =>
+              c.id === msg.conversation_id
+                ? { ...c, last_message: msg.content, last_message_at: msg.created_at, unread: String(msg.sender_id) !== String(user?.id) }
+                : c
+            );
+          }
+          return prev;
+        });
+
+        // Update unread count
+        if (String(msg.sender_id) !== String(user?.id)) {
+          setUnreadCounts((prev) => {
+            const otherId = msg.sender_id;
+            return { ...prev, [otherId]: (prev[otherId] || 0) + 1 };
+          });
+        }
+      }
+    });
+
+    channel.listen(".MessageRead", (e: any) => {
+      if (e.message_id) {
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.last_message_at && new Date(c.last_message_at) <= new Date(e.read_at)
+              ? { ...c, unread: false }
+              : c
+          )
+        );
+      }
+    });
+
+    return () => {
+      echo.leave(`App.Models.User.${user.id}`);
+    };
+  }, [user?.id]);
+
   // Polling fallback for when real-time isn't working
   useEffect(() => {
     if (!selectedConv) return;
