@@ -474,35 +474,32 @@ export default function Messages() {
 
       {actionMenu && (
         <div
-          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
+          className="absolute z-50 bg-white rounded-lg shadow-xl p-2 min-w-[150px] border border-gray-200"
+          style={{ left: actionMenu.x, top: actionMenu.y }}
           onClick={() => setActionMenu(null)}
         >
-          <div
-            className="bg-white rounded-lg shadow-xl p-2 min-w-[150px]"
-            onClick={(e) => e.stopPropagation()}
-            style={{ left: actionMenu.x, top: actionMenu.y, position: 'absolute' }}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit(actionMenu.msg);
+              setActionMenu(null);
+            }}
+            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded flex items-center gap-2"
           >
-            <button
-              onClick={() => {
-                handleEdit(actionMenu.msg);
-                setActionMenu(null);
-              }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded flex items-center gap-2"
-            >
-              <Edit className="w-4 h-4" />
-              Edit
-            </button>
-            <button
-              onClick={() => {
-                handleDelete(actionMenu.msg.id);
-                setActionMenu(null);
-              }}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 rounded text-red-600 flex items-center gap-2"
-            >
-              <Trash2 className="w-4 h-4" />
-              Delete
-            </button>
-          </div>
+            <Edit className="w-4 h-4" />
+            Edit
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(actionMenu.msg.id);
+              setActionMenu(null);
+            }}
+            className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 rounded text-red-600 flex items-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete
+          </button>
         </div>
       )}
     </div>
