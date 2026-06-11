@@ -85,6 +85,7 @@ export default function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/messages" element={<Messages />} />
+            <Route path="/seller/messages" element={<Messages />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/seller/admin" element={<SellerAdmin />} />

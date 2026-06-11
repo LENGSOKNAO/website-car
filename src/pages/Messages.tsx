@@ -282,7 +282,7 @@ export default function Messages() {
                           <span className="text-[10px] text-gray-400 shrink-0">{formatDateRelative(conv.last_message.created_at)}</span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500 truncate mt-0.5">{conv.last_message?.content || conv.subject || "No messages"}</p>
+                       <p className="text-xs text-gray-500 truncate mt-0.5">{conv.last_message?.message || conv.subject || "No messages"}</p>
                       {conv.listing && (
                         <p className="text-[10px] text-blue-500 mt-0.5 truncate">{conv.listing.make?.name || ""} {conv.listing.model?.name || ""}</p>
                       )}
@@ -333,7 +333,7 @@ export default function Messages() {
                             ? "bg-gray-900 text-white rounded-br-sm"
                             : "bg-white border border-gray-200 text-gray-900 rounded-bl-sm",
                         )}>
-                          <p className="leading-relaxed">{msg.content}</p>
+                           <p className="leading-relaxed">{msg.message}</p>
                           <p className={cn("text-[10px] mt-1", isMine ? "text-gray-400" : "text-gray-400")}>
                             {formatDateRelative(msg.created_at)}
                             {msg.read_at && isMine && <span className="ml-1">&middot; Read</span>}
