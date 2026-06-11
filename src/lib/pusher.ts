@@ -91,9 +91,9 @@ export function triggerTyping(conversationId: string, isTyping: boolean) {
   if (!window.Echo) return;
 
   const channel = window.Echo.private(`App.Models.Conversation.${conversationId}`);
-  channel.trigger('client-typing', {
-    event: isTyping ? 'typing' : 'stop_typing',
+  channel.whisper('typing', {
     user_id: localStorage.getItem('user_id'),
+    typing: isTyping,
   });
 }
 

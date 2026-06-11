@@ -23,6 +23,7 @@ import { cn, formatDateRelative } from "@/lib/utils";
 import {
   triggerTyping,
 } from "@/lib/pusher";
+import "@/bootstrap";
 
 export default function Messages() {
   const { user, isAuthenticated } = useAuth();
@@ -114,56 +115,128 @@ export default function Messages() {
       })
       .catch(() => setMessages([]))
       .finally(() => setMsgLoading(false));
+  }, [selectedConv]);
 
-    // Set up real-time updates using Echo/Pusher
-    useEffect(() => {
-      if (!selectedConv || !window.Echo) {
-        if (!window.Echo) {
-          console.warn('Echo not available. Real-time updates disabled.');
-        }
-        return;
+  // Set up real-time updates using Echo/Pusher
+  useEffect(() => {
+    if (!selectedConv || !window.Echo) {
+      if (!window.Echo) {
+        console.warn('Echo not available. Real-time updates disabled.');
       }
+      return;
+    }
 
-      const conversationId = selectedConv;
-      const channel = window.Echo.private(`App.Models.Conversation.${conversationId}`);
+    const conversationId = selectedConv;
+    const echo = window.Echo;
+    const channel = echo.private(`App.Models.Conversation.${conversationId}`);
 
-      // Listen for the MessageCreated event
-      channel.listen('.MessageCreated', (e: any) => {
-        // When we receive a new message, add it to the list if not already present
+    // Listen for the MessageCreated event
+    channel.listen('.MessageCreated', (e: any) => {
+      const msg = e.message ?? e;
+      if (msg) {
         setMessages((prev) => {
-          if (prev.some((m) => m.id === e.id)) return prev;
-          return [...prev, e];
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          return [...prev, msg];
         });
+      }
+    });
+
+    // Listen for MessageRead event
+    channel.listen('.MessageRead', (e: any) => {
+      if (e.message_id) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === e.message_id && String(m.sender_id) !== String(user?.id)
+              ? { ...m, read_at: e.read_at }
+              : m
+          )
+        );
+      }
+    });
+
+    // Listen for typing whispers (client events)
+    channel.listenForWhisper('typing', (e: { user_id: string; typing: boolean }) => {
+      if (String(e.user_id) === String(user?.id)) return;
+      setTypingUsers((prev) => {
+        if (e.typing) {
+          return prev.includes(e.user_id) ? prev : [...prev, e.user_id];
+        }
+        return prev.filter((id) => id !== e.user_id);
       });
+    });
 
-      // Clean up on unmount
-      return () => {
-        window.Echo.leaveChannel(`private-App.Models.Conversation.${conversationId}`);
-      };
-    }, [selectedConv]);
+    // Clean up on unmount
+    return () => {
+      echo.leave(`App.Models.Conversation.${conversationId}`);
+    };
+  }, [selectedConv, user?.id]);
 
-    // Set up typing indicators using Echo
-    useEffect(() => {
-      if (!selectedConv || !window.Echo) return;
+  // Polling fallback for when real-time isn't working
+  useEffect(() => {
+    if (!selectedConv) return;
 
-      const conversationId = selectedConv;
-      const channel = window.Echo.private(`App.Models.Conversation.${conversationId}`);
+    let pollingInterval: ReturnType<typeof setInterval> | null = null;
+    let isMounted = true;
+    let lastKnownMessageCount = messages.length;
+    let errorCount = 0;
+    const MAX_ERRORS_BEFORE_BACKOFF = 3;
 
-      channel.listen('.TypingStarted', (data: { user_id: string }) => {
-        setTypingUsers((prev) => (prev.includes(data.user_id) ? prev : [...prev, data.user_id]));
-        setTimeout(() => {
-          setTypingUsers((prev) => prev.filter((id) => id !== data.user_id));
-        }, 3000);
-      });
+    const fetchNewMessages = async () => {
+      if (!isMounted) return;
 
-      channel.listen('.TypingStopped', (data: { user_id: string }) => {
-        setTypingUsers((prev) => prev.filter((id) => id !== data.user_id));
-      });
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL || ''}/api/v1/conversations/${selectedConv}/messages`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          }
+        );
 
-      return () => {
-        window.Echo.leaveChannel(`private-App.Models.Conversation.${conversationId}`);
-      };
-    }, [selectedConv]);
+        if (response.ok) {
+          const data = await response.json();
+          errorCount = 0;
+
+          if (isMounted && data) {
+            const newMessages = Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : [];
+
+            if (newMessages.length !== lastKnownMessageCount) {
+              setMessages(newMessages);
+              lastKnownMessageCount = newMessages.length;
+
+              if (isMounted && bottomRef.current) {
+                requestAnimationFrame(() => {
+                  if (isMounted && bottomRef.current) {
+                    bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+                  }
+                });
+              }
+            }
+          }
+        } else {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+      } catch (error) {
+        if (isMounted) {
+          errorCount++;
+          console.warn(`Failed to fetch new messages (error #${errorCount}):`, error);
+          if (errorCount >= MAX_ERRORS_BEFORE_BACKOFF) {
+            console.warn('Multiple consecutive errors fetching messages. Continuing to try...');
+          }
+        }
+      }
+    };
+
+    pollingInterval = setInterval(fetchNewMessages, 5000);
+
+    return () => {
+      isMounted = false;
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [selectedConv, messages.length]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -492,7 +565,7 @@ export default function Messages() {
                 )}
                 <div ref={bottomRef} />
               </div>
-            ))))}
+            )}
           </div>
 
           <div
