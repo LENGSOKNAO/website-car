@@ -20,7 +20,11 @@ import { useAuth } from "@/lib/auth";
 import Avatar from "@/components/ui/Avatar";
 import type { Conversation, Message } from "@/lib/types";
 import { cn, formatDateRelative } from "@/lib/utils";
-import { subscribeToConversation, subscribeToPresence, triggerTyping, disconnectPusher } from "@/lib/pusher";
+import {
+  subscribeToConversation,
+  triggerTyping,
+  disconnectPusher,
+} from "@/lib/pusher";
 
 export default function Messages() {
   const { user, isAuthenticated } = useAuth();
@@ -48,7 +52,9 @@ export default function Messages() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const typingTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const sellerParam = searchParams.get("seller");
   const listingParam = searchParams.get("listing");
@@ -85,31 +91,58 @@ export default function Messages() {
   }, [isAuthenticated, allUsers.length]);
 
   useEffect(() => {
-    if (selectedConv) {
-      setMsgLoading(true);
-      api
-        .conversationMessages(selectedConv)
-        .then((res) => {
-          const raw = res?.data?.data ?? res?.data ?? res ?? [];
-          const fetched = Array.isArray(raw)
-            ? raw
-            : Array.isArray(raw?.data)
-              ? raw.data
-              : [];
-          setMessages((prev) => {
-            const existing = new Set(prev.map((m) => m.id));
-            const merged = [...prev];
-            for (const m of fetched) {
-              if (!existing.has(m.id)) merged.push(m);
-            }
-            return merged;
-          });
-        })
-        .catch(() => setMessages([]))
-        .finally(() => setMsgLoading(false));
-    } else {
+    if (!selectedConv) {
       setMessages([]);
+      return;
     }
+    setMsgLoading(true);
+    api
+      .conversationMessages(selectedConv)
+      .then((res) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? [];
+        const fetched = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.data)
+            ? raw.data
+            : [];
+        setMessages((prev) => {
+          const existing = new Set(prev.map((m) => m.id));
+          const merged = [...prev];
+          for (const m of fetched) {
+            if (!existing.has(m.id)) merged.push(m);
+          }
+          return merged;
+        });
+      })
+      .catch(() => setMessages([]))
+      .finally(() => setMsgLoading(false));
+
+    const unsubscribe = subscribeToConversation(selectedConv, {
+      onMessageCreated: (msg: Message) => {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
+      },
+    });
+
+    return () => unsubscribe();
+  }, [selectedConv]);
+
+  useEffect(() => {
+    if (!selectedConv) return;
+    const unsubscribeTyping = subscribeToConversation(selectedConv, {
+      onTypingStarted: (data: { user_id: string }) => {
+        setTypingUsers((prev) => (prev.includes(data.user_id) ? prev : [...prev, data.user_id]));
+        setTimeout(() => {
+          setTypingUsers((prev) => prev.filter((id) => id !== data.user_id));
+        }, 3000);
+      },
+      onTypingStopped: (data: { user_id: string }) => {
+        setTypingUsers((prev) => prev.filter((id) => id !== data.user_id));
+      },
+    });
+    return () => unsubscribeTyping();
   }, [selectedConv]);
 
   useEffect(() => {
@@ -121,58 +154,6 @@ export default function Messages() {
       api.markConversationRead(selectedConv).catch(() => {});
     }
   }, [selectedConv]);
-
-  const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (!selectedConv || !isAuthenticated) return;
-
-    const unsubscribe = subscribeToConversation(selectedConv, {
-      onMessageCreated: (message: any) => {
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === message.id)) return prev;
-          return [...prev, message];
-        });
-      },
-      onMessageRead: (data: { message_id: string; user_id: string }) => {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === data.message_id ? { ...m, read_at: new Date().toISOString() } : m
-          )
-        );
-      },
-      onTypingStarted: (data: { user_id: string; user_name: string }) => {
-        setTypingUsers((prev) => new Set([...prev, data.user_id]));
-      },
-      onTypingStopped: (data: { user_id: string }) => {
-        setTypingUsers((prev) => {
-          const next = new Set(prev);
-          next.delete(data.user_id);
-          return next;
-        });
-      },
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [selectedConv, isAuthenticated]);
-
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInput(value);
-    if (selectedConv) {
-      triggerTyping(selectedConv, value.length > 0);
-    }
-  }, [selectedConv]);
-
-  useEffect(() => {
-    if (!selectedConv) return;
-    const timeout = setTimeout(() => {
-      triggerTyping(selectedConv, false);
-    }, 2000);
-    return () => clearTimeout(timeout);
-  }, [input, selectedConv]);
 
   useEffect(() => {
     clearTimeout(searchTimer.current);
@@ -195,6 +176,18 @@ export default function Messages() {
     }, 200);
     return () => clearTimeout(searchTimer.current);
   }, [searchQuery, user?.id, allUsers]);
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const value = e.target.value;
+    setInput(value);
+    if (selectedConv && value.trim()) {
+      triggerTyping(selectedConv);
+      clearTimeout(typingTimer.current);
+      typingTimer.current = setTimeout(() => {
+        triggerTyping(selectedConv, false);
+      }, 2000);
+    }
+  }
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -238,7 +231,7 @@ export default function Messages() {
           });
         setInput("");
       } catch (e: any) {
-        console.error("Reply error:", e?.message || e);
+        console.error("Reply error:", e?.message || e, e?.response);
       }
       setSending(false);
     }
@@ -463,9 +456,22 @@ export default function Messages() {
                       )}
                     </div>
                   </button>
-                );
-              })}
-            </div>
+                    );
+                  })}
+                {typingUsers.length > 0 && (
+                  <div className="flex justify-start px-2">
+                    <div className="flex items-center gap-1 text-xs text-gray-500 bg-white border border-gray-200 rounded-lg px-3 py-1.5">
+                      <div className="flex gap-0.5">
+                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                      </div>
+                      <span>{typingUsers.length === 1 ? "typing..." : "are typing..."}</span>
+                    </div>
+                  </div>
+                )}
+                <div ref={bottomRef} />
+              </div>
           )}
         </div>
 
@@ -520,32 +526,17 @@ export default function Messages() {
                     </p>
                   </div>
                 ) : (
-                  <>
-                    {typingUsers.size > 0 && (
-                      <div className="flex items-center gap-2 px-4 py-2 text-sm text-gray-500">
-                        <div className="flex gap-1">
-                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                        </div>
-                        <span>
-                          {Array.from(typingUsers).length === 1
-                            ? "Someone is typing..."
-                            : `${typingUsers.size} people are typing...`}
-                        </span>
-                      </div>
-                    )}
-                    {(messages.map((msg) => {
-                      const isMine = String(msg.sender_id) === String(user?.id);
-                      const isEditing = editingId === msg.id;
-                      return (
-                        <div
-                          key={msg.id}
-                          className={cn(
-                            "flex",
-                            isMine ? "justify-end" : "justify-start",
-                          )}
-                        >
+                  messages.map((msg) => {
+                    const isMine = String(msg.sender_id) === String(user?.id);
+                    const isEditing = editingId === msg.id;
+                    return (
+                      <div
+                        key={msg.id}
+                        className={cn(
+                          "flex",
+                          isMine ? "justify-end" : "justify-start",
+                        )}
+                      >
                         <div
                           className={cn(
                             "max-w-[75%] px-3.5 py-2.5 rounded-lg text-sm relative",
@@ -648,10 +639,10 @@ export default function Messages() {
                           </div>
                         )}
                       </div>
-                     );
-                   }))}
-                 </>
-                 <div ref={bottomRef} />
+                    );
+                  })
+                )}
+                <div ref={bottomRef} />
               </div>
 
               <form
@@ -662,7 +653,7 @@ export default function Messages() {
                   <input
                     type="text"
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={handleInputChange}
                     placeholder={
                       selectedUser && !selectedConv
                         ? "Send a message to start..."

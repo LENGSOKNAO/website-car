@@ -10,7 +10,7 @@ export function getPusher(): Pusher | null {
     pusherInstance = new Pusher(PUSHER_KEY, {
       cluster: PUSHER_CLUSTER,
       forceTLS: true,
-      authEndpoint: "/api/v1/broadcasting/auth",
+      authEndpoint: `${import.meta.env.VITE_API_URL || ""}/api/v1/broadcasting/auth`,
       auth: {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -30,7 +30,7 @@ export function subscribeToConversation(conversationId: string, callbacks: {
   const pusher = getPusher();
   if (!pusher) return () => {};
 
-  const channel = pusher.subscribe(`private-conversation.${conversationId}`);
+  const channel = pusher.subscribe(`private-App.Models.Conversation.${conversationId}`);
 
   if (callbacks.onMessageCreated) {
     channel.bind("MessageCreated", callbacks.onMessageCreated);
@@ -91,7 +91,7 @@ export function triggerTyping(conversationId: string, isTyping: boolean) {
   const pusher = getPusher();
   if (!pusher) return;
 
-  const channel = pusher.channel(`private-conversation.${conversationId}`);
+  const channel = pusher.channel(`private-App.Models.Conversation.${conversationId}`);
   if (channel) {
     channel.trigger("client-typing", {
       event: isTyping ? "typing" : "stop_typing",
