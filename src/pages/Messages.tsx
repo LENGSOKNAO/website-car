@@ -333,7 +333,7 @@ export default function Messages() {
                             ? "bg-gray-900 text-white rounded-br-sm"
                             : "bg-white border border-gray-200 text-gray-900 rounded-bl-sm",
                         )}>
-                           <p className="leading-relaxed">{msg.message}</p>
+                           <p className="leading-relaxed">{msg.content}</p>
                           <p className={cn("text-[10px] mt-1", isMine ? "text-gray-400" : "text-gray-400")}>
                             {formatDateRelative(msg.created_at)}
                             {msg.read_at && isMine && <span className="ml-1">&middot; Read</span>}
