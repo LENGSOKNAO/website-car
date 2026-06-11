@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   MessageSquare,
@@ -12,12 +12,15 @@ import {
   Check,
   X,
   MoreVertical,
+  Pencil,
+  UserCheck,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import Avatar from "@/components/ui/Avatar";
 import type { Conversation, Message } from "@/lib/types";
 import { cn, formatDateRelative } from "@/lib/utils";
+import { subscribeToConversation, subscribeToPresence, triggerTyping, disconnectPusher } from "@/lib/pusher";
 
 export default function Messages() {
   const { user, isAuthenticated } = useAuth();
@@ -34,7 +37,11 @@ export default function Messages() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [actionMenu, setActionMenu] = useState<{ msg: any; x: number; y: number } | null>(null);
+  const [actionMenu, setActionMenu] = useState<{
+    msg: any;
+    x: number;
+    y: number;
+  } | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [allUsers, setAllUsers] = useState<any[]>([]);
@@ -114,6 +121,58 @@ export default function Messages() {
       api.markConversationRead(selectedConv).catch(() => {});
     }
   }, [selectedConv]);
+
+  const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!selectedConv || !isAuthenticated) return;
+
+    const unsubscribe = subscribeToConversation(selectedConv, {
+      onMessageCreated: (message: any) => {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === message.id)) return prev;
+          return [...prev, message];
+        });
+      },
+      onMessageRead: (data: { message_id: string; user_id: string }) => {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === data.message_id ? { ...m, read_at: new Date().toISOString() } : m
+          )
+        );
+      },
+      onTypingStarted: (data: { user_id: string; user_name: string }) => {
+        setTypingUsers((prev) => new Set([...prev, data.user_id]));
+      },
+      onTypingStopped: (data: { user_id: string }) => {
+        setTypingUsers((prev) => {
+          const next = new Set(prev);
+          next.delete(data.user_id);
+          return next;
+        });
+      },
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [selectedConv, isAuthenticated]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInput(value);
+    if (selectedConv) {
+      triggerTyping(selectedConv, value.length > 0);
+    }
+  }, [selectedConv]);
+
+  useEffect(() => {
+    if (!selectedConv) return;
+    const timeout = setTimeout(() => {
+      triggerTyping(selectedConv, false);
+    }, 2000);
+    return () => clearTimeout(timeout);
+  }, [input, selectedConv]);
 
   useEffect(() => {
     clearTimeout(searchTimer.current);
@@ -461,10 +520,25 @@ export default function Messages() {
                     </p>
                   </div>
                 ) : (
-                  messages.map((msg) => {
-                    const isMine = String(msg.sender_id) === String(user?.id);
-                    const isEditing = editingId === msg.id;
-                    return (
+                  <>
+                    {typingUsers.size > 0 && (
+                      <div className="flex items-center gap-2 px-4 py-2 text-sm text-gray-500">
+                        <div className="flex gap-1">
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                        </div>
+                        <span>
+                          {Array.from(typingUsers).length === 1
+                            ? "Someone is typing..."
+                            : `${typingUsers.size} people are typing...`}
+                        </span>
+                      </div>
+                    )}
+                    {messages.map((msg) => {
+                      const isMine = String(msg.sender_id) === String(user?.id);
+                      const isEditing = editingId === msg.id;
+                      return (
                       <div
                         key={msg.id}
                         className={cn(
@@ -497,9 +571,7 @@ export default function Messages() {
                               <input
                                 type="text"
                                 value={editContent}
-                                onChange={(e) =>
-                                  setEditContent(e.target.value)
-                                }
+                                onChange={(e) => setEditContent(e.target.value)}
                                 className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded bg-white text-gray-900 focus:outline-none focus:border-blue-500"
                                 autoFocus
                               />
@@ -526,16 +598,12 @@ export default function Messages() {
                                 <p
                                   className={cn(
                                     "text-[10px]",
-                                    isMine
-                                      ? "text-gray-400"
-                                      : "text-gray-400",
+                                    isMine ? "text-gray-400" : "text-gray-400",
                                   )}
                                 >
                                   {formatDateRelative(msg.created_at)}
                                   {msg.read_at && isMine && (
-                                    <span className="ml-1">
-                                      &middot; Read
-                                    </span>
+                                    <span className="ml-1">&middot; Read</span>
                                   )}
                                   {msg.edited_at && (
                                     <span className="ml-1">
@@ -550,7 +618,9 @@ export default function Messages() {
                         {isMine && actionMenu?.msg?.id === msg.id && (
                           <div
                             className="absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]"
-                            style={{ transform: "translateX(-50%) translateY(0)" }}
+                            style={{
+                              transform: "translateX(-50%) translateY(0)",
+                            }}
                             onClick={() => setActionMenu(null)}
                           >
                             <button
