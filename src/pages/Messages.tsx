@@ -492,10 +492,9 @@ export default function Messages() {
                 )}
                 <div ref={bottomRef} />
               </div>
-          )}
-        </div>
+          </div>
 
-        <div
+          <div
           className={cn(
             "flex-1 flex flex-col bg-gray-50",
             !selectedConv && !selectedUser && !sellerParam && "hidden md:flex",
