@@ -535,17 +535,17 @@ export default function Messages() {
                         </span>
                       </div>
                     )}
-                    {messages.map((msg) => {
+                    {(messages.map((msg) => {
                       const isMine = String(msg.sender_id) === String(user?.id);
                       const isEditing = editingId === msg.id;
                       return (
-                      <div
-                        key={msg.id}
-                        className={cn(
-                          "flex",
-                          isMine ? "justify-end" : "justify-start",
-                        )}
-                      >
+                        <div
+                          key={msg.id}
+                          className={cn(
+                            "flex",
+                            isMine ? "justify-end" : "justify-start",
+                          )}
+                        >
                         <div
                           className={cn(
                             "max-w-[75%] px-3.5 py-2.5 rounded-lg text-sm relative",
@@ -648,10 +648,10 @@ export default function Messages() {
                           </div>
                         )}
                       </div>
-                    );
-                    )}
-                  </>
-                  <div ref={bottomRef} />
+                     );
+                   }))}
+                 </>
+                 <div ref={bottomRef} />
               </div>
 
               <form
