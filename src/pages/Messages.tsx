@@ -10,6 +10,7 @@ import {
   Edit,
   Trash2,
   Check,
+  CheckCheck,
   X,
   MoreVertical,
   Pencil,
@@ -714,15 +715,24 @@ onDoubleClick={(e) => {
                                   )}
                                 >
                                   {formatDateRelative(msg.created_at)}
-                                  {msg.read_at && isMine && (
-                                    <span className="ml-1">&middot; Read</span>
-                                  )}
-                                  {msg.edited_at && (
-                                    <span className="ml-1">
-                                      &middot; Edited
-                                    </span>
-                                  )}
                                 </p>
+                                {isMine && (
+                                  <span className="flex items-center gap-0.5 ml-1">
+                                    {msg.read_at ? (
+                                      <>
+                                        <CheckCheck className="w-3.5 h-3.5 text-blue-500" />
+                                        <CheckCheck className="w-3.5 h-3.5 text-blue-500" />
+                                      </>
+                                    ) : (
+                                      <Check className="w-3.5 h-3.5 text-gray-400" />
+                                    )}
+                                  </span>
+                                )}
+                                {msg.edited_at && (
+                                  <span className="ml-1 text-[10px] text-gray-400">
+                                    &middot; Edited
+                                  </span>
+                                )}
                               </div>
                             </>
                           )}
@@ -733,7 +743,8 @@ onDoubleClick={(e) => {
                             className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]"
                             style={{
                               left: actionMenu.x + actionMenu.menuWidth > (typeof window !== 'undefined' ? window.innerWidth : 1920)
-                                ? undefined,
+                                ? undefined
+                                : actionMenu.x,
                               right: actionMenu.x + actionMenu.menuWidth > (typeof window !== 'undefined' ? window.innerWidth : 1920)
                                 ? (typeof window !== 'undefined' ? window.innerWidth : 1920) - actionMenu.x
                                 : undefined,
