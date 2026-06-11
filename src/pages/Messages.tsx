@@ -65,6 +65,7 @@ export default function Messages() {
   const [searching, setSearching] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const typingTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -81,7 +82,16 @@ export default function Messages() {
     return acc;
   }, {});
 
-  const unreadCounts = conversations.reduce((acc: any, conv: any) => {
+  useEffect(() => {
+    const initialUnread: Record<string, number> = {};
+    conversations.forEach((conv: any) => {
+      if (conv.last_message && String(conv.last_message.sender_id) !== String(user?.id) && !conv.last_message.read_at) {
+        const otherId = String(conv.sender_id) === String(user?.id) ? conv.receiver_id : conv.sender_id;
+        initialUnread[otherId] = (initialUnread[otherId] || 0) + 1;
+      }
+    });
+    setUnreadCounts(initialUnread);
+  }, [conversations, user?.id]);
     if (conv.last_message && String(conv.last_message.sender_id) !== String(user?.id) && !conv.last_message.read_at) {
       const otherId = String(conv.sender_id) === String(user?.id) ? conv.receiver_id : conv.sender_id;
       acc[otherId] = (acc[otherId] || 0) + 1;
@@ -186,6 +196,19 @@ export default function Messages() {
               : m,
           ),
         );
+
+        // Update unread counts in conversation list
+        setUnreadCounts((prev) => {
+          const updated = { ...prev };
+          const conv = conversations.find((c) => c.id === conversationId);
+          if (conv) {
+            const otherId = String(conv.sender_id) === String(user?.id) ? conv.receiver_id : conv.sender_id;
+            if (updated[otherId] > 0) {
+              updated[otherId] = Math.max(0, updated[otherId] - 1);
+            }
+          }
+          return updated;
+        });
       }
     });
 
