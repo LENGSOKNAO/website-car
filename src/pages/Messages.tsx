@@ -34,7 +34,7 @@ export default function Messages() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [showActionsStates, setShowActionsStates] = useState<Record<string, boolean>>({});
+  const [actionMenu, setActionMenu] = useState<{ msg: any; x: number; y: number } | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [allUsers, setAllUsers] = useState<any[]>([]);
