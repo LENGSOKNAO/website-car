@@ -474,8 +474,12 @@ export default function Messages() {
 
       {actionMenu && (
         <div
-          className="absolute z-50 bg-white rounded-lg shadow-xl p-2 min-w-[150px] border border-gray-200"
-          style={{ left: actionMenu.x, top: actionMenu.y }}
+          className="absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]"
+          style={{ 
+            left: '50%', 
+            top: '100%', 
+            transform: 'translateX(-50%) translateY(4px)'
+          }}
           onClick={() => setActionMenu(null)}
         >
           <button
@@ -484,9 +488,9 @@ export default function Messages() {
               handleEdit(actionMenu.msg);
               setActionMenu(null);
             }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded flex items-center gap-2"
+            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
           >
-            <Edit className="w-4 h-4" />
+            <Edit className="w-3.5 h-3.5" />
             Edit
           </button>
           <button
@@ -495,9 +499,9 @@ export default function Messages() {
               handleDelete(actionMenu.msg.id);
               setActionMenu(null);
             }}
-            className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 rounded text-red-600 flex items-center gap-2"
+            className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3.5 h-3.5" />
             Delete
           </button>
         </div>
