@@ -547,7 +547,7 @@ export default function Messages() {
                             </>
                           )}
                         </div>
-                        {isMine && showActions && (
+                        {isMine && showActionsStates[msg.id] && (
                           <div className="flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                             <button
                               onClick={() => {
