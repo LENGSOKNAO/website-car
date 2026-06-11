@@ -21,9 +21,7 @@ import Avatar from "@/components/ui/Avatar";
 import type { Conversation, Message } from "@/lib/types";
 import { cn, formatDateRelative } from "@/lib/utils";
 import {
-  subscribeToConversation,
   triggerTyping,
-  disconnectPusher,
 } from "@/lib/pusher";
 
 export default function Messages() {
@@ -117,33 +115,55 @@ export default function Messages() {
       .catch(() => setMessages([]))
       .finally(() => setMsgLoading(false));
 
-    const unsubscribe = subscribeToConversation(selectedConv, {
-      onMessageCreated: (msg: Message) => {
+    // Set up real-time updates using Echo/Pusher
+    useEffect(() => {
+      if (!selectedConv || !window.Echo) {
+        if (!window.Echo) {
+          console.warn('Echo not available. Real-time updates disabled.');
+        }
+        return;
+      }
+
+      const conversationId = selectedConv;
+      const channel = window.Echo.private(`App.Models.Conversation.${conversationId}`);
+
+      // Listen for the MessageCreated event
+      channel.listen('.MessageCreated', (e: any) => {
+        // When we receive a new message, add it to the list if not already present
         setMessages((prev) => {
-          if (prev.some((m) => m.id === msg.id)) return prev;
-          return [...prev, msg];
+          if (prev.some((m) => m.id === e.id)) return prev;
+          return [...prev, e];
         });
-      },
-    });
+      });
 
-    return () => unsubscribe();
-  }, [selectedConv]);
+      // Clean up on unmount
+      return () => {
+        window.Echo.leaveChannel(`private-App.Models.Conversation.${conversationId}`);
+      };
+    }, [selectedConv]);
 
-  useEffect(() => {
-    if (!selectedConv) return;
-    const unsubscribeTyping = subscribeToConversation(selectedConv, {
-      onTypingStarted: (data: { user_id: string }) => {
+    // Set up typing indicators using Echo
+    useEffect(() => {
+      if (!selectedConv || !window.Echo) return;
+
+      const conversationId = selectedConv;
+      const channel = window.Echo.private(`App.Models.Conversation.${conversationId}`);
+
+      channel.listen('.TypingStarted', (data: { user_id: string }) => {
         setTypingUsers((prev) => (prev.includes(data.user_id) ? prev : [...prev, data.user_id]));
         setTimeout(() => {
           setTypingUsers((prev) => prev.filter((id) => id !== data.user_id));
         }, 3000);
-      },
-      onTypingStopped: (data: { user_id: string }) => {
+      });
+
+      channel.listen('.TypingStopped', (data: { user_id: string }) => {
         setTypingUsers((prev) => prev.filter((id) => id !== data.user_id));
-      },
-    });
-    return () => unsubscribeTyping();
-  }, [selectedConv]);
+      });
+
+      return () => {
+        window.Echo.leaveChannel(`private-App.Models.Conversation.${conversationId}`);
+      };
+    }, [selectedConv]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

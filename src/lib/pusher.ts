@@ -88,16 +88,13 @@ export function subscribeToPresence(callbacks: {
 }
 
 export function triggerTyping(conversationId: string, isTyping: boolean) {
-  const pusher = getPusher();
-  if (!pusher) return;
+  if (!window.Echo) return;
 
-  const channel = pusher.channel(`private-App.Models.Conversation.${conversationId}`);
-  if (channel) {
-    channel.trigger("client-typing", {
-      event: isTyping ? "typing" : "stop_typing",
-      user_id: localStorage.getItem("user_id"),
-    });
-  }
+  const channel = window.Echo.private(`App.Models.Conversation.${conversationId}`);
+  channel.trigger('client-typing', {
+    event: isTyping ? 'typing' : 'stop_typing',
+    user_id: localStorage.getItem('user_id'),
+  });
 }
 
 export function disconnectPusher() {
