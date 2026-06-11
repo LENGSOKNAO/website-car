@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   MessageSquare,
-  Send,
   ChevronLeft,
   Loader,
   Search,
@@ -15,15 +14,14 @@ import {
   MoreVertical,
   Pencil,
   UserCheck,
+  Send,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import Avatar from "@/components/ui/Avatar";
 import type { Conversation, Message } from "@/lib/types";
 import { cn, formatDateRelative } from "@/lib/utils";
-import {
-  triggerTyping,
-} from "@/lib/pusher";
+import { triggerTyping } from "@/lib/pusher";
 import "@/bootstrap";
 
 export default function Messages() {
@@ -50,12 +48,15 @@ export default function Messages() {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (actionMenu && !(e.target as HTMLElement).closest('[data-action-menu]')) {
+      if (
+        actionMenu &&
+        !(e.target as HTMLElement).closest("[data-action-menu]")
+      ) {
         setActionMenu(null);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [actionMenu]);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -133,7 +134,7 @@ export default function Messages() {
   useEffect(() => {
     if (!selectedConv || !window.Echo) {
       if (!window.Echo) {
-        console.warn('Echo not available. Real-time updates disabled.');
+        console.warn("Echo not available. Real-time updates disabled.");
       }
       return;
     }
@@ -143,7 +144,7 @@ export default function Messages() {
     const channel = echo.private(`App.Models.Conversation.${conversationId}`);
 
     // Listen for the MessageCreated event
-    channel.listen('.MessageCreated', (e: any) => {
+    channel.listen(".MessageCreated", (e: any) => {
       const msg = e.message ?? e;
       if (msg) {
         setMessages((prev) => {
@@ -154,28 +155,31 @@ export default function Messages() {
     });
 
     // Listen for MessageRead event
-    channel.listen('.MessageRead', (e: any) => {
+    channel.listen(".MessageRead", (e: any) => {
       if (e.message_id) {
         setMessages((prev) =>
           prev.map((m) =>
             m.id === e.message_id && String(m.sender_id) !== String(user?.id)
               ? { ...m, read_at: e.read_at }
-              : m
-          )
+              : m,
+          ),
         );
       }
     });
 
     // Listen for typing whispers (client events)
-    channel.listenForWhisper('typing', (e: { user_id: string; typing: boolean }) => {
-      if (String(e.user_id) === String(user?.id)) return;
-      setTypingUsers((prev) => {
-        if (e.typing) {
-          return prev.includes(e.user_id) ? prev : [...prev, e.user_id];
-        }
-        return prev.filter((id) => id !== e.user_id);
-      });
-    });
+    channel.listenForWhisper(
+      "typing",
+      (e: { user_id: string; typing: boolean }) => {
+        if (String(e.user_id) === String(user?.id)) return;
+        setTypingUsers((prev) => {
+          if (e.typing) {
+            return prev.includes(e.user_id) ? prev : [...prev, e.user_id];
+          }
+          return prev.filter((id) => id !== e.user_id);
+        });
+      },
+    );
 
     // Clean up on unmount
     return () => {
@@ -198,12 +202,12 @@ export default function Messages() {
 
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL || ''}/api/v1/conversations/${selectedConv}/messages`,
+          `${import.meta.env.VITE_API_URL || ""}/api/v1/conversations/${selectedConv}/messages`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
 
         if (response.ok) {
@@ -211,7 +215,11 @@ export default function Messages() {
           errorCount = 0;
 
           if (isMounted && data) {
-            const newMessages = Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : [];
+            const newMessages = Array.isArray(data.data)
+              ? data.data
+              : Array.isArray(data)
+                ? data
+                : [];
 
             if (newMessages.length !== lastKnownMessageCount) {
               setMessages(newMessages);
@@ -220,7 +228,7 @@ export default function Messages() {
               if (isMounted && bottomRef.current) {
                 requestAnimationFrame(() => {
                   if (isMounted && bottomRef.current) {
-                    bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+                    bottomRef.current.scrollIntoView({ behavior: "smooth" });
                   }
                 });
               }
@@ -232,9 +240,14 @@ export default function Messages() {
       } catch (error) {
         if (isMounted) {
           errorCount++;
-          console.warn(`Failed to fetch new messages (error #${errorCount}):`, error);
+          console.warn(
+            `Failed to fetch new messages (error #${errorCount}):`,
+            error,
+          );
           if (errorCount >= MAX_ERRORS_BEFORE_BACKOFF) {
-            console.warn('Multiple consecutive errors fetching messages. Continuing to try...');
+            console.warn(
+              "Multiple consecutive errors fetching messages. Continuing to try...",
+            );
           }
         }
       }
@@ -537,7 +550,7 @@ export default function Messages() {
                       size="sm"
                       className="w-10 h-10 shrink-0 mt-0.5"
                     />
-                    <div className="flex-1 min-w-0">
+<div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-semibold text-gray-900 truncate">
                           {getUserName(other)}
@@ -548,28 +561,54 @@ export default function Messages() {
                           </span>
                         )}
                       </div>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                        {conv.last_message?.message || conv.subject || "No messages"}
+                      </p>
+                    </div>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                        {conv.last_message?.message ||
+                          conv.subject ||
+                          "No messages"}
+                      </p>
+                      {conv.listing && (
+                        <p className="text-[10px] text-blue-500 mt-0.5 truncate">
+                          {conv.listing.make?.name || ""}{" "}
+                          {conv.listing.model?.name || ""}
+                        </p>
+                      )}
                     </div>
                   </button>
-                    );
-                  })}
-                {typingUsers.length > 0 && (
-                  <div className="flex justify-start px-2">
-                    <div className="flex items-center gap-1 text-xs text-gray-500 bg-white border border-gray-200 rounded-lg px-3 py-1.5">
-                      <div className="flex gap-0.5">
-                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                      </div>
-                      <span>{typingUsers.length === 1 ? "typing..." : "are typing..."}</span>
+                );
+              })}
+              {typingUsers.length > 0 && (
+                <div className="flex justify-start px-2">
+                  <div className="flex items-center gap-1 text-xs text-gray-500 bg-white border border-gray-200 rounded-lg px-3 py-1.5">
+                    <div className="flex gap-0.5">
+                      <span
+                        className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                        style={{ animationDelay: "0ms" }}
+                      />
+                      <span
+                        className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                        style={{ animationDelay: "150ms" }}
+                      />
+                      <span
+                        className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+                        style={{ animationDelay: "300ms" }}
+                      />
                     </div>
+                    <span>
+                      {typingUsers.length === 1 ? "typing..." : "are typing..."}
+                    </span>
                   </div>
-                )}
-                <div ref={bottomRef} />
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+              <div ref={bottomRef} />
+            </div>
+          )}
+        </div>
 
-          <div
+        <div
           className={cn(
             "flex-1 flex flex-col bg-gray-50 ",
             !selectedConv && !selectedUser && !sellerParam && "hidden md:flex",
@@ -638,35 +677,37 @@ export default function Messages() {
                               ? "bg-gray-900 text-white rounded-br-sm"
                               : "bg-white border border-gray-200 text-gray-900 rounded-bl-sm",
                           )}
-onDoubleClick={(e) => {
-                             if (isMine) {
-                               const menuWidth = 120;
-                               const x = e.clientX + menuWidth > window.innerWidth
-                                 ? window.innerWidth - menuWidth - 10
-                                 : e.clientX;
-                               setActionMenu({
-                                 msg,
-                                 x,
-                                 y: e.clientY,
-                                 menuWidth,
-                               });
-                             }
-                           }}
-                           onContextMenu={(e) => {
-                             e.preventDefault();
-                             if (isMine) {
-                               const menuWidth = 120;
-                               const x = e.clientX + menuWidth > window.innerWidth
-                                 ? window.innerWidth - menuWidth - 10
-                                 : e.clientX;
-                               setActionMenu({
-                                 msg,
-                                 x,
-                                 y: e.clientY,
-                                 menuWidth,
-                               });
-                             }
-                           }}
+                          onDoubleClick={(e) => {
+                            if (isMine) {
+                              const menuWidth = 120;
+                              const x =
+                                e.clientX + menuWidth > window.innerWidth
+                                  ? window.innerWidth - menuWidth - 10
+                                  : e.clientX;
+                              setActionMenu({
+                                msg,
+                                x,
+                                y: e.clientY,
+                                menuWidth,
+                              });
+                            }
+                          }}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            if (isMine) {
+                              const menuWidth = 120;
+                              const x =
+                                e.clientX + menuWidth > window.innerWidth
+                                  ? window.innerWidth - menuWidth - 10
+                                  : e.clientX;
+                              setActionMenu({
+                                msg,
+                                x,
+                                y: e.clientY,
+                                menuWidth,
+                              });
+                            }
+                          }}
                         >
                           {isEditing ? (
                             <div className="flex items-center gap-2">
@@ -728,12 +769,22 @@ onDoubleClick={(e) => {
                             data-action-menu
                             className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]"
                             style={{
-                              left: actionMenu.x + actionMenu.menuWidth > (typeof window !== 'undefined' ? window.innerWidth : 1920)
-                                ? undefined
-                                : actionMenu.x,
-                              right: actionMenu.x + actionMenu.menuWidth > (typeof window !== 'undefined' ? window.innerWidth : 1920)
-                                ? (typeof window !== 'undefined' ? window.innerWidth : 1920) - actionMenu.x
-                                : undefined,
+                              left:
+                                actionMenu.x + actionMenu.menuWidth >
+                                (typeof window !== "undefined"
+                                  ? window.innerWidth
+                                  : 1920)
+                                  ? undefined
+                                  : actionMenu.x,
+                              right:
+                                actionMenu.x + actionMenu.menuWidth >
+                                (typeof window !== "undefined"
+                                  ? window.innerWidth
+                                  : 1920)
+                                  ? (typeof window !== "undefined"
+                                      ? window.innerWidth
+                                      : 1920) - actionMenu.x
+                                  : undefined,
                               top: actionMenu.y,
                             }}
                             onClick={(e) => e.stopPropagation()}
