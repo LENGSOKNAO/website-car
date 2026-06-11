@@ -34,11 +34,7 @@ export default function Messages() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [actionMenu, setActionMenu] = useState<{
-    msg: any;
-    x: number;
-    y: number;
-  } | null>(null);
+  const [showActionsStates, setShowActionsStates] = useState<Record<string, boolean>>({});
 
   const [searchQuery, setSearchQuery] = useState("");
   const [allUsers, setAllUsers] = useState<any[]>([]);
@@ -551,33 +547,27 @@ export default function Messages() {
                             </>
                           )}
                         </div>
-                        {isMine && actionMenu?.msg?.id === msg.id && (
-                          <div
-                            className="absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]"
-                            style={{ transform: "translateX(-50%) translateY(0)" }}
-                            onClick={() => setActionMenu(null)}
-                          >
+                        {isMine && showActions && (
+                          <div className="flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEdit(actionMenu.msg);
-                                setActionMenu(null);
+                              onClick={() => {
+                                handleEdit(msg);
+                                setShowActionsStates(prev => ({ ...prev, [msg.id]: false }));
                               }}
-                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                              className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                              title="Edit"
                             >
                               <Edit className="w-3.5 h-3.5" />
-                              Edit
                             </button>
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(actionMenu.msg.id);
-                                setActionMenu(null);
+                              onClick={() => {
+                                handleDelete(msg.id);
+                                setShowActionsStates(prev => ({ ...prev, [msg.id]: false }));
                               }}
-                              className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
+                              className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                              title="Delete"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
-                              Delete
                             </button>
                           </div>
                         )}
