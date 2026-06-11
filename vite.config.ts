@@ -13,7 +13,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://store-car-seven.vercel.app',
+        target: 'https://admin-car-2dr5.vercel.app',
         changeOrigin: true,
       },
     },
