@@ -71,6 +71,18 @@ export default function Messages() {
   const sellerParam = searchParams.get("seller");
   const listingParam = searchParams.get("listing");
 
+  const groupedConversations = conversations.reduce((acc: any, conv: any) => {
+    const otherId = String(conv.sender_id) === String(user?.id) ? conv.receiver_id : conv.sender_id;
+    const other = String(conv.sender_id) === String(user?.id) ? conv.receiver : conv.sender;
+    const existing = acc[otherId];
+    if (!existing || new Date(conv.last_message_at || conv.last_message?.created_at || 0) > new Date(existing.last_message_at || existing.last_message?.created_at || 0)) {
+      acc[otherId] = { ...conv, other, otherId };
+    }
+    return acc;
+  }, {});
+
+  const uniqueConversations = Object.values(groupedConversations);
+
   useEffect(() => {
     if (!isAuthenticated) {
       setLoading(false);
@@ -516,7 +528,7 @@ export default function Messages() {
                 </div>
               ))}
             </div>
-          ) : conversations.length === 0 && !sellerParam ? (
+          ) : uniqueConversations.length === 0 && !sellerParam ? (
             <div className="flex-1 flex items-center justify-center p-6 text-center">
               <div>
                 <MessageSquare className="w-10 h-10 mx-auto mb-3 text-gray-300" />
@@ -527,56 +539,44 @@ export default function Messages() {
             </div>
           ) : (
             <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
-              {conversations.map((conv) => {
-                const other =
-                  String(conv.sender_id) === String(user?.id)
-                    ? conv.receiver
-                    : conv.sender;
-                return (
-                  <button
-                    key={conv.id}
-                    onClick={() => {
-                      setSelectedConv(conv.id);
-                      setSelectedUser(null);
-                    }}
-                    className={cn(
-                      "w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-gray-50",
-                      selectedConv === conv.id && "bg-blue-50",
-                    )}
-                  >
-                    <Avatar
-                      name={getUserName(other) || "U"}
-                      src={getUserAvatar(other)}
-                      size="sm"
-                      className="w-10 h-10 shrink-0 mt-0.5"
-                    />
-<div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
-                          {getUserName(other)}
-                        </p>
-                        {conv.last_message?.created_at && (
-                          <span className="text-[10px] text-gray-400 shrink-0">
-                            {formatDateRelative(conv.last_message.created_at)}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500 truncate mt-0.5">
-                        {conv.last_message?.message || conv.subject || "No messages"}
-                      </p>
-                    </div>
-                      <p className="text-xs text-gray-500 truncate mt-0.5">
-                        {conv.last_message?.message ||
-                          conv.subject ||
-                          "No messages"}
-                      </p>
-                      {conv.listing && (
-                        <p className="text-[10px] text-blue-500 mt-0.5 truncate">
-                          {conv.listing.make?.name || ""}{" "}
-                          {conv.listing.model?.name || ""}
-                        </p>
+              {uniqueConversations.map((conv: any) => (
+                <button
+                  key={conv.id}
+                  onClick={() => {
+                    setSelectedConv(conv.id);
+                    setSelectedUser(null);
+                  }}
+                  className={cn(
+                    "w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-gray-50",
+                    selectedConv === conv.id && "bg-blue-50",
+                  )}
+                >
+                  <Avatar
+                    name={getUserName(conv.other) || "U"}
+                    src={getUserAvatar(conv.other)}
+                    size="sm"
+                    className="w-10 h-10 shrink-0 mt-0.5"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-gray-900 truncate">
+                        {getUserName(conv.other)}
+                      </p>  
+                      {conv.last_message?.created_at && (
+                        <span className="text-[10px] text-gray-400 shrink-0">
+                          {formatDateRelative(conv.last_message.created_at)}
+                        </span>
                       )}
                     </div>
+                    <p className="text-xs text-gray-500 truncate mt-0.5">
+                      {conv.last_message?.message || conv.subject || "No messages"}
+                    </p>
+                    {conv.listing && (
+                      <p className="text-[10px] text-blue-500 mt-0.5 truncate">
+                        {conv.listing.make?.name || ""} {conv.listing.model?.name || ""}
+                      </p>
+                    )}
+                  </div>
                   </button>
                 );
               })}
