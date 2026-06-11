@@ -34,7 +34,7 @@ export default function Messages() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [actionMenu, setActionMenu] = useState<{ msg: any; x: number; y: number } | null>(null);
+  const [showActionsStates, setShowActionsStates] = useState<Record<string, boolean>>({});
 
   const [searchQuery, setSearchQuery] = useState("");
   const [allUsers, setAllUsers] = useState<any[]>([]);
@@ -384,6 +384,7 @@ export default function Messages() {
                   messages.map((msg) => {
                     const isMine = String(msg.sender_id) === String(user?.id);
                     const isEditing = editingId === msg.id;
+                    const showActions = showActionsStates[msg.id] || false;
                     return (
                       <div key={msg.id} className={cn("flex", isMine ? "justify-end" : "justify-start")}>
                         <div
@@ -393,10 +394,10 @@ export default function Messages() {
                               ? "bg-gray-900 text-white rounded-br-sm"
                               : "bg-white border border-gray-200 text-gray-900 rounded-bl-sm",
                           )}
-                          onDoubleClick={() => isMine && setActionMenu({ msg, x: 0, y: 0 })}
+                          onDoubleClick={() => isMine && setShowActionsStates(prev => ({ ...prev, [msg.id]: true }))}
                           onContextMenu={(e) => {
                             e.preventDefault();
-                            if (isMine) setActionMenu({ msg, x: e.clientX, y: e.clientY });
+                            if (isMine) setShowActionsStates(prev => ({ ...prev, [msg.id]: true }));
                           }}
                         >
                           {isEditing ? (
@@ -431,44 +432,34 @@ export default function Messages() {
                                   {msg.read_at && isMine && <span className="ml-1">&middot; Read</span>}
                                   {msg.edited_at && <span className="ml-1">&middot; Edited</span>}
                                 </p>
+                                {isMine && showActions && (
+                                  <div className="flex items-center gap-1 ml-auto">
+                                    <button
+                                      onClick={() => {
+                                        handleEdit(msg);
+                                        setShowActionsStates(prev => ({ ...prev, [msg.id]: false }));
+                                      }}
+                                      className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                                      title="Edit"
+                                    >
+                                      <Edit className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        handleDelete(msg.id);
+                                        setShowActionsStates(prev => ({ ...prev, [msg.id]: false }));
+                                      }}
+                                      className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                      title="Delete"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                )}
                               </div>
                             </>
                           )}
                         </div>
-                        {isMine && actionMenu?.msg?.id === msg.id && (
-                          <div
-                            className="absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]"
-                            style={{ 
-                              left: '50%', 
-                              bottom: '-40px', 
-                              transform: 'translateX(-50%) translateY(0)'
-                            }}
-                            onClick={() => setActionMenu(null)}
-                          >
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEdit(actionMenu.msg);
-                                setActionMenu(null);
-                              }}
-                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                            >
-                              <Edit className="w-3.5 h-3.5" />
-                              Edit
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(actionMenu.msg.id);
-                                setActionMenu(null);
-                              }}
-                              className="w-full text-left px-3 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              Delete
-                            </button>
-                          </div>
-                        )}
                       </div>
                     );
                   })
