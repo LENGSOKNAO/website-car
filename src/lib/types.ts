@@ -124,7 +124,8 @@ export interface Conversation {
   sender: SellerProfile
   receiver: SellerProfile
   listing: CarListing | null
-  last_message: Message | null
+  last_message: string | null
+  unread: boolean
 }
 
 export interface Message {

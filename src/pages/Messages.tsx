@@ -95,11 +95,7 @@ export default function Messages() {
   useEffect(() => {
     const initialUnread: Record<string, number> = {};
     conversations.forEach((conv: any) => {
-      if (
-        conv.last_message &&
-        String(conv.last_message.sender_id) !== String(user?.id) &&
-        !conv.last_message.read_at
-      ) {
+      if (conv.unread) {
         const otherId =
           String(conv.sender_id) === String(user?.id)
             ? conv.receiver_id
@@ -622,7 +618,7 @@ export default function Messages() {
                     </div>
 {conv.last_message && (
                       <p className="text-xs text-gray-500 truncate mt-0.5">
-                        {conv.last_message?.content || conv.subject || "No messages"}
+                        {conv.last_message || conv.subject || "No messages"}
                       </p>
                     )}
                     {conv.listing && (
