@@ -7,6 +7,11 @@ import {
   Loader,
   Search,
   Plus,
+  Edit,
+  Trash2,
+  Check,
+  X,
+  MoreVertical,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -25,6 +30,10 @@ export default function Messages() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [allUsers, setAllUsers] = useState<any[]>([]);
@@ -153,6 +162,44 @@ export default function Messages() {
       }
       setSending(false);
     }
+  }
+
+  async function handleEdit(msg: any) {
+    setEditingId(msg.id);
+    setEditContent(msg.content);
+  }
+
+  async function saveEdit(msgId: string) {
+    try {
+      const res = await api.editMessage(msgId, { content: editContent.trim() });
+      const updated = res?.data?.data ?? res?.data ?? res;
+      if (updated) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === msgId ? updated : m))
+        );
+      }
+      setEditingId(null);
+      setEditContent("");
+    } catch (e: any) {
+      console.error("Edit error:", e?.message || e);
+    }
+  }
+
+  async function cancelEdit() {
+    setEditingId(null);
+    setEditContent("");
+  }
+
+  async function handleDelete(msgId: string) {
+    if (!window.confirm("Delete this message?")) return;
+    setDeletingId(msgId);
+    try {
+      await api.deleteMessage(msgId);
+      setMessages((prev) => prev.filter((m) => m.id !== msgId));
+    } catch (e: any) {
+      console.error("Delete error:", e?.message || e);
+    }
+    setDeletingId(null);
   }
 
   function getUserName(u: any) { return u?.full_name || u?.name || "Unknown"; }
@@ -325,19 +372,69 @@ export default function Messages() {
                 ) : (
                   messages.map((msg) => {
                     const isMine = String(msg.sender_id) === String(user?.id);
+                    const isEditing = editingId === msg.id;
                     return (
                       <div key={msg.id} className={cn("flex", isMine ? "justify-end" : "justify-start")}>
                         <div className={cn(
-                          "max-w-[75%] px-3.5 py-2.5 rounded-lg text-sm",
+                          "max-w-[75%] px-3.5 py-2.5 rounded-lg text-sm relative",
                           isMine
                             ? "bg-gray-900 text-white rounded-br-sm"
                             : "bg-white border border-gray-200 text-gray-900 rounded-bl-sm",
                         )}>
-                           <p className="leading-relaxed">{msg.content}</p>
-                          <p className={cn("text-[10px] mt-1", isMine ? "text-gray-400" : "text-gray-400")}>
-                            {formatDateRelative(msg.created_at)}
-                            {msg.read_at && isMine && <span className="ml-1">&middot; Read</span>}
-                          </p>
+                          {isEditing ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={editContent}
+                                onChange={(e) => setEditContent(e.target.value)}
+                                className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded bg-white text-gray-900 focus:outline-none focus:border-blue-500"
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => saveEdit(msg.id)}
+                                disabled={!editContent.trim() || deletingId === msg.id}
+                                className="p-1.5 text-green-500 hover:bg-green-50 rounded"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={cancelEdit}
+                                className="p-1.5 text-gray-500 hover:bg-gray-100 rounded"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="leading-relaxed">{msg.content}</p>
+                              <div className="flex items-center gap-1 mt-1">
+                                <p className={cn("text-[10px]", isMine ? "text-gray-400" : "text-gray-400")}>
+                                  {formatDateRelative(msg.created_at)}
+                                  {msg.read_at && isMine && <span className="ml-1">&middot; Read</span>}
+                                  {msg.edited_at && <span className="ml-1">&middot; Edited</span>}
+                                </p>
+                                {isMine && (
+                                  <div className="flex items-center gap-1 ml-auto">
+                                    <button
+                                      onClick={() => handleEdit(msg)}
+                                      className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                                      title="Edit"
+                                    >
+                                      <Edit className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDelete(msg.id)}
+                                      disabled={deletingId === msg.id}
+                                      className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                      title="Delete"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     );

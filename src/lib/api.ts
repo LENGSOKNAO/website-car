@@ -180,6 +180,10 @@ export const api = {
     request<Message>(`/conversations/${id}/reply`, { method: "POST", body: JSON.stringify(data) }),
   markConversationRead: (id: string) =>
     request<void>(`/conversations/${id}/read`, { method: "POST" }),
+  editMessage: (id: string, data: { content: string }) =>
+    request<Message>(`/messages/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteMessage: (id: string) =>
+    request<void>(`/messages/${id}`, { method: "DELETE" }),
   listings: (params: Record<string, string | number | undefined | null | boolean>) => {
     const query = Object.entries(params)
       .filter(([, v]) => v !== undefined && v !== null && v !== '')
