@@ -73,10 +73,20 @@ export default function Messages() {
   const listingParam = searchParams.get("listing");
 
   const groupedConversations = conversations.reduce((acc: any, conv: any) => {
-    const otherId = String(conv.sender_id) === String(user?.id) ? conv.receiver_id : conv.sender_id;
-    const other = String(conv.sender_id) === String(user?.id) ? conv.receiver : conv.sender;
+    const otherId =
+      String(conv.sender_id) === String(user?.id)
+        ? conv.receiver_id
+        : conv.sender_id;
+    const other =
+      String(conv.sender_id) === String(user?.id) ? conv.receiver : conv.sender;
     const existing = acc[otherId];
-    if (!existing || new Date(conv.last_message_at || conv.last_message?.created_at || 0) > new Date(existing.last_message_at || existing.last_message?.created_at || 0)) {
+    if (
+      !existing ||
+      new Date(conv.last_message_at || conv.last_message?.created_at || 0) >
+        new Date(
+          existing.last_message_at || existing.last_message?.created_at || 0,
+        )
+    ) {
       acc[otherId] = { ...conv, other, otherId };
     }
     return acc;
@@ -85,21 +95,25 @@ export default function Messages() {
   useEffect(() => {
     const initialUnread: Record<string, number> = {};
     conversations.forEach((conv: any) => {
-      if (conv.last_message && String(conv.last_message.sender_id) !== String(user?.id) && !conv.last_message.read_at) {
-        const otherId = String(conv.sender_id) === String(user?.id) ? conv.receiver_id : conv.sender_id;
+      if (
+        conv.last_message &&
+        String(conv.last_message.sender_id) !== String(user?.id) &&
+        !conv.last_message.read_at
+      ) {
+        const otherId =
+          String(conv.sender_id) === String(user?.id)
+            ? conv.receiver_id
+            : conv.sender_id;
         initialUnread[otherId] = (initialUnread[otherId] || 0) + 1;
       }
     });
     setUnreadCounts(initialUnread);
   }, [conversations, user?.id]);
-    if (conv.last_message && String(conv.last_message.sender_id) !== String(user?.id) && !conv.last_message.read_at) {
-      const otherId = String(conv.sender_id) === String(user?.id) ? conv.receiver_id : conv.sender_id;
-      acc[otherId] = (acc[otherId] || 0) + 1;
-    }
-    return acc;
-  }, {});
 
-  const totalUnread = Object.values(unreadCounts).reduce((sum: number, count: any) => sum + count, 0);
+  const totalUnread = Object.values(unreadCounts).reduce(
+    (sum: number, count: any) => sum + count,
+    0,
+  );
 
   const uniqueConversations = Object.values(groupedConversations);
 
@@ -202,7 +216,10 @@ export default function Messages() {
           const updated = { ...prev };
           const conv = conversations.find((c) => c.id === conversationId);
           if (conv) {
-            const otherId = String(conv.sender_id) === String(user?.id) ? conv.receiver_id : conv.sender_id;
+            const otherId =
+              String(conv.sender_id) === String(user?.id)
+                ? conv.receiver_id
+                : conv.sender_id;
             if (updated[otherId] > 0) {
               updated[otherId] = Math.max(0, updated[otherId] - 1);
             }
@@ -594,13 +611,8 @@ export default function Messages() {
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-semibold text-gray-900 truncate">
                         {getUserName(conv.other)}
-                      </p>  
+                      </p>
                       <div className="flex items-center gap-2 shrink-0">
-                        {unreadCounts[conv.otherId] > 0 && (
-                          <span className="bg-blue-600 text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
-                            {unreadCounts[conv.otherId] > 99 ? "99+" : unreadCounts[conv.otherId]}
-                          </span>
-                        )}
                         {conv.last_message?.created_at && (
                           <span className="text-[10px] text-gray-400 shrink-0">
                             {formatDateRelative(conv.last_message.created_at)}
@@ -608,18 +620,28 @@ export default function Messages() {
                         )}
                       </div>
                     </div>
-                    {conv.last_message && String(conv.last_message.sender_id) !== String(user?.id) && (
-                      <p className="text-xs text-gray-500 truncate mt-0.5">
-                        {conv.last_message?.message || conv.subject || "No messages"}
-                      </p>
-                    )}
+                    {conv.last_message &&
+                      String(conv.last_message.sender_id) !==
+                        String(user?.id) && (
+                        <p className="text-xs text-gray-500 truncate mt-0.5">
+                          {/* {conv.last_message?.message || conv.subject || "No messages"} */}
+                          {messages.map((e) => (
+                            <div className="">{e.message}</div>
+                          ))}
+                        </p>
+                      )}
                     {conv.listing && (
                       <p className="text-[10px] text-blue-500 mt-0.5 truncate">
-                        {conv.listing.make?.name || ""} {conv.listing.model?.name || ""}
+                        {conv.listing.make?.name || ""}{" "}
+                        {conv.listing.model?.name || ""}
                       </p>
                     )}
+
+                    <p className="text-xs text-gray-500 truncate mt-0.5">
+                      {conv.last_message?.message || conv.subject || "No messages"}
+                    </p>
                   </div>
-                  </button>
+                </button>
               ))}
               {typingUsers.length > 0 && (
                 <div className="flex justify-start px-2">
