@@ -399,20 +399,22 @@ export default function Messages() {
                   messages.map((msg) => {
                     const isMine = String(msg.sender_id) === String(user?.id);
                     const isEditing = editingId === msg.id;
-                    const showActions = showActionsStates[msg.id] || false;
                     return (
                       <div key={msg.id} className={cn("flex", isMine ? "justify-end" : "justify-start")}>
                         <div
                           className={cn(
-                            "max-w-[75%] px-3.5 py-2.5 rounded-lg text-sm relative group",
+                            "max-w-[75%] px-3.5 py-2.5 rounded-lg text-sm relative",
                             isMine
                               ? "bg-gray-900 text-white rounded-br-sm"
                               : "bg-white border border-gray-200 text-gray-900 rounded-bl-sm",
                           )}
-                          onDoubleClick={() => isMine && setShowActionsStates(prev => ({ ...prev, [msg.id]: true }))}
+                          onDoubleClick={() => isMine && handleEdit(msg)}
                           onContextMenu={(e) => {
                             e.preventDefault();
-                            if (isMine) setShowActionsStates(prev => ({ ...prev, [msg.id]: true }));
+                            if (isMine) {
+                              e.preventDefault();
+                              handleEdit(msg);
+                            }
                           }}
                         >
                           {isEditing ? (
@@ -447,30 +449,6 @@ export default function Messages() {
                                   {msg.read_at && isMine && <span className="ml-1">&middot; Read</span>}
                                   {msg.edited_at && <span className="ml-1">&middot; Edited</span>}
                                 </p>
-                                {isMine && showActions && (
-                                  <div className="flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                                    <button
-                                      onClick={() => {
-                                        handleEdit(msg);
-                                        setShowActionsStates(prev => ({ ...prev, [msg.id]: false }));
-                                      }}
-                                      className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
-                                      title="Edit"
-                                    >
-                                      <Edit className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        handleDelete(msg);
-                                        setShowActionsStates(prev => ({ ...prev, [msg.id]: false }));
-                                      }}
-                                      className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                                      title="Delete"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                )}
                               </div>
                             </>
                           )}
