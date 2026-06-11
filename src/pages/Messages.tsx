@@ -554,9 +554,7 @@ export default function Messages() {
                         {isMine && actionMenu?.msg?.id === msg.id && (
                           <div
                             className="absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]"
-                            style={
-                              transform: "translateX(-50%) translateY(0)"
-                            }
+                            style={{ transform: "translateX(-50%) translateY(0)" }}
                             onClick={() => setActionMenu(null)}
                           >
                             <button
