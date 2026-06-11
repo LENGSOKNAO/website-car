@@ -548,12 +548,6 @@ export default function Messages() {
                           </span>
                         )}
                       </div>
-                      {conv.listing && (
-                        <p className="text-[10px] text-blue-500 mt-0.5 truncate">
-                          {conv.listing.make?.name || ""}{" "}
-                          {conv.listing.model?.name || ""}
-                        </p>
-                      )}
                     </div>
                   </button>
                     );
