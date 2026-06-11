@@ -35,6 +35,9 @@ export default function Messages() {
   const [editContent, setEditContent] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showActionsStates, setShowActionsStates] = useState<Record<string, boolean>>({});
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedMsgForAction, setSelectedMsgForAction] = useState<any>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [allUsers, setAllUsers] = useState<any[]>([]);
@@ -176,8 +179,9 @@ export default function Messages() {
   }
 
   async function handleEdit(msg: any) {
-    setEditingId(msg.id);
+    setSelectedMsgForAction(msg);
     setEditContent(msg.content);
+    setShowEditDialog(true);
   }
 
   async function saveEdit(msgId: string) {
@@ -191,6 +195,8 @@ export default function Messages() {
       }
       setEditingId(null);
       setEditContent("");
+      setShowEditDialog(false);
+      setSelectedMsgForAction(null);
     } catch (e: any) {
       console.error("Edit error:", e?.message || e);
     }
@@ -199,18 +205,27 @@ export default function Messages() {
   async function cancelEdit() {
     setEditingId(null);
     setEditContent("");
+    setShowEditDialog(false);
+    setSelectedMsgForAction(null);
   }
 
-  async function handleDelete(msgId: string) {
-    if (!window.confirm("Delete this message?")) return;
-    setDeletingId(msgId);
+  async function handleDelete(msg: any) {
+    setSelectedMsgForAction(msg);
+    setShowDeleteDialog(true);
+  }
+
+  async function confirmDelete() {
+    if (!selectedMsgForAction) return;
+    setDeletingId(selectedMsgForAction.id);
     try {
-      await api.deleteMessage(msgId);
-      setMessages((prev) => prev.filter((m) => m.id !== msgId));
+      await api.deleteMessage(selectedMsgForAction.id);
+      setMessages((prev) => prev.filter((m) => m.id !== selectedMsgForAction.id));
     } catch (e: any) {
       console.error("Delete error:", e?.message || e);
     }
     setDeletingId(null);
+    setShowDeleteDialog(false);
+    setSelectedMsgForAction(null);
   }
 
   function getUserName(u: any) { return u?.full_name || u?.name || "Unknown"; }
@@ -389,7 +404,7 @@ export default function Messages() {
                       <div key={msg.id} className={cn("flex", isMine ? "justify-end" : "justify-start")}>
                         <div
                           className={cn(
-                            "max-w-[75%] px-3.5 py-2.5 rounded-lg text-sm relative",
+                            "max-w-[75%] px-3.5 py-2.5 rounded-lg text-sm relative group",
                             isMine
                               ? "bg-gray-900 text-white rounded-br-sm"
                               : "bg-white border border-gray-200 text-gray-900 rounded-bl-sm",
@@ -433,7 +448,7 @@ export default function Messages() {
                                   {msg.edited_at && <span className="ml-1">&middot; Edited</span>}
                                 </p>
                                 {isMine && showActions && (
-                                  <div className="flex items-center gap-1 ml-auto">
+                                  <div className="flex items-center gap-1 ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                                     <button
                                       onClick={() => {
                                         handleEdit(msg);
@@ -446,7 +461,7 @@ export default function Messages() {
                                     </button>
                                     <button
                                       onClick={() => {
-                                        handleDelete(msg.id);
+                                        handleDelete(msg);
                                         setShowActionsStates(prev => ({ ...prev, [msg.id]: false }));
                                       }}
                                       className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
@@ -496,6 +511,95 @@ export default function Messages() {
           )}
         </div>
       </div>
+
+      {/* Edit Message Dialog */}
+      {showEditDialog && selectedMsgForAction && (
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
+          onClick={() => {
+            setShowEditDialog(false);
+            setSelectedMsgForAction(null);
+          }}
+        >
+          <div
+            className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold mb-4">Edit Message</h3>
+            <textarea
+              value={editContent}
+              onChange={(e) => setEditContent(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 resize-none"
+              rows={3}
+              autoFocus
+            />
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => {
+                  saveEdit(selectedMsgForAction.id);
+                  setShowEditDialog(false);
+                  setSelectedMsgForAction(null);
+                }}
+                disabled={!editContent.trim() || deletingId === selectedMsgForAction?.id}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => {
+                  cancelEdit();
+                  setShowEditDialog(false);
+                  setSelectedMsgForAction(null);
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Message Dialog */}
+      {showDeleteDialog && selectedMsgForAction && (
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
+          onClick={() => {
+            setShowDeleteDialog(false);
+            setSelectedMsgForAction(null);
+          }}
+        >
+          <div
+            className="bg-white rounded-lg p-6 max-w-sm w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold mb-2">Delete Message</h3>
+            <p className="text-gray-600 mb-4">Are you sure you want to delete this message? This action cannot be undone.</p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => {
+                  handleDelete(selectedMsgForAction.id);
+                  setShowDeleteDialog(false);
+                  setSelectedMsgForAction(null);
+                }}
+                disabled={deletingId === selectedMsgForAction?.id}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteDialog(false);
+                  setSelectedMsgForAction(null);
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
