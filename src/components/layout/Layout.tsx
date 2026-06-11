@@ -14,6 +14,7 @@ export default function Layout() {
   
   const slug = pathname.split('/')[1]
   const isBrandPage = BRAND_PAGES.some(p => p.slug === slug || (p.slug === 'nissan' && slug === 'gtr'))
+  const isMessagesPage = pathname.startsWith('/messages')
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -21,7 +22,7 @@ export default function Layout() {
       <main className={`flex-1 ${isBrandPage ? 'pt-24 md:pt-[104px]' : 'pt-14 md:pt-16'} bg-white`}>
         <Outlet />
       </main>
-      <Footer />
+      {!isMessagesPage && <Footer />}
     </div>
   )
 }
