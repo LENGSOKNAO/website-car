@@ -81,11 +81,19 @@ export default function Messages() {
       api.conversationMessages(selectedConv)
         .then((res) => {
           const raw = res?.data?.data ?? res?.data ?? res ?? [];
-          setMessages(Array.isArray(raw)
+          const fetched = Array.isArray(raw)
             ? raw
             : Array.isArray(raw?.data)
               ? raw.data
-              : []);
+              : [];
+          setMessages((prev) => {
+            const existing = new Set(prev.map(m => m.id));
+            const merged = [...prev];
+            for (const m of fetched) {
+              if (!existing.has(m.id)) merged.push(m);
+            }
+            return merged;
+          });
         })
         .catch(() => setMessages([]))
         .finally(() => setMsgLoading(false));
@@ -136,7 +144,6 @@ export default function Messages() {
           setSelectedUser(null);
           setSearchQuery("");
           setSearchResults([]);
-          setMessages(msg.id ? [msg] : []);
           const convRes = await api.conversations();
           const raw = convRes?.data?.data ?? convRes?.data ?? convRes ?? [];
           setConversations(Array.isArray(raw)
@@ -155,7 +162,10 @@ export default function Messages() {
       try {
         const res = await api.replyConversation(selectedConv, { content: input.trim() });
         const msg = res?.data?.data ?? res?.data;
-        if (msg) setMessages((prev) => [...prev, msg]);
+        if (msg) setMessages((prev) => {
+          if (prev.some(m => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
         setInput("");
       } catch (e: any) {
         console.error("Reply error:", e?.message || e);
