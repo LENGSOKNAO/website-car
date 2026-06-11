@@ -89,6 +89,8 @@ export default function Messages() {
     return acc;
   }, {});
 
+  const totalUnread = Object.values(unreadCounts).reduce((sum: number, count: any) => sum + count, 0);
+
   const uniqueConversations = Object.values(groupedConversations);
 
   useEffect(() => {
