@@ -477,8 +477,8 @@ export default function Messages() {
           className="absolute z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]"
           style={{ 
             left: '50%', 
-            top: '100%', 
-            transform: 'translateX(-50%) translateY(4px)'
+            bottom: '100%', 
+            transform: 'translateX(-50%) translateY(-4px)'
           }}
           onClick={() => setActionMenu(null)}
         >
