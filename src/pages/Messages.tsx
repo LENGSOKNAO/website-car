@@ -620,9 +620,7 @@ export default function Messages() {
                         )}
                       </div>
                     </div>
-{conv.last_message &&
-                      String(conv.last_message.sender_id) !==
-                        String(user?.id) && (
+{conv.last_message && (
                       <p className="text-xs text-gray-500 truncate mt-0.5">
                         {conv.last_message?.content || conv.subject || "No messages"}
                       </p>
