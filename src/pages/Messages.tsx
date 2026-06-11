@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   MessageSquare,
+  Send,
   ChevronLeft,
   Loader,
   Search,
@@ -547,11 +548,6 @@ export default function Messages() {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500 truncate mt-0.5">
-                        {conv.last_message?.message ||
-                          conv.subject ||
-                          "No messages"}
-                      </p>
                       {conv.listing && (
                         <p className="text-[10px] text-blue-500 mt-0.5 truncate">
                           {conv.listing.make?.name || ""}{" "}
@@ -778,6 +774,36 @@ onDoubleClick={(e) => {
                 )}
                 <div ref={bottomRef} />
               </div>
+
+              <form
+                onSubmit={handleSend}
+                className="bg-white border-t border-gray-200 px-4 py-3 shrink-0"
+              >
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={handleInputChange}
+                    placeholder={
+                      selectedUser && !selectedConv
+                        ? "Send a message to start..."
+                        : "Type a message..."
+                    }
+                    className="flex-1 px-3.5 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400 text-gray-900 placeholder-gray-400"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!input.trim() || sending}
+                    className="shrink-0 w-9 h-9 rounded-lg bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {sending ? (
+                      <Loader className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </form>
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center text-center p-6">
