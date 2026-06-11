@@ -492,7 +492,7 @@ export default function Messages() {
                 )}
                 <div ref={bottomRef} />
               </div>
-            )}
+            ))))}
           </div>
 
           <div
