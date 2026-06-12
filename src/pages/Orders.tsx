@@ -651,7 +651,7 @@ function OrderDetail({
                         </p>
                       </div>
                     </div>
-                  ))}
+                  )))}
                 )}
               )}
                 <div ref={messagesEndRef} />
