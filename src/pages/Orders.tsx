@@ -463,9 +463,6 @@ function OrderDetail({
   const [msgLoading, setMsgLoading] = useState(true);
   const [msgError, setMsgError] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [showMessageModal, setShowMessageModal] = useState(false);
-  const [creatingConv, setCreatingConv] = useState(false);
-
   const listing = order.items?.[0]?.listing;
   const primaryImage =
     listing?.primary_image?.image_url || listing?.images?.[0]?.image_url;
@@ -532,9 +529,7 @@ function OrderDetail({
     if (!msgInput.trim() || sendingMsg || !listing) return;
     setSendingMsg(true);
     try {
-      let convId = conversation?.id;
-      if (!convId) {
-        setCreatingConv(true);
+      if (!conversation) {
         const res = await api.sendMessage({
           receiver_id: order.seller_id,
           listing_id: listing.id,
@@ -542,12 +537,11 @@ function OrderDetail({
         });
         const msg = res?.data?.data ?? res?.data ?? res;
         if (msg?.conversation_id) {
-          convId = msg.conversation_id;
-          setConversation({ ...conversation, id: convId } as Conversation);
+          setConversation({ ...conversation, id: msg.conversation_id } as Conversation);
         }
         if (msg) setMessages((prev) => [...prev, msg]);
       } else {
-        const res = await api.replyConversation(convId, {
+        const res = await api.replyConversation(conversation.id, {
           content: msgInput.trim(),
         });
         const msg = res?.data?.data ?? res?.data ?? res;
@@ -558,7 +552,6 @@ function OrderDetail({
       setMsgError(err.message || "Failed to send message");
     } finally {
       setSendingMsg(false);
-      setCreatingConv(false);
     }
   }
 
@@ -949,9 +942,7 @@ function OrderDetail({
         </div>
       )}
 
-      {/* Message Modal */}
-      {showMessageModal && listing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+
         <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
           <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
