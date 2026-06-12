@@ -1013,7 +1013,6 @@ function OrderDetail({
           </form>
         </div>
       </div>
-    )}
   </div>
   );
 }
