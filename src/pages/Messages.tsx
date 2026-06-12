@@ -63,6 +63,7 @@ export default function Messages() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [allUsersLoaded, setAllUsersLoaded] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
@@ -70,6 +71,7 @@ export default function Messages() {
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const typingTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const autoSelected = useRef(false);
 
   const sellerParam = searchParams.get("seller");
   const listingParam = searchParams.get("listing");
