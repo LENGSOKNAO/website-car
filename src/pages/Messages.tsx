@@ -547,6 +547,7 @@ export default function Messages() {
     }
     setSearchQuery("");
     setSearchResults([]);
+    setInput("");
   }
 
   if (!isAuthenticated) {
