@@ -925,16 +925,15 @@ function OrderDetail({
 
       {/* Next Payment Due */}
       {order.next_payment_due_at && (
-        <div className="mt-4 bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 flex items-center gap-2 text-sm rounded-sm">
+        <div className="mt-4 bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 flex items-center justify-center gap-2 text-sm rounded-sm">
           <Clock className="w-4 h-4 shrink-0" />
           Next payment due: {formatDate(order.next_payment_due_at)}
         </div>
       )}
-    </div>
 
-    {/* Message Modal */}
-    {showMessageModal && conversation && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      {/* Message Modal */}
+      {showMessageModal && conversation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
         <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
           <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
