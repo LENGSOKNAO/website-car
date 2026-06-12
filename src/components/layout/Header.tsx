@@ -25,6 +25,7 @@ import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import Avatar from "@/components/ui/Avatar";
 import SettingsDrawer from "@/components/layout/SettingsDrawer";
+import "@/bootstrap";
 
 const buyerLinks = [
   { label: "My Profile", icon: User, path: "/profile" },
@@ -38,7 +39,7 @@ const sellerLinks = [
   { label: "My Profile", icon: User, path: "/profile" },
   { label: "My Listings", icon: Car, path: "/seller/listings" },
   { label: "My Sales", icon: ClipboardList, path: "/seller/sales" },
-  { label: "Messages", icon: MessageSquare, path: "/seller/messages" },
+  { label: "Messages", icon: MessageSquare, path: "/messages" },
   { label: "Banner", icon: Image, path: "/seller/banner" },
   { label: "Heroes", icon: Layout, path: "/seller/heroes" },
 ];
@@ -60,6 +61,7 @@ export default function Header() {
   const [sellers, setSellers] = useState<any[]>([]);
   const [heroes, setHeroes] = useState<any[]>([]);
   const [openHeroId, setOpenHeroId] = useState<string | null>(null);
+  const [totalUnread, setTotalUnread] = useState(0);
   const location = useLocation();
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -117,6 +119,40 @@ export default function Header() {
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    function fetchUnread() {
+      api.conversations().then((res: any) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? [];
+        const convs: any[] = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+        const unread = convs.filter((c: any) => c.unread).length;
+        setTotalUnread(unread);
+      }).catch(() => {});
+    }
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 15000);
+
+    if (user?.id && window.Echo) {
+      const channel = window.Echo.private(`App.Models.User.${user.id}`);
+      channel.listen(".MessageCreated", () => {
+        setTotalUnread((prev) => prev + 1);
+      });
+      channel.listen(".MessageRead", (e: any) => {
+        if (e.message_id) {
+          fetchUnread();
+        }
+      });
+      return () => {
+        clearInterval(interval);
+        window.Echo.leave(`App.Models.User.${user.id}`);
+      };
+    }
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, user?.id]);
 
   useEffect(() => {
     if (mobileOpen) {
@@ -268,17 +304,22 @@ export default function Header() {
                             <div>
                               <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-1">Admin</p>
                               <div className="space-y-0.5">
-                                {adminLinks.map((item) => {
-                                  const Icon = item.icon;
-                                  return (
-                                    <button key={item.path} onClick={() => { setProfileOpen(false); navigate(item.path); }}
-                                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-gray-100 transition-colors text-left group"
-                                    >
-                                      <Icon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 shrink-0" />
-                                      <span className="font-medium">{item.label}</span>
-                                    </button>
-                                  );
-                                })}
+                                    {adminLinks.map((item) => {
+                                      const Icon = item.icon;
+                                      return (
+                                        <button key={item.path} onClick={() => { setProfileOpen(false); navigate(item.path); }}
+                                          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-gray-100 transition-colors text-left group"
+                                        >
+                                          <Icon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 shrink-0" />
+                                          <span className="font-medium">{item.label}</span>
+                                          {item.label === "Messages" && totalUnread > 0 && (
+                                            <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-blue-500 rounded-full">
+                                              {totalUnread}
+                                            </span>
+                                          )}
+                                        </button>
+                                      );
+                                    })}
                               </div>
                             </div>
                           )}
@@ -286,17 +327,22 @@ export default function Header() {
                             <div>
                               {isAdmin && <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-1">Seller</p>}
                               <div className="space-y-0.5">
-                                {sellerLinks.map((item) => {
-                                  const Icon = item.icon;
-                                  return (
-                                    <button key={item.path} onClick={() => { setProfileOpen(false); navigate(item.path); }}
-                                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-gray-100 transition-colors text-left group"
-                                    >
-                                      <Icon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 shrink-0" />
-                                      <span className="font-medium">{item.label}</span>
-                                    </button>
-                                  );
-                                })}
+                                  {sellerLinks.map((item) => {
+                                    const Icon = item.icon;
+                                    return (
+                                      <button key={item.path} onClick={() => { setProfileOpen(false); navigate(item.path); }}
+                                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-gray-100 transition-colors text-left group"
+                                      >
+                                        <Icon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 shrink-0" />
+                                        <span className="font-medium">{item.label}</span>
+                                        {item.label === "Messages" && totalUnread > 0 && (
+                                          <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-blue-500 rounded-full">
+                                            {totalUnread}
+                                          </span>
+                                        )}
+                                      </button>
+                                    );
+                                  })}
                               </div>
                             </div>
                           )}
@@ -312,6 +358,11 @@ export default function Header() {
                                     >
                                       <Icon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 shrink-0" />
                                       <span className="font-medium">{item.label}</span>
+                                      {item.label === "Messages" && totalUnread > 0 && (
+                                        <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-blue-500 rounded-full">
+                                          {totalUnread}
+                                        </span>
+                                      )}
                                     </button>
                                   );
                                 })}
