@@ -111,7 +111,6 @@ export const api = {
     email: string;
     password: string;
     password_confirmation: string;
-    role?: string;
   }) =>
     request<{
       token: string;

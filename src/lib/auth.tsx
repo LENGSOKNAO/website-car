@@ -34,7 +34,7 @@ interface AuthContextType {
   user: AuthUser | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
-  register: (data: { full_name: string; email: string; password: string; password_confirmation: string; role?: string }) => Promise<void>
+  register: (data: { full_name: string; email: string; password: string; password_confirmation: string }) => Promise<void>
   logout: () => Promise<void>
   isAuthenticated: boolean
   refreshUser: () => Promise<void>
@@ -150,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData)
   }
 
-  const register = async (data: { full_name: string; email: string; password: string; password_confirmation: string; role?: string }) => {
+  const register = async (data: { full_name: string; email: string; password: string; password_confirmation: string }) => {
     const res = await api.register(data)
     if (!res?.data) throw new Error('Invalid register response')
     const { token, user: userData } = res.data as any

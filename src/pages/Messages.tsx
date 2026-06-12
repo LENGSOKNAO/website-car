@@ -20,7 +20,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import Avatar from "@/components/ui/Avatar";
 import type { Conversation, Message } from "@/lib/types";
-import { cn, formatDateRelative, formatTime } from "@/lib/utils";
+import { cn, formatDateRelative } from "@/lib/utils";
 import { triggerTyping } from "@/lib/pusher";
 import "@/bootstrap";
 
@@ -61,7 +61,6 @@ export default function Messages() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [allUsers, setAllUsers] = useState<any[]>([]);
-  const [allUsersLoaded, setAllUsersLoaded] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
@@ -69,14 +68,9 @@ export default function Messages() {
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const typingTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const conversationsRef = useRef(conversations);
-  const userRef = useRef(user);
-  conversationsRef.current = conversations;
-  userRef.current = user;
 
   const sellerParam = searchParams.get("seller");
   const listingParam = searchParams.get("listing");
-  const autoSelected = useRef(false);
 
   const groupedConversations = conversations.reduce((acc: any, conv: any) => {
     const otherId =
@@ -137,22 +131,22 @@ export default function Messages() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (isAuthenticated && !allUsersLoaded) {
+    if (isAuthenticated && allUsers.length === 0) {
       api
-        .users({ per_page: "1000" })
+        .users()
         .then((res) => {
           const raw = res?.data?.data ?? res?.data ?? res ?? [];
           setAllUsers(
             Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [],
           );
         })
-        .catch(() => {})
-        .finally(() => setAllUsersLoaded(true));
+        .catch(() => {});
     }
   }, [isAuthenticated, allUsersLoaded]);
 
   useEffect(() => {
-    if (!sellerParam || !loading || !allUsersLoaded || autoSelected.current) return;
+    if (!sellerParam || !loading || !allUsersLoaded || autoSelected.current)
+      return;
     if (selectedConv) return;
     const match = conversations.find(
       (c: any) =>
@@ -163,13 +157,22 @@ export default function Messages() {
       setSelectedConv(match.id);
       setSelectedUser(null);
     } else {
-      const sellerUser = allUsers.find((u: any) => String(u.id) === sellerParam);
+      const sellerUser = allUsers.find(
+        (u: any) => String(u.id) === sellerParam,
+      );
       if (sellerUser) {
         setSelectedUser(sellerUser);
       }
     }
     autoSelected.current = true;
-  }, [sellerParam, conversations, selectedConv, allUsers, loading, allUsersLoaded]);
+  }, [
+    sellerParam,
+    conversations,
+    selectedConv,
+    allUsers,
+    loading,
+    allUsersLoaded,
+  ]);
 
   useEffect(() => {
     if (!selectedConv) {
@@ -187,18 +190,12 @@ export default function Messages() {
             ? raw.data
             : [];
         setMessages((prev) => {
-          const existing = new Map(prev.map((m) => [m.id, m]));
+          const existing = new Set(prev.map((m) => m.id));
+          const merged = [...prev];
           for (const m of fetched) {
-            if (existing.has(m.id)) {
-              const old = existing.get(m.id)!;
-              if (m.read_at && !old.read_at) {
-                existing.set(m.id, { ...old, read_at: m.read_at });
-              }
-            } else {
-              existing.set(m.id, m);
-            }
+            if (!existing.has(m.id)) merged.push(m);
           }
-          return Array.from(existing.values());
+          return merged;
         });
       })
       .catch(() => setMessages([]))
@@ -224,11 +221,6 @@ export default function Messages() {
       if (msg) {
         setMessages((prev) => {
           if (prev.some((m) => m.id === msg.id)) return prev;
-          const u = userRef.current;
-          if (String(msg.sender_id) !== String(u?.id)) {
-            api.markConversationRead(conversationId).catch(() => {});
-            return [...prev, { ...msg, read_at: new Date().toISOString() }];
-          }
           return [...prev, msg];
         });
       }
@@ -236,27 +228,27 @@ export default function Messages() {
 
     // Listen for MessageRead event
     channel.listen(".MessageRead", (e: any) => {
-      const u = userRef.current;
-      const convs = conversationsRef.current;
-      const messageId = e.message_id || e.message?.id || e.id;
-      if (messageId) {
+      if (e.message_id) {
         setMessages((prev) =>
           prev.map((m) =>
-            m.id === messageId && String(m.sender_id) !== String(u?.id)
-              ? { ...m, read_at: e.read_at || new Date().toISOString() }
+            m.id === e.message_id && String(m.sender_id) !== String(user?.id)
+              ? { ...m, read_at: e.read_at }
               : m,
           ),
         );
 
+        // Update unread counts in conversation list
         setUnreadCounts((prev) => {
           const updated = { ...prev };
-          const conv = convs.find((c) => c.id === conversationId);
+          const conv = conversations.find((c) => c.id === conversationId);
           if (conv) {
             const otherId =
-              String(conv.sender_id) === String(u?.id)
+              String(conv.sender_id) === String(user?.id)
                 ? conv.receiver_id
                 : conv.sender_id;
-            updated[otherId] = 0;
+            if (updated[otherId] > 0) {
+              updated[otherId] = Math.max(0, updated[otherId] - 1);
+            }
           }
           return updated;
         });
@@ -292,26 +284,22 @@ export default function Messages() {
 
     channel.listen(".MessageCreated", (e: any) => {
       const msg = e.message ?? e;
-      const u = userRef.current;
       if (msg) {
+        // Update conversations list with new message
         setConversations((prev) => {
           const existing = prev.find((c) => c.id === msg.conversation_id);
           if (existing) {
             return prev.map((c) =>
               c.id === msg.conversation_id
-                ? {
-                    ...c,
-                    last_message: msg.content,
-                    last_message_at: msg.created_at,
-                    unread: String(msg.sender_id) !== String(u?.id),
-                  }
-                : c,
+                ? { ...c, last_message: msg.content, last_message_at: msg.created_at, unread: String(msg.sender_id) !== String(user?.id) }
+                : c
             );
           }
           return prev;
         });
 
-        if (String(msg.sender_id) !== String(u?.id)) {
+        // Update unread count
+        if (String(msg.sender_id) !== String(user?.id)) {
           setUnreadCounts((prev) => {
             const otherId = msg.sender_id;
             return { ...prev, [otherId]: (prev[otherId] || 0) + 1 };
@@ -321,23 +309,13 @@ export default function Messages() {
     });
 
     channel.listen(".MessageRead", (e: any) => {
-      const messageId = e.message_id || e.message?.id || e.id;
-      if (messageId) {
+      if (e.message_id) {
         setConversations((prev) =>
           prev.map((c) =>
-            c.last_message_at &&
-            new Date(c.last_message_at) <=
-              new Date(e.read_at || new Date().toISOString())
+            c.last_message_at && new Date(c.last_message_at) <= new Date(e.read_at)
               ? { ...c, unread: false }
-              : c,
-          ),
-        );
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === messageId
-              ? { ...m, read_at: e.read_at || new Date().toISOString() }
-              : m,
-          ),
+              : c
+          )
         );
       }
     });
@@ -381,28 +359,8 @@ export default function Messages() {
                 ? data
                 : [];
 
-            let hasChanges = newMessages.length !== lastKnownMessageCount;
-            if (!hasChanges) {
-              for (const m of newMessages) {
-                const existing = messages.find((e) => e.id === m.id);
-                if (existing && existing.read_at !== m.read_at) {
-                  hasChanges = true;
-                  break;
-                }
-              }
-            }
-
-            if (hasChanges) {
-              setMessages((prev) => {
-                const merged = [...newMessages];
-                for (let i = 0; i < merged.length; i++) {
-                  const existing = prev.find((m) => m.id === merged[i].id);
-                  if (existing && existing.read_at && !merged[i].read_at) {
-                    merged[i] = { ...merged[i], read_at: existing.read_at };
-                  }
-                }
-                return merged;
-              });
+            if (newMessages.length !== lastKnownMessageCount) {
+              setMessages(newMessages);
               lastKnownMessageCount = newMessages.length;
 
               if (isMounted && bottomRef.current) {
@@ -449,24 +407,6 @@ export default function Messages() {
 
   useEffect(() => {
     if (selectedConv) {
-      setMessages((prev) =>
-        prev.map((m) =>
-          String(m.sender_id) !== String(user?.id) && !m.read_at
-            ? { ...m, read_at: new Date().toISOString() }
-            : m,
-        ),
-      );
-      setConversations((prev) =>
-        prev.map((c) => (c.id === selectedConv ? { ...c, unread: false } : c)),
-      );
-      const conv = conversations.find((c) => c.id === selectedConv);
-      if (conv) {
-        const otherId =
-          String(conv.sender_id) === String(user?.id)
-            ? conv.receiver_id
-            : conv.sender_id;
-        setUnreadCounts((prev) => ({ ...prev, [otherId]: 0 }));
-      }
       api.markConversationRead(selectedConv).catch(() => {});
     }
   }, [selectedConv]);
@@ -518,10 +458,6 @@ export default function Messages() {
         });
         const msg = res?.data?.data ?? res?.data ?? res;
         if (msg?.conversation_id) {
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === msg.id)) return prev;
-            return [...prev, msg];
-          });
           setSelectedConv(msg.conversation_id);
           setSelectedUser(null);
           setSearchQuery("");
@@ -673,35 +609,10 @@ export default function Messages() {
             </div>
           </div>
 
-          {searchQuery.trim() ? (
-            searchResults.length > 0 ? (
-              <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
-                <div className="px-4 py-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                  Search Results
-                </div>
-                {searchResults.map((u: any) => (
-                  <button
-                    key={u.id}
-                    onClick={() => handleSelectUser(u)}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
-                  >
-                    <Avatar
-                      name={getUserName(u)}
-                      src={getUserAvatar(u)}
-                      size="sm"
-                      className="w-10 h-10 shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">
-                        {getUserName(u)}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {u.email || ""}
-                      </p>
-                    </div>
-                    <Plus className="w-4 h-4 text-gray-400 shrink-0" />
-                  </button>
-                ))}
+          {searchQuery.trim() && searchResults.length > 0 ? (
+            <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
+              <div className="px-4 py-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                Search Results
               </div>
             ) : searching ? (
               <div className="flex-1 flex items-center justify-center p-6 text-center">
@@ -709,7 +620,9 @@ export default function Messages() {
               </div>
             ) : (
               <div className="flex-1 flex items-center justify-center p-6 text-center">
-                <p className="text-sm text-gray-400">{allUsersLoaded ? "No users found" : "Loading users..."}</p>
+                <p className="text-sm text-gray-400">
+                  {allUsersLoaded ? "No users found" : "Loading users..."}
+                </p>
               </div>
             )
           ) : loading ? (
@@ -755,22 +668,10 @@ export default function Messages() {
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <p
-                        className={cn(
-                          "text-sm truncate",
-                          unreadCounts[conv.otherId] > 0
-                            ? "font-bold text-gray-900"
-                            : "font-semibold text-gray-900",
-                        )}
-                      >
+                      <p className="text-sm font-semibold text-gray-900 truncate">
                         {getUserName(conv.other)}
                       </p>
                       <div className="flex items-center gap-2 shrink-0">
-                        {unreadCounts[conv.otherId] > 0 && (
-                          <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1 text-[10px] font-bold text-white bg-blue-500 rounded-full">
-                            {unreadCounts[conv.otherId]}
-                          </span>
-                        )}
                         {conv.last_message?.created_at && (
                           <span className="text-[10px] text-gray-400 shrink-0">
                             {formatDateRelative(conv.last_message.created_at)}
@@ -778,7 +679,7 @@ export default function Messages() {
                         )}
                       </div>
                     </div>
-                    {conv.last_message && (
+{conv.last_message && (
                       <p className="text-xs text-gray-500 truncate mt-0.5">
                         {conv.last_message || conv.subject || "No messages"}
                       </p>
@@ -959,21 +860,11 @@ export default function Messages() {
                                   {formatDateRelative(msg.created_at)}
                                 </p>
                                 {isMine && (
-                                  <span className="flex items-center gap-1 ml-1">
+                                  <span className="flex items-center ml-1">
                                     {msg.read_at ? (
-                                      <>
-                                        <CheckCheck className="w-3.5 h-3.5 text-blue-500" />
-                                        <span className="text-[10px] text-blue-500">
-                                          Read {formatTime(msg.read_at)}
-                                        </span>
-                                      </>
+                                      <CheckCheck className="w-4 h-4 text-blue-500" />
                                     ) : (
-                                      <>
-                                        <Check className="w-3.5 h-3.5 text-gray-400" />
-                                        <span className="text-[10px] text-gray-400">
-                                          Sent
-                                        </span>
-                                      </>
+                                      <Check className="w-4 h-4 text-gray-400" />
                                     )}
                                   </span>
                                 )}

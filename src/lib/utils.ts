@@ -34,14 +34,6 @@ export function formatDate(date: string): string {
   })
 }
 
-export function formatTime(date: string): string {
-  return new Date(date).toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  })
-}
-
 export function formatDateRelative(date: string): string {
   const now = new Date()
   const d = new Date(date)
