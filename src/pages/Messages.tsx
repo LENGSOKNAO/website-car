@@ -28,7 +28,9 @@ export default function Messages() {
   const { user, isAuthenticated } = useAuth();
   const [searchParams] = useSearchParams();
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [messages, setMessages] = useState<(Message & { edited_at?: string | null })[]>([]);
+  const [messages, setMessages] = useState<
+    (Message & { edited_at?: string | null })[]
+  >([]);
   const [selectedConv, setSelectedConv] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [msgLoading, setMsgLoading] = useState(false);
@@ -291,8 +293,13 @@ export default function Messages() {
           if (existing) {
             return prev.map((c) =>
               c.id === msg.conversation_id
-                ? { ...c, last_message: msg.content, last_message_at: msg.created_at, unread: String(msg.sender_id) !== String(user?.id) }
-                : c
+                ? {
+                    ...c,
+                    last_message: msg.content,
+                    last_message_at: msg.created_at,
+                    unread: String(msg.sender_id) !== String(user?.id),
+                  }
+                : c,
             );
           }
           return prev;
@@ -312,10 +319,11 @@ export default function Messages() {
       if (e.message_id) {
         setConversations((prev) =>
           prev.map((c) =>
-            c.last_message_at && new Date(c.last_message_at) <= new Date(e.read_at)
+            c.last_message_at &&
+            new Date(c.last_message_at) <= new Date(e.read_at)
               ? { ...c, unread: false }
-              : c
-          )
+              : c,
+          ),
         );
       }
     });
@@ -339,41 +347,28 @@ export default function Messages() {
       if (!isMounted) return;
 
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL || ""}/api/v1/conversations/${selectedConv}/messages`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          },
-        );
+        const res = await api.conversationMessages(selectedConv);
+        errorCount = 0;
 
-        if (response.ok) {
-          const data = await response.json();
-          errorCount = 0;
+        if (isMounted && res?.data) {
+          const newMessages = Array.isArray(res.data)
+            ? res.data
+            : Array.isArray(res.data?.data)
+              ? res.data.data
+              : [];
 
-          if (isMounted && data) {
-            const newMessages = Array.isArray(data.data)
-              ? data.data
-              : Array.isArray(data)
-                ? data
-                : [];
+          if (newMessages.length !== lastKnownMessageCount) {
+            setMessages(newMessages);
+            lastKnownMessageCount = newMessages.length;
 
-            if (newMessages.length !== lastKnownMessageCount) {
-              setMessages(newMessages);
-              lastKnownMessageCount = newMessages.length;
-
-              if (isMounted && bottomRef.current) {
-                requestAnimationFrame(() => {
-                  if (isMounted && bottomRef.current) {
-                    bottomRef.current.scrollIntoView({ behavior: "smooth" });
-                  }
-                });
-              }
+            if (isMounted && bottomRef.current) {
+              requestAnimationFrame(() => {
+                if (isMounted && bottomRef.current) {
+                  bottomRef.current.scrollIntoView({ behavior: "smooth" });
+                }
+              });
             }
           }
-        } else {
-          throw new Error(`HTTP error! status: ${response.status}`);
         }
       } catch (error) {
         if (isMounted) {
@@ -702,7 +697,7 @@ export default function Messages() {
                         )}
                       </div>
                     </div>
-{conv.last_message && (
+                    {conv.last_message && (
                       <p className="text-xs text-gray-500 truncate mt-0.5">
                         {conv.last_message || conv.subject || "No messages"}
                       </p>
