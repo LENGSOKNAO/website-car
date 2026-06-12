@@ -28,7 +28,7 @@ export default function Messages() {
   const { user, isAuthenticated } = useAuth();
   const [searchParams] = useSearchParams();
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<(Message & { edited_at?: string | null })[]>([]);
   const [selectedConv, setSelectedConv] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [msgLoading, setMsgLoading] = useState(false);
@@ -614,17 +614,40 @@ export default function Messages() {
               <div className="px-4 py-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
                 Search Results
               </div>
-            ) : searching ? (
-              <div className="flex-1 flex items-center justify-center p-6 text-center">
-                <Loader className="w-5 h-5 text-gray-300 animate-spin" />
-              </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center p-6 text-center">
-                <p className="text-sm text-gray-400">
-                  {allUsersLoaded ? "No users found" : "Loading users..."}
-                </p>
-              </div>
-            )
+              {searchResults.map((u: any) => (
+                <button
+                  key={u.id}
+                  onClick={() => handleSelectUser(u)}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <Avatar
+                    name={getUserName(u)}
+                    src={getUserAvatar(u)}
+                    size="sm"
+                    className="w-10 h-10 shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">
+                      {getUserName(u)}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {u.email || ""}
+                    </p>
+                  </div>
+                  <Plus className="w-4 h-4 text-gray-400 shrink-0" />
+                </button>
+              ))}
+            </div>
+          ) : searchQuery.trim() && searching ? (
+            <div className="flex-1 flex items-center justify-center p-6 text-center">
+              <Loader className="w-5 h-5 text-gray-300 animate-spin" />
+            </div>
+          ) : searchQuery.trim() ? (
+            <div className="flex-1 flex items-center justify-center p-6 text-center">
+              <p className="text-sm text-gray-400">
+                {allUsersLoaded ? "No users found" : "Loading users..."}
+              </p>
+            </div>
           ) : loading ? (
             <div className="flex-1 p-4 space-y-3">
               {Array.from({ length: 5 }).map((_, i) => (
