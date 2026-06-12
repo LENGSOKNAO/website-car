@@ -464,6 +464,7 @@ function OrderDetail({
   const [msgError, setMsgError] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const [creatingConv, setCreatingConv] = useState(false);
 
   const listing = order.items?.[0]?.listing;
   const primaryImage =
@@ -528,19 +529,36 @@ function OrderDetail({
 
   async function handleSendMessage(e: React.FormEvent) {
     e.preventDefault();
-    if (!msgInput.trim() || sendingMsg || !conversation) return;
+    if (!msgInput.trim() || sendingMsg || !listing) return;
     setSendingMsg(true);
     try {
-      const res = await api.replyConversation(conversation.id, {
-        content: msgInput.trim(),
-      });
-      const msg = res?.data?.data ?? res?.data ?? res;
-      if (msg) setMessages((prev) => [...prev, msg]);
+      let convId = conversation?.id;
+      if (!convId) {
+        setCreatingConv(true);
+        const res = await api.sendMessage({
+          receiver_id: order.seller_id,
+          listing_id: listing.id,
+          content: msgInput.trim(),
+        });
+        const msg = res?.data?.data ?? res?.data ?? res;
+        if (msg?.conversation_id) {
+          convId = msg.conversation_id;
+          setConversation({ ...conversation, id: convId } as Conversation);
+        }
+        if (msg) setMessages((prev) => [...prev, msg]);
+      } else {
+        const res = await api.replyConversation(convId, {
+          content: msgInput.trim(),
+        });
+        const msg = res?.data?.data ?? res?.data ?? res;
+        if (msg) setMessages((prev) => [...prev, msg]);
+      }
       setMsgInput("");
     } catch (err: any) {
       setMsgError(err.message || "Failed to send message");
     } finally {
       setSendingMsg(false);
+      setCreatingConv(false);
     }
   }
 
@@ -932,7 +950,7 @@ function OrderDetail({
       )}
 
       {/* Message Modal */}
-      {showMessageModal && conversation && (
+      {showMessageModal && listing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
         <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
           <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
@@ -981,8 +999,8 @@ function OrderDetail({
                     </p>
                   </div>
                 </div>
-                  ))}
-                )}
+              )))
+            }
             <div ref={messagesEndRef} />
           </div>
           <form onSubmit={handleSendMessage} className="border-t border-gray-100 p-4 flex items-center gap-2">
