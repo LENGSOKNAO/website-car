@@ -3,7 +3,13 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import type { Order, OrderStatus, Conversation, Message } from "@/lib/types";
-import { formatPrice, formatDate, getStatusColor, imageUrl, cn } from "@/lib/utils";
+import {
+  formatPrice,
+  formatDate,
+  getStatusColor,
+  imageUrl,
+  cn,
+} from "@/lib/utils";
 import {
   ChevronLeft,
   ChevronRight,
@@ -39,7 +45,10 @@ export default function Orders() {
   const [searchParams, setSearchParams] = useSearchParams();
   const orderId = searchParams.get("id");
 
-  const canManageOrders = user?.is_dealer || user?.role === 'admin' || user?.roles?.some((r: any) => r.name === 'admin');
+  const canManageOrders =
+    user?.is_dealer ||
+    user?.role === "admin" ||
+    user?.roles?.some((r: any) => r.name === "admin");
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -104,7 +113,13 @@ export default function Orders() {
           ? {
               ...o,
               installments: o.installments.map((inst) =>
-                inst.id === installmentId ? { ...inst, status: newStatus as Order["installments"][number]["status"] } : inst,
+                inst.id === installmentId
+                  ? {
+                      ...inst,
+                      status:
+                        newStatus as Order["installments"][number]["status"],
+                    }
+                  : inst,
               ),
             }
           : o,
@@ -115,7 +130,13 @@ export default function Orders() {
         ? {
             ...prev,
             installments: prev.installments.map((inst) =>
-              inst.id === installmentId ? { ...inst, status: newStatus as Order["installments"][number]["status"] } : inst,
+              inst.id === installmentId
+                ? {
+                    ...inst,
+                    status:
+                      newStatus as Order["installments"][number]["status"],
+                  }
+                : inst,
             ),
           }
         : prev,
@@ -127,8 +148,12 @@ export default function Orders() {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center py-12 px-4">
           <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Sign in to view orders</h2>
-          <p className="text-gray-500 text-sm mb-6">You need to be signed in to see your order history.</p>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            Sign in to view orders
+          </h2>
+          <p className="text-gray-500 text-sm mb-6">
+            You need to be signed in to see your order history.
+          </p>
           <Link
             to="/login"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
@@ -180,8 +205,12 @@ export default function Orders() {
       {!error && orders.length === 0 ? (
         <div className="text-center py-16">
           <Package className="w-16 h-16 mx-auto mb-4 text-gray-200" />
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">No orders yet</h2>
-          <p className="text-gray-500 text-sm mb-6">You haven't placed any orders yet.</p>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            No orders yet
+          </h2>
+          <p className="text-gray-500 text-sm mb-6">
+            You haven't placed any orders yet.
+          </p>
           <Link
             to="/listings"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
@@ -192,7 +221,11 @@ export default function Orders() {
       ) : (
         <div className="space-y-4">
           {orders.map((order) => (
-            <OrderCard key={order.id} order={order} onSelect={() => selectOrder(order)} />
+            <OrderCard
+              key={order.id}
+              order={order}
+              onSelect={() => selectOrder(order)}
+            />
           ))}
         </div>
       )}
@@ -200,9 +233,16 @@ export default function Orders() {
   );
 }
 
-function OrderCard({ order, onSelect }: { order: Order; onSelect: () => void }) {
+function OrderCard({
+  order,
+  onSelect,
+}: {
+  order: Order;
+  onSelect: () => void;
+}) {
   const listing = order.items?.[0]?.listing;
-  const primaryImage = listing?.primary_image?.image_url || listing?.images?.[0]?.image_url;
+  const primaryImage =
+    listing?.primary_image?.image_url || listing?.images?.[0]?.image_url;
 
   return (
     <button
@@ -214,7 +254,11 @@ function OrderCard({ order, onSelect }: { order: Order; onSelect: () => void }) 
           {primaryImage ? (
             <img
               src={imageUrl(primaryImage)}
-              alt={listing ? `${listing.year} ${listing.make?.name} ${listing.model?.name}` : "Vehicle"}
+              alt={
+                listing
+                  ? `${listing.year} ${listing.make?.name} ${listing.model?.name}`
+                  : "Vehicle"
+              }
               className="w-full h-full object-cover"
             />
           ) : (
@@ -253,7 +297,9 @@ function OrderCard({ order, onSelect }: { order: Order; onSelect: () => void }) 
               <CreditCard className="w-3 h-3" />
               {order.payment_method === "finance" ? "Finance" : "Cash"}
             </span>
-            <span className="font-medium text-gray-900">{formatPrice(order.total)}</span>
+            <span className="font-medium text-gray-900">
+              {formatPrice(order.total)}
+            </span>
           </div>
         </div>
         <ChevronRight className="w-4 h-4 text-gray-300 self-center shrink-0" />
@@ -315,7 +361,9 @@ function StatusDropdown({
                 )}
               />
               <span className="capitalize">{status.replace("_", " ")}</span>
-              {status === current && <Check className="w-3 h-3 ml-auto text-gray-400" />}
+              {status === current && (
+                <Check className="w-3 h-3 ml-auto text-gray-400" />
+              )}
             </button>
           ))}
         </div>
@@ -378,7 +426,9 @@ function InstallmentStatusDropdown({
                 )}
               />
               {status}
-              {status === current && <Check className="w-3 h-3 ml-auto text-gray-400" />}
+              {status === current && (
+                <Check className="w-3 h-3 ml-auto text-gray-400" />
+              )}
             </button>
           ))}
         </div>
@@ -396,7 +446,11 @@ function OrderDetail({
   order: Order;
   onBack: () => void;
   onStatusChange: (orderId: string, status: string) => void;
-  onInstallmentStatusChange: (orderId: string, installmentId: string, status: string) => void;
+  onInstallmentStatusChange: (
+    orderId: string,
+    installmentId: string,
+    status: string,
+  ) => void;
   canManageOrders: boolean;
 }) {
   const { user } = useAuth();
@@ -409,9 +463,11 @@ function OrderDetail({
   const [msgLoading, setMsgLoading] = useState(true);
   const [msgError, setMsgError] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showMessageModal, setShowMessageModal] = useState(false);
 
   const listing = order.items?.[0]?.listing;
-  const primaryImage = listing?.primary_image?.image_url || listing?.images?.[0]?.image_url;
+  const primaryImage =
+    listing?.primary_image?.image_url || listing?.images?.[0]?.image_url;
 
   async function handleStatusChange(newStatus: string) {
     if (newStatus === order.status || updating) return;
@@ -440,7 +496,11 @@ function OrderDetail({
       .conversations()
       .then((res: any) => {
         const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        const convs = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+        const convs = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.data)
+            ? raw.data
+            : [];
         const conv = convs.find(
           (c: Conversation) =>
             c.listing_id === listing.id &&
@@ -455,7 +515,11 @@ function OrderDetail({
       })
       .then((res: any) => {
         const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        const msgs = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+        const msgs = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.data)
+            ? raw.data
+            : [];
         setMessages(msgs);
       })
       .catch((err) => setMsgError(err.message || "Failed to load messages"))
@@ -467,7 +531,9 @@ function OrderDetail({
     if (!msgInput.trim() || sendingMsg || !conversation) return;
     setSendingMsg(true);
     try {
-      const res = await api.replyConversation(conversation.id, { content: msgInput.trim() });
+      const res = await api.replyConversation(conversation.id, {
+        content: msgInput.trim(),
+      });
       const msg = res?.data?.data ?? res?.data ?? res;
       if (msg) setMessages((prev) => [...prev, msg]);
       setMsgInput("");
@@ -519,7 +585,6 @@ function OrderDetail({
         {/* Vehicle */}
         {listing && (
           <div className="border-b border-gray-100 w-full">
-         
             <div className="w-full h-full flex flex-col gap-6">
               <div className="w-full h-[500px] shrink-0  overflow-hidden bg-gray-100">
                 {primaryImage ? (
@@ -589,9 +654,7 @@ function OrderDetail({
               </span>
             )}
             <button
-              onClick={() =>
-                (window.location.href = `/messages?seller=${order.seller?.id}&listing=${listing?.id}`)
-              }
+              onClick={() => setShowMessageModal(true)}
               className="ml-auto inline-flex items-center gap-1.5 text-sm font-medium rounded-sm hover:text-gray-500 cursor-pointer transition-colors"
             >
               <MessageSquare className="w-4 h-4" />
@@ -608,9 +671,16 @@ function OrderDetail({
             </h2>
             <div className="bg-white border border-gray-200 rounded-sm overflow-hidden">
               <div className="border-b border-gray-100 px-4 py-3 flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-900">Conversation with {order.seller?.dealer_name || order.seller?.full_name || "Seller"}</span>
+                <span className="text-sm font-medium text-gray-900">
+                  Conversation with{" "}
+                  {order.seller?.dealer_name ||
+                    order.seller?.full_name ||
+                    "Seller"}
+                </span>
                 <button
-                  onClick={() => window.location.href = `/messages?seller=${order.seller?.id}&listing=${listing?.id}`}
+                  onClick={() =>
+                    (window.location.href = `/messages?seller=${order.seller?.id}&listing=${listing?.id}`)
+                  }
                   className="text-xs text-blue-600 hover:underline"
                 >
                   Open full conversation
@@ -631,7 +701,9 @@ function OrderDetail({
                       key={msg.id}
                       className={cn(
                         "flex gap-2",
-                        msg.sender_id === user?.id ? "justify-end" : "justify-start"
+                        msg.sender_id === user?.id
+                          ? "justify-end"
+                          : "justify-start",
                       )}
                     >
                       <div
@@ -639,11 +711,18 @@ function OrderDetail({
                           "max-w-[70%] px-3 py-2 text-sm rounded-2xl",
                           msg.sender_id === user?.id
                             ? "bg-gray-900 text-white rounded-tr-none"
-                            : "bg-gray-100 text-gray-900 rounded-tl-none"
+                            : "bg-gray-100 text-gray-900 rounded-tl-none",
                         )}
                       >
                         <p className="whitespace-pre-wrap">{msg.content}</p>
-                        <p className={cn("text-[10px] mt-1", msg.sender_id === user?.id ? "text-gray-400" : "text-gray-500")}>
+                        <p
+                          className={cn(
+                            "text-[10px] mt-1",
+                            msg.sender_id === user?.id
+                              ? "text-gray-400"
+                              : "text-gray-500",
+                          )}
+                        >
                           {formatDate(msg.created_at)}
                           {msg.sender_id === user?.id && msg.read_at && (
                             <span className="ml-1.5 text-blue-500">✓✓</span>
@@ -651,12 +730,14 @@ function OrderDetail({
                         </p>
                       </div>
                     </div>
-                  )))}
+                  ))
                 )}
-              )}
                 <div ref={messagesEndRef} />
               </div>
-              <form onSubmit={handleSendMessage} className="border-t border-gray-100 p-4 flex items-center gap-2">
+              <form
+                onSubmit={handleSendMessage}
+                className="border-t border-gray-100 p-4 flex items-center gap-2"
+              >
                 <input
                   type="text"
                   value={msgInput}
@@ -670,7 +751,11 @@ function OrderDetail({
                   disabled={!msgInput.trim() || sendingMsg}
                   className="shrink-0 w-9 h-9 rounded-lg bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 transition-colors disabled:opacity-40"
                 >
-                  {sendingMsg ? <Loader className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {sendingMsg ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
                 </button>
               </form>
             </div>
@@ -846,5 +931,80 @@ function OrderDetail({
         </div>
       )}
     </div>
+
+    {/* Message Modal */}
+    {showMessageModal && conversation && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+          <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Message {order.seller?.dealer_name || order.seller?.full_name || "Seller"}
+            </h2>
+            <button
+              onClick={() => setShowMessageModal(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <ChevronRight className="w-6 h-6 rotate-180" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            {msgLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="flex items-center justify-center h-64 text-gray-400">
+                <p className="text-sm">No messages yet. Start the conversation!</p>
+              </div>
+            ) : (
+              messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={cn(
+                    "flex gap-3",
+                    msg.sender_id === user?.id ? "justify-end" : "justify-start"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "max-w-[75%] px-4 py-2 text-sm rounded-2xl",
+                      msg.sender_id === user?.id
+                        ? "bg-gray-900 text-white rounded-tr-none"
+                        : "bg-gray-100 text-gray-900 rounded-tl-none"
+                    )}
+                  >
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    <p className={cn("text-[10px] mt-1", msg.sender_id === user?.id ? "text-gray-400" : "text-gray-500")}>
+                      {formatDate(msg.created_at)}
+                      {msg.sender_id === user?.id && msg.read_at && (
+                        <span className="ml-1.5 text-blue-500">✓✓</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+          <form onSubmit={handleSendMessage} className="border-t border-gray-100 p-4 flex items-center gap-2">
+            <input
+              type="text"
+              value={msgInput}
+              onChange={(e) => setMsgInput(e.target.value)}
+              placeholder="Type a message..."
+              className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
+              disabled={sendingMsg}
+            />
+            <button
+              type="submit"
+              disabled={!msgInput.trim() || sendingMsg}
+              className="shrink-0 w-10 h-10 rounded-lg bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 transition-colors disabled:opacity-40"
+            >
+              {sendingMsg ? <Loader className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+            </button>
+          </form>
+        </div>
+      </div>
+    )}
   );
 }
