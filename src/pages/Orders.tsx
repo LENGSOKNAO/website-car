@@ -653,6 +653,7 @@ function OrderDetail({
                     </div>
                   ))}
                 )}
+              )}
                 <div ref={messagesEndRef} />
               </div>
               <form onSubmit={handleSendMessage} className="border-t border-gray-100 p-4 flex items-center gap-2">
