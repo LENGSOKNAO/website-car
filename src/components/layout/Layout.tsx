@@ -14,7 +14,7 @@ export default function Layout() {
   
   const slug = pathname.split('/')[1]
   const isBrandPage = BRAND_PAGES.some(p => p.slug === slug || (p.slug === 'nissan' && slug === 'gtr'))
-  const isMessagesPage = pathname.startsWith('/messages')
+  const isMessagesPage = pathname.startsWith('/messages') || pathname.startsWith('/seller/messages')
 
   return (
     <div className="flex flex-col min-h-screen">

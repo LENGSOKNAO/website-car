@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
-import type { Order, OrderStatus } from "@/lib/types";
+import type { Order, OrderStatus, Conversation, Message } from "@/lib/types";
 import { formatPrice, formatDate, getStatusColor, imageUrl, cn } from "@/lib/utils";
 import {
   ChevronLeft,
@@ -18,6 +18,8 @@ import {
   Check,
   ChevronDown,
   MessageSquare,
+  Send,
+  Loader,
 } from "lucide-react";
 
 type View = "list" | "detail";
@@ -397,8 +399,16 @@ function OrderDetail({
   onInstallmentStatusChange: (orderId: string, installmentId: string, status: string) => void;
   canManageOrders: boolean;
 }) {
+  const { user } = useAuth();
   const [updating, setUpdating] = useState(false);
   const [updateError, setUpdateError] = useState("");
+  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [msgInput, setMsgInput] = useState("");
+  const [sendingMsg, setSendingMsg] = useState(false);
+  const [msgLoading, setMsgLoading] = useState(true);
+  const [msgError, setMsgError] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const listing = order.items?.[0]?.listing;
   const primaryImage = listing?.primary_image?.image_url || listing?.images?.[0]?.image_url;
@@ -421,6 +431,51 @@ function OrderDetail({
 
   function handleInstallmentChange(installmentId: string, newStatus: string) {
     onInstallmentStatusChange(order.id, installmentId, newStatus);
+  }
+
+  useEffect(() => {
+    if (!user || !listing) return;
+    setMsgLoading(true);
+    api
+      .conversations()
+      .then((res: any) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? [];
+        const convs = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+        const conv = convs.find(
+          (c: Conversation) =>
+            c.listing_id === listing.id &&
+            ((c.sender_id === user.id && c.receiver_id === order.seller_id) ||
+              (c.receiver_id === user.id && c.sender_id === order.seller_id)),
+        );
+        if (conv) {
+          setConversation(conv);
+          return api.conversationMessages(conv.id);
+        }
+        return { data: [] };
+      })
+      .then((res: any) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? [];
+        const msgs = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+        setMessages(msgs);
+      })
+      .catch((err) => setMsgError(err.message || "Failed to load messages"))
+      .finally(() => setMsgLoading(false));
+  }, [listing?.id, order.seller_id, user?.id]);
+
+  async function handleSendMessage(e: React.FormEvent) {
+    e.preventDefault();
+    if (!msgInput.trim() || sendingMsg || !conversation) return;
+    setSendingMsg(true);
+    try {
+      const res = await api.replyConversation(conversation.id, { content: msgInput.trim() });
+      const msg = res?.data?.data ?? res?.data ?? res;
+      if (msg) setMessages((prev) => [...prev, msg]);
+      setMsgInput("");
+    } catch (err: any) {
+      setMsgError(err.message || "Failed to send message");
+    } finally {
+      setSendingMsg(false);
+    }
   }
 
   return (
@@ -544,6 +599,82 @@ function OrderDetail({
             </button>
           </div>
         </div>
+
+        {/* Messages */}
+        {conversation && (
+          <div className="border-b border-gray-100 p-6">
+            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+              Messages
+            </h2>
+            <div className="bg-white border border-gray-200 rounded-sm overflow-hidden">
+              <div className="border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-900">Conversation with {order.seller?.dealer_name || order.seller?.full_name || "Seller"}</span>
+                <button
+                  onClick={() => window.location.href = `/messages?seller=${order.seller?.id}&listing=${listing?.id}`}
+                  className="text-xs text-blue-600 hover:underline"
+                >
+                  Open full conversation
+                </button>
+              </div>
+              <div className="h-80 overflow-y-auto p-4 space-y-3">
+                {msgLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-gray-400">
+                    <p className="text-sm">No messages yet</p>
+                  </div>
+                ) : (
+                  messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={cn(
+                        "flex gap-2",
+                        msg.sender_id === user?.id ? "justify-end" : "justify-start"
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "max-w-[70%] px-3 py-2 text-sm rounded-2xl",
+                          msg.sender_id === user?.id
+                            ? "bg-gray-900 text-white rounded-tr-none"
+                            : "bg-gray-100 text-gray-900 rounded-tl-none"
+                        )}
+                      >
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                        <p className={cn("text-[10px] mt-1", msg.sender_id === user?.id ? "text-gray-400" : "text-gray-500")}>
+                          {formatDate(msg.created_at)}
+                          {msg.sender_id === user?.id && msg.read_at && (
+                            <span className="ml-1.5 text-blue-500">✓✓</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+              <form onSubmit={handleSendMessage} className="border-t border-gray-100 p-4 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={msgInput}
+                  onChange={(e) => setMsgInput(e.target.value)}
+                  placeholder="Type a message..."
+                  className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
+                  disabled={sendingMsg}
+                />
+                <button
+                  type="submit"
+                  disabled={!msgInput.trim() || sendingMsg}
+                  className="shrink-0 w-9 h-9 rounded-lg bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 transition-colors disabled:opacity-40"
+                >
+                  {sendingMsg ? <Loader className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Payment */}
         <div className="border-b border-gray-100 p-6">
