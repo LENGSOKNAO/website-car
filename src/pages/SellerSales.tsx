@@ -2,8 +2,30 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
-import { formatPrice, formatDate, imageUrl, getStatusColor, cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, DollarSign, Loader2, AlertCircle, Package, User, Calendar, CreditCard, ExternalLink, Clock, MessageSquare, Send, Check, ChevronDown } from "lucide-react";
+import {
+  formatPrice,
+  formatDate,
+  imageUrl,
+  getStatusColor,
+  cn,
+} from "@/lib/utils";
+import {
+  ChevronLeft,
+  ChevronRight,
+  DollarSign,
+  Loader2,
+  AlertCircle,
+  Package,
+  User,
+  Calendar,
+  CreditCard,
+  ExternalLink,
+  Clock,
+  MessageSquare,
+  Send,
+  Check,
+  ChevronDown,
+} from "lucide-react";
 
 type Tab = "orders" | "pre-orders";
 
@@ -27,8 +49,20 @@ export default function SellerSales() {
       .sellerOrders({ tab })
       .then((res: any) => {
         const d = res?.data?.data ?? res?.data;
-        setOrders(Array.isArray(d?.orders?.data) ? d.orders.data : Array.isArray(d?.orders) ? d.orders : []);
-        setPreOrders(Array.isArray(d?.preOrders?.data) ? d.preOrders.data : Array.isArray(d?.preOrders) ? d.preOrders : []);
+        setOrders(
+          Array.isArray(d?.orders?.data)
+            ? d.orders.data
+            : Array.isArray(d?.orders)
+              ? d.orders
+              : [],
+        );
+        setPreOrders(
+          Array.isArray(d?.preOrders?.data)
+            ? d.preOrders.data
+            : Array.isArray(d?.preOrders)
+              ? d.preOrders
+              : [],
+        );
       })
       .catch((err: any) => {
         setError(err.message || "Failed to load sales");
@@ -40,8 +74,15 @@ export default function SellerSales() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center py-12 px-4">
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Sign in to view sales</h2>
-          <Link to="/login" className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg">Sign In</Link>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            Sign in to view sales
+          </h2>
+          <Link
+            to="/login"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg"
+          >
+            Sign In
+          </Link>
         </div>
       </div>
     );
@@ -123,7 +164,9 @@ export default function SellerSales() {
           {items.map((item: any) => {
             if (tab === "orders") {
               const listing = item.items?.[0]?.listing;
-              const primaryImage = listing?.primary_image?.image_url || listing?.images?.[0]?.image_url;
+              const primaryImage =
+                listing?.primary_image?.image_url ||
+                listing?.images?.[0]?.image_url;
               return (
                 <button
                   key={item.id}
@@ -132,7 +175,11 @@ export default function SellerSales() {
                 >
                   <div className="w-14 h-11 rounded-sm bg-gray-100 shrink-0 overflow-hidden">
                     {primaryImage ? (
-                      <img src={imageUrl(primaryImage)} alt="" className="w-full h-full object-cover" />
+                      <img
+                        src={imageUrl(primaryImage)}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-300">
                         <DollarSign className="w-5 h-5" />
@@ -140,19 +187,33 @@ export default function SellerSales() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">#{item.order_number}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      #{item.order_number}
+                    </p>
                     {listing && (
-                      <p className="text-xs text-gray-500 truncate mt-0.5">{listing.year} {listing.make?.name} {listing.model?.name}</p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                        {listing.year} {listing.make?.name}{" "}
+                        {listing.model?.name}
+                      </p>
                     )}
                   </div>
                   <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500">
-                    <span className={cn("px-2 py-0.5 rounded-full capitalize", getStatusColor(item.status))}>{item.status.replace("_", " ")}</span>
+                    <span
+                      className={cn(
+                        "px-2 py-0.5 rounded-full capitalize",
+                        getStatusColor(item.status),
+                      )}
+                    >
+                      {item.status.replace("_", " ")}
+                    </span>
                   </div>
                   <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500">
                     <span>{formatDate(item.placed_at)}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
-                    <span className="font-semibold text-gray-900">{formatPrice(item.total)}</span>
+                    <span className="font-semibold text-gray-900">
+                      {formatPrice(item.total)}
+                    </span>
                     <ChevronRight className="w-4 h-4 text-gray-300" />
                   </div>
                 </button>
@@ -160,7 +221,9 @@ export default function SellerSales() {
             }
 
             const poListing = item.listing;
-            const poImage = poListing?.primary_image?.image_url || poListing?.images?.[0]?.image_url;
+            const poImage =
+              poListing?.primary_image?.image_url ||
+              poListing?.images?.[0]?.image_url;
             return (
               <button
                 key={item.id}
@@ -169,7 +232,11 @@ export default function SellerSales() {
               >
                 <div className="w-14 h-11 rounded-sm bg-gray-100 shrink-0 overflow-hidden">
                   {poImage ? (
-                    <img src={imageUrl(poImage)} alt="" className="w-full h-full object-cover" />
+                    <img
+                      src={imageUrl(poImage)}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300">
                       <Package className="w-5 h-5" />
@@ -177,17 +244,32 @@ export default function SellerSales() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">{item.customer_name}</p>
-                  <p className="text-xs text-gray-500 truncate mt-0.5">{item.customer_email}</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {item.customer_name}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate mt-0.5">
+                    {item.customer_email}
+                  </p>
                 </div>
                 <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500">
-                  <span className={cn("px-2 py-0.5 rounded-full capitalize", getStatusColor(item.status))}>{item.status.replace("_", " ")}</span>
+                  <span
+                    className={cn(
+                      "px-2 py-0.5 rounded-full capitalize",
+                      getStatusColor(item.status),
+                    )}
+                  >
+                    {item.status.replace("_", " ")}
+                  </span>
                 </div>
                 <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500">
                   <span>{formatDate(item.created_at)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs">
-                  {item.total_price && <span className="font-semibold text-gray-900">{formatPrice(item.total_price)}</span>}
+                  {item.total_price && (
+                    <span className="font-semibold text-gray-900">
+                      {formatPrice(item.total_price)}
+                    </span>
+                  )}
                   <ChevronRight className="w-4 h-4 text-gray-300" />
                 </div>
               </button>
@@ -199,7 +281,15 @@ export default function SellerSales() {
   );
 }
 
-const ORDER_STATUSES = ["pending", "confirmed", "processing", "shipped", "delivered", "completed", "cancelled"];
+const ORDER_STATUSES = [
+  "pending",
+  "confirmed",
+  "processing",
+  "shipped",
+  "delivered",
+  "completed",
+  "cancelled",
+];
 
 const PRE_ORDER_STATUSES = ["pending", "confirmed", "cancelled"];
 
@@ -333,12 +423,16 @@ function OrderDetailView({
   const [updating, setUpdating] = useState(false);
   const [updateError, setUpdateError] = useState("");
   const [currentStatus, setCurrentStatus] = useState(item.status);
-  const [installments, setInstallments] = useState<any[]>(item.installments || []);
+  const [installments, setInstallments] = useState<any[]>(
+    item.installments || [],
+  );
   const [pendingCascade, setPendingCascade] = useState<{
     message: string;
     updated: any[];
   } | null>(null);
-  const [installmentUpdating, setInstallmentUpdating] = useState<Set<string>>(new Set());
+  const [installmentUpdating, setInstallmentUpdating] = useState<Set<string>>(
+    new Set(),
+  );
   const statuses = tab === "orders" ? ORDER_STATUSES : PRE_ORDER_STATUSES;
 
   async function handleStatusChange(newStatus: string) {
@@ -378,12 +472,18 @@ function OrderDetailView({
     }
   }
 
-  function handleInstallmentChange(installmentId: string, newStatus: string, paidAt?: string) {
+  function handleInstallmentChange(
+    installmentId: string,
+    newStatus: string,
+    paidAt?: string,
+  ) {
     setInstallments((prev) => {
       const target = prev.find((i: any) => i.id === installmentId);
       if (!target) return prev;
 
-      const sorted = [...prev].sort((a: any, b: any) => a.month_number - b.month_number);
+      const sorted = [...prev].sort(
+        (a: any, b: any) => a.month_number - b.month_number,
+      );
       const targetIdx = sorted.findIndex((i: any) => i.id === installmentId);
 
       // Cascade upward: mark earlier installments with same status
@@ -410,7 +510,16 @@ function OrderDetailView({
           return prev;
         }
         const single = prev.map((inst: any) =>
-          inst.id === installmentId ? { ...inst, status: newStatus, paid_at: newStatus === "paid" ? (paidAt || new Date().toISOString().slice(0, 10)) : null } : inst,
+          inst.id === installmentId
+            ? {
+                ...inst,
+                status: newStatus,
+                paid_at:
+                  newStatus === "paid"
+                    ? paidAt || new Date().toISOString().slice(0, 10)
+                    : null,
+              }
+            : inst,
         );
         persistInstallments(single);
         return single;
@@ -439,7 +548,16 @@ function OrderDetailView({
         return prev;
       }
       const single = prev.map((inst: any) =>
-        inst.id === installmentId ? { ...inst, status: newStatus, paid_at: newStatus === "paid" ? (paidAt || new Date().toISOString().slice(0, 10)) : null } : inst,
+        inst.id === installmentId
+          ? {
+              ...inst,
+              status: newStatus,
+              paid_at:
+                newStatus === "paid"
+                  ? paidAt || new Date().toISOString().slice(0, 10)
+                  : null,
+            }
+          : inst,
       );
       persistInstallments(single);
       return single;
@@ -459,7 +577,8 @@ function OrderDetailView({
 
   if (tab === "orders") {
     const listing = item.items?.[0]?.listing;
-    const primaryImage = listing?.primary_image?.image_url || listing?.images?.[0]?.image_url;
+    const primaryImage =
+      listing?.primary_image?.image_url || listing?.images?.[0]?.image_url;
 
     return (
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 pt-20">
@@ -481,8 +600,12 @@ function OrderDetailView({
           <div className="border-b border-gray-100 p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Order #{item.order_number}</h1>
-                <p className="text-sm text-gray-500 mt-1">Placed on {formatDate(item.placed_at)}</p>
+                <h1 className="text-xl font-bold text-gray-900">
+                  Order #{item.order_number}
+                </h1>
+                <p className="text-sm text-gray-500 mt-1">
+                  Placed on {formatDate(item.placed_at)}
+                </p>
               </div>
               <StatusDropdown
                 current={currentStatus}
@@ -518,10 +641,14 @@ function OrderDetailView({
                     {listing.year} {listing.make?.name} {listing.model?.name}
                   </Link>
                   {listing.mileage && (
-                    <p className="text-xs md:text-sm text-gray-500 mt-0.5">{listing.mileage.toLocaleString()} mi</p>
+                    <p className="text-xs md:text-sm text-gray-500 mt-0.5">
+                      {listing.mileage.toLocaleString()} mi
+                    </p>
                   )}
                   {listing.vin && (
-                    <p className="text-xs md:text-sm text-gray-400 mt-0.5">VIN: {listing.vin}</p>
+                    <p className="text-xs md:text-sm text-gray-400 mt-0.5">
+                      VIN: {listing.vin}
+                    </p>
                   )}
                 </div>
               </div>
@@ -530,53 +657,76 @@ function OrderDetailView({
 
           {/* Buyer */}
           <div className="border-b border-gray-100 p-6">
-            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Buyer</h2>
+            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+              Buyer
+            </h2>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
                 {item.buyer?.avatar_url ? (
-                  <img src={imageUrl(item.buyer.avatar_url)} alt="" className="w-full h-full rounded-full object-cover" />
+                  <img
+                    src={imageUrl(item.buyer.avatar_url)}
+                    alt=""
+                    className="w-full h-full rounded-full object-cover"
+                  />
                 ) : (
                   <User className="w-5 h-5 text-gray-400" />
                 )}
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  {item.buyer?.dealer_name || item.buyer?.full_name || item.buyer?.name || "Unknown"}
+                  {item.buyer?.dealer_name ||
+                    item.buyer?.full_name ||
+                    item.buyer?.name ||
+                    "Unknown"}
                 </p>
-                {item.buyer?.location && <p className="text-xs text-gray-500">{item.buyer.location}</p>}
+                {item.buyer?.location && (
+                  <p className="text-xs text-gray-500">{item.buyer.location}</p>
+                )}
               </div>
               {item.buyer?.is_dealer && (
-                <span className="text-[11px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full ml-auto">Dealer</span>
+                <span className="text-[11px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full ml-auto">
+                  Dealer
+                </span>
               )}
             </div>
           </div>
 
           {/* Payment */}
           <div className="border-b border-gray-100 p-6">
-            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Payment</h2>
+            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+              Payment
+            </h2>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-500">Method</span>
-                <span className="font-medium capitalize text-gray-900">{item.payment_method || "N/A"}</span>
+                <span className="font-medium capitalize text-gray-900">
+                  {item.payment_method || "N/A"}
+                </span>
               </div>
               {item.payment_method === "finance" && (
                 <>
                   {item.down_payment != null && (
                     <div className="flex justify-between">
                       <span className="text-gray-500">Down Payment</span>
-                      <span className="font-medium text-gray-900">{formatPrice(item.down_payment)}</span>
+                      <span className="font-medium text-gray-900">
+                        {formatPrice(item.down_payment)}
+                      </span>
                     </div>
                   )}
                   {item.loan_term != null && (
                     <div className="flex justify-between">
                       <span className="text-gray-500">Loan Term</span>
-                      <span className="font-medium text-gray-900">{item.loan_term} months</span>
+                      <span className="font-medium text-gray-900">
+                        {item.loan_term} months
+                      </span>
                     </div>
                   )}
                   {item.monthly_payment != null && (
                     <div className="flex justify-between">
                       <span className="text-gray-500">Monthly Payment</span>
-                      <span className="font-medium text-gray-900">{formatPrice(item.monthly_payment)}</span>
+                      <span className="font-medium text-gray-900">
+                        {formatPrice(item.monthly_payment)}
+                      </span>
                     </div>
                   )}
                 </>
@@ -586,16 +736,23 @@ function OrderDetailView({
 
           {/* Invoice */}
           <div className="border-b border-gray-100 p-6">
-            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Invoice</h2>
+            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+              Invoice
+            </h2>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-500">Subtotal</span>
-                <span className="text-gray-900">{formatPrice(item.subtotal)}</span>
+                <span className="text-gray-900">
+                  {formatPrice(item.subtotal)}
+                </span>
               </div>
               {item.accessories && item.accessories.length > 0 && (
                 <div className="pl-4 space-y-1">
                   {item.accessories.map((acc: any, i: number) => (
-                    <div key={i} className="flex justify-between text-xs text-gray-500">
+                    <div
+                      key={i}
+                      className="flex justify-between text-xs text-gray-500"
+                    >
                       <span>{acc.name}</span>
                       <span>{formatPrice(acc.price)}</span>
                     </div>
@@ -620,7 +777,9 @@ function OrderDetailView({
           {/* Installments */}
           {installments.length > 0 && (
             <div className="border-b border-gray-100 p-6">
-              <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Installments ({installments.length})</h2>
+              <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+                Installments ({installments.length})
+              </h2>
               {pendingCascade && (
                 <div className="mb-3 bg-amber-50 border border-amber-200 text-amber-700 px-3 py-2 text-xs rounded-sm flex items-center gap-3">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
@@ -657,8 +816,11 @@ function OrderDetailView({
                           style={{
                             left: `${left}%`,
                             width: `${width}%`,
-                            backgroundColor:
-                              isPaid ? "#16a34a" : isOverdue ? "#ea580c" : "#d1d5db",
+                            backgroundColor: isPaid
+                              ? "#16a34a"
+                              : isOverdue
+                                ? "#ea580c"
+                                : "#d1d5db",
                           }}
                         />
                       );
@@ -670,17 +832,33 @@ function OrderDetailView({
                       const isPaid = inst.status === "paid";
                       const isOverdue = inst.status === "overdue";
                       const due = new Date(inst.due_at);
-                      const monthStart = new Date(due.getFullYear(), due.getMonth(), 1);
-                      const monthEnd = new Date(due.getFullYear(), due.getMonth() + 1, 0);
+                      const monthStart = new Date(
+                        due.getFullYear(),
+                        due.getMonth(),
+                        1,
+                      );
+                      const monthEnd = new Date(
+                        due.getFullYear(),
+                        due.getMonth() + 1,
+                        0,
+                      );
                       const formatShort = (d: Date) =>
-                        d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                        d.toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        });
                       const width = 100 / installments.length;
                       const left = idx * width;
                       return (
                         <div
                           key={inst.id}
                           className="relative text-center"
-                          style={{ width: `${width}%`, paddingLeft: idx === 0 ? 0 : 4, paddingRight: idx === installments.length - 1 ? 0 : 4 }}
+                          style={{
+                            width: `${width}%`,
+                            paddingLeft: idx === 0 ? 0 : 4,
+                            paddingRight:
+                              idx === installments.length - 1 ? 0 : 4,
+                          }}
                         >
                           <div
                             className={cn(
@@ -713,9 +891,27 @@ function OrderDetailView({
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-2 text-[9px] text-gray-500">
-                  <span className="text-green-700">{installments.filter((i: any) => i.status === "paid").length} paid</span>
-                  <span className="text-gray-400">{installments.filter((i: any) => i.status === "pending").length} pending</span>
-                  <span className="text-orange-600">{installments.filter((i: any) => i.status === "overdue").length} overdue</span>
+                  <span className="text-green-700">
+                    {
+                      installments.filter((i: any) => i.status === "paid")
+                        .length
+                    }{" "}
+                    paid
+                  </span>
+                  <span className="text-gray-400">
+                    {
+                      installments.filter((i: any) => i.status === "pending")
+                        .length
+                    }{" "}
+                    pending
+                  </span>
+                  <span className="text-orange-600">
+                    {
+                      installments.filter((i: any) => i.status === "overdue")
+                        .length
+                    }{" "}
+                    overdue
+                  </span>
                 </div>
               </div>
 
@@ -724,8 +920,12 @@ function OrderDetailView({
                   <thead>
                     <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase">
                       <th className="text-left py-2 pr-3 font-medium">#</th>
-                      <th className="text-left py-2 pr-3 font-medium">Due Date</th>
-                      <th className="text-right py-2 pr-3 font-medium">Amount</th>
+                      <th className="text-left py-2 pr-3 font-medium">
+                        Due Date
+                      </th>
+                      <th className="text-right py-2 pr-3 font-medium">
+                        Amount
+                      </th>
                       <th className="text-right py-2 font-medium">Status</th>
                     </tr>
                   </thead>
@@ -734,16 +934,47 @@ function OrderDetailView({
                       const instIsPaid = inst.status === "paid";
                       const isOverdue = inst.status === "overdue";
                       const due = new Date(inst.due_at);
-                      const monthStart = new Date(due.getFullYear(), due.getMonth(), 1);
-                      const monthEnd = new Date(due.getFullYear(), due.getMonth() + 1, 0);
+                      const monthStart = new Date(
+                        due.getFullYear(),
+                        due.getMonth(),
+                        1,
+                      );
+                      const monthEnd = new Date(
+                        due.getFullYear(),
+                        due.getMonth() + 1,
+                        0,
+                      );
                       const formatShort = (d: Date) =>
-                        d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                        d.toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        });
+                      // Progress % within the month: up to paid date, or today if pending
+                      const getProgressPct = () => {
+                        const target = inst.paid_at
+                          ? new Date(inst.paid_at)
+                          : instIsPaid
+                            ? new Date()
+                            : new Date();
+                        const totalMs = monthEnd.getTime() - monthStart.getTime();
+                        const elapsedMs = target.getTime() - monthStart.getTime();
+                        if (elapsedMs <= 0) return 0;
+                        if (elapsedMs >= totalMs) return 100;
+                        return Math.round((elapsedMs / totalMs) * 100);
+                      };
+                      const progressPct = getProgressPct();
                       return (
                         <tr key={inst.id} className="border-b border-gray-50">
-                          <td className="py-2.5 pr-3 text-gray-600">{inst.month_number}</td>
-                          <td className="py-2.5 pr-3 text-gray-600">{formatDate(inst.due_at)}</td>
-                          <td className="py-2.5 pr-3 text-right font-medium text-gray-900">{formatPrice(inst.amount)}</td>
-                          <td className="py-2.5">
+                          <td className="py-2.5 pr-3 text-gray-600">
+                            {inst.month_number}
+                          </td>
+                          <td className="py-2.5 pr-3 text-gray-600">
+                            {formatDate(inst.due_at)}
+                          </td>
+                          <td className="py-2.5 pr-3  font-medium text-gray-900">
+                            {formatPrice(inst.amount)}
+                          </td>
+                          <td className="py-2.5 text-right">
                             <div className="w-full max-w-xs">
                               {/* Month slider with start/end dates */}
                               <div className="mb-1.5">
@@ -752,13 +983,13 @@ function OrderDetailView({
                                     <div
                                       className="h-full rounded-lg transition-all duration-500 ease-out"
                                       style={{
-                                        width: instIsPaid ? "100%" : "0%",
+                                        width: `${progressPct}%`,
                                         backgroundColor:
-                                          instIsPaid
+                                          inst.status === "paid"
                                             ? "#16a34a"
-                                            : isOverdue
+                                            : inst.status === "overdue"
                                               ? "#ea580c"
-                                              : "#d1d5db",
+                                              : "#9ca3af",
                                       }}
                                     />
                                   </div>
@@ -772,11 +1003,17 @@ function OrderDetailView({
                                 {instIsPaid && (
                                   <input
                                     type="date"
-                                    value={inst.paid_at ? inst.paid_at.slice(0, 10) : new Date().toISOString().slice(0, 10)}
+                                    value={
+                                      inst.paid_at
+                                        ? inst.paid_at.slice(0, 10)
+                                        : new Date().toISOString().slice(0, 10)
+                                    }
                                     onChange={(e) => {
                                       setInstallments((prev) =>
                                         prev.map((i: any) =>
-                                          i.id === inst.id ? { ...i, paid_at: e.target.value } : i,
+                                          i.id === inst.id
+                                            ? { ...i, paid_at: e.target.value }
+                                            : i,
                                         ),
                                       );
                                     }}
@@ -786,7 +1023,9 @@ function OrderDetailView({
                                 <InstallmentStatusCheckboxes
                                   current={inst.status}
                                   onChange={(s) => {
-                                    const date = inst.paid_at || new Date().toISOString().slice(0, 10);
+                                    const date =
+                                      inst.paid_at ||
+                                      new Date().toISOString().slice(0, 10);
                                     handleInstallmentChange(inst.id, s, date);
                                   }}
                                   disabled={installmentUpdating.has(inst.id)}
@@ -802,7 +1041,9 @@ function OrderDetailView({
                 <div className="mt-3 flex items-center justify-between gap-4 text-xs">
                   <div className="flex items-center gap-2">
                     {INSTALLMENT_STATUSES.map((s) => {
-                      const count = installments.filter((i: any) => i.status === s).length;
+                      const count = installments.filter(
+                        (i: any) => i.status === s,
+                      ).length;
                       if (count === 0) return null;
                       return (
                         <span
@@ -820,16 +1061,45 @@ function OrderDetailView({
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-gray-500">
-                      Total: <strong className="text-gray-900">{formatPrice(installments.reduce((sum: number, i: any) => sum + Number(i.amount), 0))}</strong>
+                      Total:{" "}
+                      <strong className="text-gray-900">
+                        {formatPrice(
+                          installments.reduce(
+                            (sum: number, i: any) => sum + Number(i.amount),
+                            0,
+                          ),
+                        )}
+                      </strong>
                     </span>
                     <span className="text-green-700">
-                      Paid: <strong>{formatPrice(installments.reduce((sum: number, i: any) => sum + (i.status === "paid" ? Number(i.amount) : 0), 0))}</strong>
+                      Paid:{" "}
+                      <strong>
+                        {formatPrice(
+                          installments.reduce(
+                            (sum: number, i: any) =>
+                              sum +
+                              (i.status === "paid" ? Number(i.amount) : 0),
+                            0,
+                          ),
+                        )}
+                      </strong>
                     </span>
                     <span className="text-red-700">
-                      Remaining: <strong>{formatPrice(
-                        installments.reduce((sum: number, i: any) => sum + Number(i.amount), 0) -
-                        installments.reduce((sum: number, i: any) => sum + (i.status === "paid" ? Number(i.amount) : 0), 0),
-                      )}</strong>
+                      Remaining:{" "}
+                      <strong>
+                        {formatPrice(
+                          installments.reduce(
+                            (sum: number, i: any) => sum + Number(i.amount),
+                            0,
+                          ) -
+                            installments.reduce(
+                              (sum: number, i: any) =>
+                                sum +
+                                (i.status === "paid" ? Number(i.amount) : 0),
+                              0,
+                            ),
+                        )}
+                      </strong>
                     </span>
                   </div>
                 </div>
@@ -840,7 +1110,9 @@ function OrderDetailView({
           {/* Notes */}
           {item.notes && (
             <div className="border-b border-gray-100 p-6">
-              <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-2">Notes</h2>
+              <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-2">
+                Notes
+              </h2>
               <p className="text-sm text-gray-600">{item.notes}</p>
             </div>
           )}
@@ -848,7 +1120,9 @@ function OrderDetailView({
           {/* Footer */}
           <div className="p-6 bg-gray-50 flex items-center justify-between">
             <div className="text-xs text-gray-400">
-              {item.completed_at && <span>Completed: {formatDate(item.completed_at)}</span>}
+              {item.completed_at && (
+                <span>Completed: {formatDate(item.completed_at)}</span>
+              )}
             </div>
             {item.items?.[0]?.listing_id && (
               <Link
@@ -873,7 +1147,8 @@ function OrderDetailView({
   }
 
   const poListing = item.listing;
-  const poImage = poListing?.primary_image?.image_url || poListing?.images?.[0]?.image_url;
+  const poImage =
+    poListing?.primary_image?.image_url || poListing?.images?.[0]?.image_url;
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 pt-20">
@@ -896,7 +1171,9 @@ function OrderDetailView({
           <div className="flex items-center justify-between gap-4">
             <div>
               <h1 className="text-xl font-bold text-gray-900">Pre-Order</h1>
-              <p className="text-sm text-gray-500 mt-1">Created on {formatDate(item.created_at)}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Created on {formatDate(item.created_at)}
+              </p>
             </div>
             <StatusDropdown
               current={currentStatus}
@@ -926,9 +1203,14 @@ function OrderDetailView({
               </div>
               <div className="flex-1 min-w-0 px-6 pb-6">
                 <p className="font-semibold text-gray-900 hover:text-blue-600 transition-colors text-sm md:text-base">
-                  {poListing.year} {poListing.make?.name} {poListing.model?.name}
+                  {poListing.year} {poListing.make?.name}{" "}
+                  {poListing.model?.name}
                 </p>
-                {poListing.price && <p className="text-xs md:text-sm text-gray-500 mt-0.5">{formatPrice(poListing.price)}</p>}
+                {poListing.price && (
+                  <p className="text-xs md:text-sm text-gray-500 mt-0.5">
+                    {formatPrice(poListing.price)}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -936,15 +1218,21 @@ function OrderDetailView({
 
         {/* Customer */}
         <div className="border-b border-gray-100 p-6">
-          <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Customer</h2>
+          <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+            Customer
+          </h2>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
               <User className="w-5 h-5 text-gray-400" />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900">{item.customer_name}</p>
+              <p className="text-sm font-medium text-gray-900">
+                {item.customer_name}
+              </p>
               <p className="text-xs text-gray-500">{item.customer_email}</p>
-              {item.customer_phone && <p className="text-xs text-gray-500">{item.customer_phone}</p>}
+              {item.customer_phone && (
+                <p className="text-xs text-gray-500">{item.customer_phone}</p>
+              )}
             </div>
           </div>
         </div>
@@ -952,15 +1240,21 @@ function OrderDetailView({
         {/* Details */}
         {item.total_price && (
           <div className="border-b border-gray-100 p-6">
-            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Details</h2>
+            <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">
+              Details
+            </h2>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-500">Total</span>
-                <span className="font-semibold text-gray-900">{formatPrice(item.total_price)}</span>
+                <span className="font-semibold text-gray-900">
+                  {formatPrice(item.total_price)}
+                </span>
               </div>
               {item.message && (
                 <div className="pt-2 border-t border-gray-100">
-                  <span className="text-gray-500 text-xs block mb-1">Message</span>
+                  <span className="text-gray-500 text-xs block mb-1">
+                    Message
+                  </span>
                   <p className="text-sm text-gray-600">{item.message}</p>
                 </div>
               )}
