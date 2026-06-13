@@ -642,29 +642,49 @@ function OrderDetailView({
 
               {/* Payment Timeline Slider */}
               <div className="mb-5">
-                <div className="flex items-center gap-1.5">
-                  {installments.map((inst: any, idx: number) => {
-                    const isPaid = inst.status === "paid";
-                    const isOverdue = inst.status === "overdue";
-                    return (
-                      <div key={inst.id} className="flex-1 flex flex-col items-center gap-1.5">
-                        <div className="w-full h-2 rounded-full overflow-hidden bg-gray-100 relative">
+                <div className="relative">
+                  {/* Main timeline bar */}
+                  <div className="h-3 rounded-full bg-gray-100 relative overflow-hidden">
+                    {installments.map((inst: any, idx: number) => {
+                      const isPaid = inst.status === "paid";
+                      const isOverdue = inst.status === "overdue";
+                      const width = 100 / installments.length;
+                      const left = idx * width;
+                      return (
+                        <div
+                          key={inst.id}
+                          className="absolute top-0 h-full transition-all duration-500"
+                          style={{
+                            left: `${left}%`,
+                            width: `${width}%`,
+                            backgroundColor:
+                              isPaid ? "#22c55e" : isOverdue ? "#fb923c" : "#e5e7eb",
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                  {/* Month markers with date ranges */}
+                  <div className="flex justify-between mt-2 text-[10px]">
+                    {installments.map((inst: any, idx: number) => {
+                      const isPaid = inst.status === "paid";
+                      const isOverdue = inst.status === "overdue";
+                      const due = new Date(inst.due_at);
+                      const monthStart = new Date(due.getFullYear(), due.getMonth(), 1);
+                      const monthEnd = new Date(due.getFullYear(), due.getMonth() + 1, 0);
+                      const formatShort = (d: Date) =>
+                        d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                      const width = 100 / installments.length;
+                      const left = idx * width;
+                      return (
+                        <div
+                          key={inst.id}
+                          className="relative text-center"
+                          style={{ width: `${width}%`, paddingLeft: idx === 0 ? 0 : 4, paddingRight: idx === installments.length - 1 ? 0 : 4 }}
+                        >
                           <div
                             className={cn(
-                              "h-full rounded-full transition-all duration-500",
-                              isPaid
-                                ? "bg-green-500"
-                                : isOverdue
-                                  ? "bg-orange-400"
-                                  : "bg-gray-200",
-                            )}
-                            style={{ width: "100%" }}
-                          />
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span
-                            className={cn(
-                              "w-2 h-2 rounded-full shrink-0",
+                              "w-2 h-2 rounded-full mx-auto mb-1 transition-colors",
                               isPaid
                                 ? "bg-green-500"
                                 : isOverdue
@@ -674,7 +694,7 @@ function OrderDetailView({
                           />
                           <span
                             className={cn(
-                              "text-[10px] font-medium",
+                              "block text-[9px] font-medium",
                               isPaid
                                 ? "text-green-600"
                                 : isOverdue
@@ -682,16 +702,20 @@ function OrderDetailView({
                                   : "text-gray-400",
                             )}
                           >
-                            {inst.month_number}
+                            M{inst.month_number}
+                          </span>
+                          <span className="block text-[8px] text-gray-400">
+                            {formatShort(monthStart)}–{formatShort(monthEnd)}
                           </span>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="flex items-center justify-between mt-2 text-[10px] text-gray-400">
-                  <span>{installments.filter((i: any) => i.status === "paid").length} paid</span>
-                  <span>{installments.filter((i: any) => i.status === "pending").length} remaining</span>
+                <div className="flex items-center justify-between mt-2 text-[10px] text-gray-500">
+                  <span className="text-green-600">{installments.filter((i: any) => i.status === "paid").length} paid</span>
+                  <span className="text-gray-400">{installments.filter((i: any) => i.status === "pending").length} pending</span>
+                  <span className="text-orange-500">{installments.filter((i: any) => i.status === "overdue").length} overdue</span>
                 </div>
               </div>
 
