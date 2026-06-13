@@ -147,7 +147,7 @@ const offerAccessories: Accessory[] = [
 
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [listing, setListing] = useState<CarListing | null>(null);
   const [loading, setLoading] = useState(true);
@@ -307,6 +307,7 @@ export default function ListingDetail() {
     : 0;
   const isNew = d.condition?.toLowerCase() === "new";
   const isCertified = d.condition?.toLowerCase() === "certified pre-owned";
+  const isOwner = user ? user.id === d.seller_id || user.id === d.seller?.id || user.role === "seller" : false;
 
   async function toggleSave() {
     if (!isAuthenticated) return;
@@ -548,7 +549,11 @@ export default function ListingDetail() {
               <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">
                 Actions
               </p>
-              {isAuthenticated ? (
+              {isOwner ? (
+                <div className="text-center py-5 bg-gray-50 rounded-lg border border-gray-100">
+                  <p className="text-sm text-gray-500">You cannot purchase your own listing</p>
+                </div>
+              ) : isAuthenticated ? (
                 <div className="space-y-2.5">
                   <button
                     onClick={toggleSave}
@@ -611,7 +616,7 @@ export default function ListingDetail() {
                 </div>
               )}
 
-              {showOffer && (
+              {showOffer && !isOwner && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
