@@ -639,6 +639,62 @@ function OrderDetailView({
                   </button>
                 </div>
               )}
+
+              {/* Payment Timeline Slider */}
+              <div className="mb-5">
+                <div className="flex items-center gap-1.5">
+                  {installments.map((inst: any, idx: number) => {
+                    const isPaid = inst.status === "paid";
+                    const isOverdue = inst.status === "overdue";
+                    return (
+                      <div key={inst.id} className="flex-1 flex flex-col items-center gap-1.5">
+                        <div className="w-full h-2 rounded-full overflow-hidden bg-gray-100 relative">
+                          <div
+                            className={cn(
+                              "h-full rounded-full transition-all duration-500",
+                              isPaid
+                                ? "bg-green-500"
+                                : isOverdue
+                                  ? "bg-orange-400"
+                                  : "bg-gray-200",
+                            )}
+                            style={{ width: "100%" }}
+                          />
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span
+                            className={cn(
+                              "w-2 h-2 rounded-full shrink-0",
+                              isPaid
+                                ? "bg-green-500"
+                                : isOverdue
+                                  ? "bg-orange-400"
+                                  : "bg-gray-300",
+                            )}
+                          />
+                          <span
+                            className={cn(
+                              "text-[10px] font-medium",
+                              isPaid
+                                ? "text-green-600"
+                                : isOverdue
+                                  ? "text-orange-600"
+                                  : "text-gray-400",
+                            )}
+                          >
+                            {inst.month_number}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-between mt-2 text-[10px] text-gray-400">
+                  <span>{installments.filter((i: any) => i.status === "paid").length} paid</span>
+                  <span>{installments.filter((i: any) => i.status === "pending").length} remaining</span>
+                </div>
+              </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
