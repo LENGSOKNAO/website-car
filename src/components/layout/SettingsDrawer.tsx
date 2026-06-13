@@ -2,7 +2,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   User,
-  ShoppingBag,
   Heart,
   MessageSquare,
   ClipboardList,
@@ -23,7 +22,6 @@ const links = [
   { label: "Orders", icon: ClipboardList, path: "/orders" },
   { label: "Wishlist", icon: Heart, path: "/wishlist" },
   { label: "Messages", icon: MessageSquare, path: "/messages" },
-  { label: "Bag", icon: ShoppingBag, path: "/cart" },
 ];
 
 export default function SettingsDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {

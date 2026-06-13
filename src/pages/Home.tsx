@@ -4,7 +4,7 @@ import NewArrivalsBar from "@/components/home/NewArrivalsBar";
 import BrowseByType from "@/components/home/BrowseByType";
 import BrandsSection from "@/components/home/BrandsSection";
 import StatsTrust from "@/components/home/StatsTrust";
-import ProductsShowcase from "@/components/home/ProductsShowcase";
+// import ProductsShowcase from "@/components/home/ProductsShowcase";
 import StepsSection from "@/components/home/StepsSection";
 import TradeInBanner from "@/components/home/TradeInBanner";
 import FeaturesGrid from "@/components/home/FeaturesGrid";
@@ -26,7 +26,7 @@ export default function Home() {
       <BrowseByType />
       <BrandsSection />
       <StatsTrust />
-      <ProductsShowcase />
+      {/* <ProductsShowcase /> */}
       <StepsSection />
       <TradeInBanner />
       <FeaturesGrid />

@@ -281,7 +281,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-14 md:pt-16">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
         <motion.div {...fadeUp} transition={{ duration: 0.4 }}>
           <div className="relative mb-16">

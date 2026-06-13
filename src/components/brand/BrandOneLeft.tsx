@@ -1,50 +1,67 @@
-import type { BrandData } from "@/lib/constants";
+import type { BrandData, BrandSection } from "@/lib/constants";
 import ButtonBlue from "../ui/ButtonBlue";
 import { useEffect, useState, useRef } from "react";
-import { api } from "@/lib/api";
 import { imageUrl } from "@/lib/utils";
+import { Loader } from "lucide-react";
+import { api } from "@/lib/api";
 
 interface BoxLeftItem {
   badge: string;
   image: string;
 }
 
+function mapBoxLeftItems(items: BrandSection[]): BoxLeftItem[] {
+  return items.map((item) => ({
+    badge: item.name,
+    image: item.image,
+  }));
+}
+
 export default function BrandOneLeft({ data }: { data: BrandData }) {
+  if (!data) return null;
   const ref = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
   const [items, setItems] = useState<BoxLeftItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.boxLeft().then((res: any) => {
-      const raw = res?.data?.data ?? res?.data ?? res ?? [];
-      const list = Array.isArray(raw) ? raw : [];
-      const brandName = data.name.toLowerCase();
-      const filtered = list.filter((s: any) => {
-        const badge = (s.badge || "").toLowerCase();
-        const un = (s.user?.name || "").toLowerCase();
-        return (
-          badge === brandName ||
-          un === brandName ||
-          un === data.slug.toLowerCase()
-        );
-      });
-      if (filtered.length === 0) {
-        const loose = list.filter((s: any) => {
+    setLoading(true);
+    const boxLeftData = (data as any).boxLeft || (data as any).box_left;
+    if (boxLeftData?.length) {
+      setItems(mapBoxLeftItems(boxLeftData));
+      setLoading(false);
+    } else {
+      api.boxLeft().then((res: any) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? [];
+        const list = Array.isArray(raw) ? raw : [];
+        const brandName = data.name.toLowerCase();
+        const filtered = list.filter((s: any) => {
           const badge = (s.badge || "").toLowerCase();
           const un = (s.user?.name || "").toLowerCase();
           return (
-            badge.includes(brandName) ||
-            brandName.includes(badge) ||
-            un.includes(brandName) ||
-            brandName.includes(un)
+            badge === brandName ||
+            un === brandName ||
+            un === data.slug.toLowerCase()
           );
         });
-        setItems(loose);
-      } else {
-        setItems(filtered);
-      }
-    }).catch(() => {});
-  }, [data.name]);
+        if (filtered.length === 0) {
+          const loose = list.filter((s: any) => {
+            const badge = (s.badge || "").toLowerCase();
+            const un = (s.user?.name || "").toLowerCase();
+            return (
+              badge.includes(brandName) ||
+              brandName.includes(badge) ||
+              un.includes(brandName) ||
+              brandName.includes(un)
+            );
+          });
+          setItems(mapBoxLeftItems(loose));
+        } else {
+          setItems(mapBoxLeftItems(filtered));
+        }
+      }).catch(() => {}).finally(() => setLoading(false));
+    }
+  }, [data]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -63,25 +80,30 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
     return () => observer.disconnect();
   }, []);
 
-  if (items.length === 0) return null;
+  if (items.length === 0 && !loading) return null;
 
   return (
     <section className={`relative overflow-hidden ${isInView ? 'animate-slideUp' : ''}`} ref={ref}>
        <style>{`
-         @keyframes slideUp {
-           from { 
-             opacity: 0;
-             transform: translateY(100px);
-           }
-           to { 
-             opacity: 1;
-             transform: translateY(0);
-           }
-         }
-         .animate-slideUp {
-           animation: slideUp 1s ease-out forwards;
-         }
-       `}</style>
+          @keyframes slideUp {
+            from { 
+              opacity: 0;
+              transform: translateY(100px);
+            }
+            to { 
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          .animate-slideUp {
+            animation: slideUp 1s ease-out forwards;
+          }
+        `}</style>
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-dark-975">
+          <Loader className="w-10 h-10 text-gray-300 animate-spin" />
+        </div>
+      )}
       {items.map((banner, index) => (
         <div className={index > 0 ? "tb-8" : ""} key={index}>
           <div className="absolute top-0 left-1/4 w-[500px] h-[500px] blur-[150px] pointer-events-none " />
@@ -89,11 +111,14 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
             <div className="flex flex-col lg:flex-row items-stretch overflow-hidden min-h-[500px] lg:min-h-[650px]">
               <div className="flex-[1.5] min-h-[350px] lg:min-h-full rounded-sm relative overflow-hidden">
                 <div className="absolute inset-0">
-                  <img
-                    src={imageUrl(banner.image)}
-                    alt={banner.badge}
-                    className="w-full h-full object-cover"
-                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
+                    <img
+                      src={imageUrl(banner.image)}
+                      alt={banner.badge}
+                      className="w-full h-full object-cover"
+                    />
+                    <Loader className="w-10 h-10 text-gray-300 animate-spin" />
+                  </div>
                   <div
                     className="absolute inset-0"
                     style={{

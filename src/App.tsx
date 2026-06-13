@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import Layout from "@/components/layout/Layout";
-import { api } from "@/lib/api";
 import Home from "@/pages/Home";
 import Listings from "@/pages/Listings";
 import ListingDetail from "@/pages/ListingDetail";
@@ -19,45 +17,16 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import BrandPage from "@/pages/BrandPage";
 import NotFound from "@/pages/NotFound";
 import SellerAdmin from "@/pages/SellerAdmin";
+import SellerListings from "@/pages/SellerListings";
+import SellerHeroes from "@/pages/SellerHeroes";
+import SellerBanner from "@/pages/SellerBanner";
+import SellerSales from "@/pages/SellerSales";
 import Orders from "@/pages/Orders";
 import Messages from "@/pages/Messages";
 import Wishlist from "@/pages/Wishlist";
-import CartPage from "@/pages/Cart";
 import Profile from "@/pages/Profile";
 
 export default function App() {
-  const [sellers, setSellers] = useState<any[]>([]);
-
-  useEffect(() => {
-    api
-      .users()
-      .then((res: any) => {
-        const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        const list = Array.isArray(raw)
-          ? raw
-          : Array.isArray(raw?.data)
-            ? raw.data
-            : [];
-        setSellers(
-          list.filter((u: any) => {
-            const roleName = (u.role || u.type || "").toLowerCase();
-            const hasRole = u.roles?.some(
-              (r: any) =>
-                (typeof r === "string" ? r : r.name || "").toLowerCase() ===
-                "seller",
-            );
-            return (
-              roleName === "seller" ||
-              roleName === "dealer" ||
-              u.is_dealer ||
-              hasRole
-            );
-          }),
-        );
-      })
-      .catch(() => {});
-  }, []);
-
   return (
     <BrowserRouter>
       <AuthProvider>
@@ -65,13 +34,7 @@ export default function App() {
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
             <Route path="/search" element={<SearchPage />} />
-            {sellers.map((seller) => (
-              <Route
-                key={seller.id}
-                path={`/${seller.full_name.toLowerCase()}`}
-                element={<BrandPage />}
-              />
-            ))}
+            <Route path="/brand/:name" element={<BrandPage />} />
             <Route path="/listings" element={<Listings />} />
             <Route path="/financing" element={<Financing />} />
             <Route path="/trade-in" element={<TradeIn />} />
@@ -86,12 +49,15 @@ export default function App() {
             <Route path="/orders" element={<Orders />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/seller/messages" element={<Messages />} />
-            <Route path="/cart" element={<CartPage />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/seller/admin" element={<SellerAdmin />} />
+            <Route path="/seller/listings" element={<SellerListings />} />
+            <Route path="/seller/heroes" element={<SellerHeroes />} />
+            <Route path="/seller/banner" element={<SellerBanner />} />
+            <Route path="/seller/sales" element={<SellerSales />} />
             <Route path="*" element={<NotFound />} />
+            <Route path="/listings/:id" element={<ListingDetail />} />
           </Route>
-          <Route path="/listings/:id" element={<ListingDetail />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

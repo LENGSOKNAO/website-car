@@ -7,7 +7,6 @@ import {
   CircleUser,
   Search,
   User,
-  ShoppingBag,
   Heart,
   MessageSquare,
   ClipboardList,
@@ -20,7 +19,7 @@ import {
   Users,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { APP_NAME, BRANDS, BRAND_PAGES } from "@/lib/constants";
+import { APP_NAME } from "@/lib/constants";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import Avatar from "@/components/ui/Avatar";
@@ -31,7 +30,6 @@ const buyerLinks = [
   { label: "Orders", icon: ClipboardList, path: "/orders" },
   { label: "Wishlist", icon: Heart, path: "/wishlist" },
   { label: "Messages", icon: MessageSquare, path: "/messages" },
-  { label: "Cart", icon: ShoppingBag, path: "/cart" },
 ];
 
 const sellerLinks = [
@@ -129,11 +127,6 @@ export default function Header() {
     };
   }, [mobileOpen]);
 
-  const brandRoutes = BRANDS.map((b) => {
-    const bp = BRAND_PAGES.find((p) => p.slug === b.slug);
-    return { ...b, route: bp?.route || `/listings?make=${b.slug}` };
-  });
-
   const pageSlug = decodeURIComponent(
     location.pathname.split("/")[1] || "",
   ).toLowerCase();
@@ -143,11 +136,19 @@ export default function Header() {
   const getUserRole = (u: typeof user) => {
     if (!u) return "buyer";
     const roleStr = (u.role || "").toLowerCase();
-    const roleArr = u.roles?.map((r: any) =>
-      typeof r === "string" ? r.toLowerCase() : (r.name || "").toLowerCase(),
-    ) ?? [];
+    const roleArr =
+      u.roles?.map((r: any) =>
+        typeof r === "string" ? r.toLowerCase() : (r.name || "").toLowerCase(),
+      ) ?? [];
     if (roleStr === "admin" || roleArr.includes("admin")) return "admin";
-    if (roleStr === "seller" || roleStr === "dealer" || u.is_dealer || roleArr.includes("seller") || roleArr.includes("dealer")) return "seller";
+    if (
+      roleStr === "seller" ||
+      roleStr === "dealer" ||
+      u.is_dealer ||
+      roleArr.includes("seller") ||
+      roleArr.includes("dealer")
+    )
+      return "seller";
     return "buyer";
   };
 
@@ -173,22 +174,36 @@ export default function Header() {
 
           <nav className="hidden md:flex items-center absolute left-1/2 -translate-x-1/2">
             <div className="flex items-center gap-1">
-              {sellers
-                .filter((s) => s.id !== user?.id)
-                .map((seller) => (
-                  <Link
-                    key={seller.id}
-                    to={`/${encodeURIComponent(seller.full_name.toLowerCase())}`}
-                    className={cn(
-                      "block px-3 py-1.5 text-sm font-medium rounded-[4px] transition-colors",
-                      currentSellerId === seller.id
-                        ? "text-black"
-                        : "text-[#5C5E62] hover:text-black",
-                    )}
-                  >
-                    {seller.full_name}
-                  </Link>
-                ))}
+              {isSeller && user ? (
+                <Link
+                  to={`/brand/${encodeURIComponent(user.full_name.toLowerCase())}`}
+                  className={cn(
+                    "block px-3 py-1.5 text-sm font-medium rounded-[4px] transition-colors",
+                    currentSellerId === user.id
+                      ? "text-black"
+                      : "text-[#5C5E62] hover:text-black",
+                  )}
+                >
+                  {user.full_name}
+                </Link>
+              ) : (
+                sellers
+                  .filter((s) => s.id !== user?.id)
+                  .map((seller) => (
+                    <Link
+                      key={seller.id}
+                      to={`/brand/${encodeURIComponent(seller.full_name.toLowerCase())}`}
+                      className={cn(
+                        "block px-3 py-1.5 text-sm font-medium rounded-[4px] transition-colors",
+                        currentSellerId === seller.id
+                          ? "text-black"
+                          : "text-[#5C5E62] hover:text-black",
+                      )}
+                    >
+                      {seller.full_name}
+                    </Link>
+                  ))
+              )}
             </div>
           </nav>
 
@@ -233,16 +248,22 @@ export default function Header() {
                         className="fixed inset-0 z-50 bg-black/30"
                         onClick={() => setProfileOpen(false)}
                       />
-                      <motion.div
-                        initial={{ x: "100%" }}
-                        animate={{ x: 0 }}
-                        exit={{ x: "100%" }}
-                        transition={{ type: "spring", damping: 28, stiffness: 260 }}
-                        className="fixed top-0 right-0 bottom-0 z-50 w-[300px] bg-white shadow-xl flex flex-col"
-                      >
+                       <motion.div
+                         initial={{ x: "100%" }}
+                         animate={{ x: 0 }}
+                         exit={{ x: "100%" }}
+                         transition={{
+                           type: "spring",
+                           damping: 28,
+                           stiffness: 260,
+                         }}
+                         className="fixed top-14 md:top-16 right-0 bottom-0 z-50 w-[300px] bg-white shadow-xl flex flex-col"
+                       >
                         <div className="px-4 pt-4 pb-3 border-b border-gray-100">
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Profile</span>
+                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                              Profile
+                            </span>
                             <button
                               onClick={() => setProfileOpen(false)}
                               className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
@@ -258,24 +279,37 @@ export default function Header() {
                               className="w-8 h-8 ring-2 ring-gray-100"
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-semibold text-gray-900 truncate">{user.full_name || "User"}</p>
-                              <p className="text-[11px] text-gray-500 truncate">{user.email || ""}</p>
+                              <p className="text-xs font-semibold text-gray-900 truncate">
+                                {user.full_name || "User"}
+                              </p>
+                              <p className="text-[11px] text-gray-500 truncate">
+                                {user.email || ""}
+                              </p>
                             </div>
                           </div>
                         </div>
                         <div className="flex-1 overflow-y-auto py-2 px-3 space-y-3">
                           {isAdmin && (
                             <div>
-                              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-1">Admin</p>
+                              <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-1">
+                                Admin
+                              </p>
                               <div className="space-y-0.5">
                                 {adminLinks.map((item) => {
                                   const Icon = item.icon;
                                   return (
-                                    <button key={item.path} onClick={() => { setProfileOpen(false); navigate(item.path); }}
+                                    <button
+                                      key={item.path}
+                                      onClick={() => {
+                                        setProfileOpen(false);
+                                        navigate(item.path);
+                                      }}
                                       className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-gray-100 transition-colors text-left group"
                                     >
                                       <Icon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 shrink-0" />
-                                      <span className="font-medium">{item.label}</span>
+                                      <span className="font-medium">
+                                        {item.label}
+                                      </span>
                                     </button>
                                   );
                                 })}
@@ -284,16 +318,27 @@ export default function Header() {
                           )}
                           {isSeller && (
                             <div>
-                              {isAdmin && <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-1">Seller</p>}
+                              {isAdmin && (
+                                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-1">
+                                  Seller
+                                </p>
+                              )}
                               <div className="space-y-0.5">
                                 {sellerLinks.map((item) => {
                                   const Icon = item.icon;
                                   return (
-                                    <button key={item.path} onClick={() => { setProfileOpen(false); navigate(item.path); }}
+                                    <button
+                                      key={item.path}
+                                      onClick={() => {
+                                        setProfileOpen(false);
+                                        navigate(item.path);
+                                      }}
                                       className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-gray-100 transition-colors text-left group"
                                     >
                                       <Icon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 shrink-0" />
-                                      <span className="font-medium">{item.label}</span>
+                                      <span className="font-medium">
+                                        {item.label}
+                                      </span>
                                     </button>
                                   );
                                 })}
@@ -302,16 +347,27 @@ export default function Header() {
                           )}
                           {(!isSeller || isAdmin) && (
                             <div>
-                              {isAdmin && <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-1">Account</p>}
+                              {isAdmin && (
+                                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-3 mb-1">
+                                  Account
+                                </p>
+                              )}
                               <div className="space-y-0.5">
                                 {buyerLinks.map((item) => {
                                   const Icon = item.icon;
                                   return (
-                                    <button key={item.path} onClick={() => { setProfileOpen(false); navigate(item.path); }}
+                                    <button
+                                      key={item.path}
+                                      onClick={() => {
+                                        setProfileOpen(false);
+                                        navigate(item.path);
+                                      }}
                                       className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-gray-100 transition-colors text-left group"
                                     >
                                       <Icon className="w-4 h-4 text-gray-400 group-hover:text-gray-600 shrink-0" />
-                                      <span className="font-medium">{item.label}</span>
+                                      <span className="font-medium">
+                                        {item.label}
+                                      </span>
                                     </button>
                                   );
                                 })}
@@ -321,7 +377,10 @@ export default function Header() {
                         </div>
                         <div className="px-3 py-2 border-t border-gray-100">
                           <button
-                            onClick={() => { setProfileOpen(false); logout(); }}
+                            onClick={() => {
+                              setProfileOpen(false);
+                              logout();
+                            }}
                             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-red-600 hover:bg-red-50 transition-colors group"
                           >
                             <LogOut className="w-4 h-4 shrink-0" />
@@ -336,7 +395,7 @@ export default function Header() {
             ) : (
               <Link
                 to="/login"
-                className="hidden md:flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-full transition-all duration-200"
+                className="hidden md:flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-00  bg-gray-200 hover:bg-gray-300 rounded-full transition-all duration-200"
               >
                 <CircleUser className="w-4 h-4" />
                 <span>Sign In</span>
@@ -428,57 +487,71 @@ export default function Header() {
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 top-14 md:top-16 bg-white z-40 flex flex-col">
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-0.5">
-            {sellers
-              .filter((s) => s.id !== user?.id)
-              .map((seller) => {
-                const sellerHeroes = heroes
-                  .filter((h) => h.seller_id === seller.id && h.is_active)
-                  .sort((a, b) => a.sort_order - b.sort_order);
-                return (
-                  <div key={seller.id}>
-                    <Link
-                      to={`/${encodeURIComponent(seller.full_name)}`}
-                      className="block px-4 py-3 text-sm font-medium text-black hover:text-blue-600 transition-colors"
-                    >
-                      {seller.full_name}
-                    </Link>
-                    {sellerHeroes.length > 0 && (
-                      <div className="pl-4 pb-2 space-y-0.5">
-                        {sellerHeroes.map((hero) => {
-                          const isHeroOpen = openHeroId === hero.id;
-                          const items = Array.isArray(hero.subtitle)
-                            ? hero.subtitle
-                            : [];
-                          return (
-                            <div key={hero.id}>
-                              <button
-                                onClick={() =>
-                                  setOpenHeroId(isHeroOpen ? null : hero.id)
-                                }
-                                className="block w-full text-left px-4 py-2 text-xs font-semibold text-[#5C5E62] uppercase tracking-wide hover:text-black"
-                              >
-                                {hero.title}
-                              </button>
-                              {isHeroOpen && items.length > 0 && (
-                                <div className="pl-4 space-y-0.5">
-                                  {items.map((item: any, i: number) => (
-                                    <div
-                                      key={i}
-                                      className="px-4 py-1.5 text-xs text-[#5C5E62]"
-                                    >
-                                      {item.text_more || item.text}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            {isSeller && user ? (
+              <Link
+                to={`/brand/${encodeURIComponent(user.full_name.toLowerCase())}`}
+                className={cn(
+                  "block px-3 py-1.5 text-sm font-medium rounded-[4px] transition-colors",
+                  currentSellerId === user.id
+                    ? "text-black"
+                    : "text-[#5C5E62] hover:text-black",
+                )}
+              >
+                {user.full_name}
+              </Link>
+            ) : (
+              sellers
+                .filter((s) => s.id !== user?.id)
+                .map((seller) => {
+                  const sellerHeroes = heroes
+                    .filter((h) => h.seller_id === seller.id && h.is_active)
+                    .sort((a, b) => a.sort_order - b.sort_order);
+                  return (
+                    <div key={seller.id}>
+                      <Link
+                        to={`/brand/${encodeURIComponent(seller.full_name.toLowerCase())}`}
+                        className="block px-4 py-3 text-sm font-medium text-black hover:text-blue-600 transition-colors"
+                      >
+                        {seller.full_name}
+                      </Link>
+                      {sellerHeroes.length > 0 && (
+                        <div className="pl-4 pb-2 space-y-0.5">
+                          {sellerHeroes.map((hero) => {
+                            const isHeroOpen = openHeroId === hero.id;
+                            const items = Array.isArray(hero.subtitle)
+                              ? hero.subtitle
+                              : [];
+                            return (
+                              <div key={hero.id}>
+                                <button
+                                  onClick={() =>
+                                    setOpenHeroId(isHeroOpen ? null : hero.id)
+                                  }
+                                  className="block w-full text-left px-4 py-2 text-xs font-semibold text-[#5C5E62] uppercase tracking-wide hover:text-black"
+                                >
+                                  {hero.title}
+                                </button>
+                                {isHeroOpen && items.length > 0 && (
+                                  <div className="pl-4 space-y-0.5">
+                                    {items.map((item: any, i: number) => (
+                                      <div
+                                        key={i}
+                                        className="px-4 py-1.5 text-xs text-[#5C5E62]"
+                                      >
+                                        {item.text_more || item.text}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+            )}
           </div>
           <div className="shrink-0 border-t border-gray-200 px-4 py-2 flex flex-row items-stretch gap-1">
             <Link
@@ -490,7 +563,10 @@ export default function Header() {
             </Link>
             {isAuthenticated && user ? (
               <button
-                onClick={() => { setMobileOpen(false); setSettingsOpen(true); }}
+                onClick={() => {
+                  setMobileOpen(false);
+                  setSettingsOpen(true);
+                }}
                 className="flex flex-1 items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-50 rounded-lg transition-colors"
               >
                 <Avatar
@@ -514,7 +590,10 @@ export default function Header() {
         </div>
       )}
 
-      <SettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsDrawer
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
     </header>
   );
 }

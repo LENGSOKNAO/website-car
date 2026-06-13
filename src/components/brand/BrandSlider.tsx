@@ -1,20 +1,55 @@
 ﻿import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader } from "lucide-react";
 import { cn, imageUrl } from "@/lib/utils";
 import { api } from "@/lib/api";
+import type { BrandData, BrandSection } from "@/lib/constants";
 import ButtonBlue from "../ui/ButtonBlue";
 import ButtonWhite from "../ui/ButtonWhite";
-import type { BrandData } from "@/lib/constants";
+
+interface SlideItem {
+  id: string;
+  image: string;
+  badge: string;
+  title: string;
+  description: string;
+  button_text?: string;
+  button_url?: string;
+  button_text_2?: string;
+  button_url_2?: string;
+}
+
+function mapSliderItems(items: any[]): SlideItem[] {
+  return items.map((item, index) => ({
+    id: item.id || item.name + index,
+    image: item.image,
+    badge: item.badge || item.user?.name || item.name,
+    title: item.title || item.tagline,
+    description: item.description,
+    button_text: item.button_text || "Order Now",
+    button_url: item.button_url || `/listings?make=${(item.badge || item.user?.name || item.name).toLowerCase()}`,
+    button_text_2: item.button_text_2 || "Learn More",
+    button_url_2: item.button_url_2 || `/brand/${(item.badge || item.user?.name || item.name).toLowerCase()}`,
+  }));
+}
 
 export default function BrandSlider({ data }: { data: BrandData }) {
-  const [slides, setSlides] = useState<any[]>([]);
+  const [slides, setSlides] = useState<SlideItem[]>([]);
   const [current, setCurrent] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [imageLoading, setImageLoading] = useState<string | null>(null);
+
+  if (!data) return null;
 
   useEffect(() => {
-    api
-      .sliders()
-      .then((res: any) => {
+    setLoading(true);
+    const sliderData = (data as any).slider || (data as any).sliders;
+    if (sliderData?.length) {
+      setSlides(mapSliderItems(sliderData));
+      setLoading(false);
+    } else {
+      // Fallback to API call
+      api.sliders().then((res: any) => {
         const raw = res?.data?.data ?? res?.data ?? res ?? [];
         const list = Array.isArray(raw) ? raw : [];
         const brandName = data.name.toLowerCase();
@@ -38,13 +73,13 @@ export default function BrandSlider({ data }: { data: BrandData }) {
               brandName.includes(un)
             );
           });
-          setSlides(loose);
+          setSlides(mapSliderItems(loose));
         } else {
-          setSlides(filtered);
+          setSlides(mapSliderItems(filtered));
         }
-      })
-      .catch(() => {});
-  }, [data.name]);
+      }).catch(() => {}).finally(() => setLoading(false));
+    }
+  }, [data]);
 
   const prev = () => setCurrent((p) => (p - 1 + slides.length) % slides.length);
   const next = () => setCurrent((p) => (p + 1) % slides.length);
@@ -69,7 +104,11 @@ export default function BrandSlider({ data }: { data: BrandData }) {
     return () => observer.disconnect();
   }, []);
 
-  if (slides.length === 0) return null;
+  if (slides.length === 0 && !loading) return null;
+
+  const handleImageLoad = (src: string) => {
+    setImageLoading(prev => prev === src ? null : prev);
+  };
 
   return (
     <section
@@ -91,6 +130,11 @@ export default function BrandSlider({ data }: { data: BrandData }) {
           animation: slideUp 1s ease-out forwards;
         }
       `}</style>
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-dark-975">
+          <Loader className="w-10 h-10 text-gray-300 animate-spin" />
+        </div>
+      )}
       {slides.map((e, i) => (
         <div
           key={e.id}
@@ -99,11 +143,18 @@ export default function BrandSlider({ data }: { data: BrandData }) {
             i === current ? "opacity-100 scale-100" : "opacity-0 scale-105",
           )}
         >
-          <img
-            src={imageUrl(e.image)}
-            alt=""
-            className="w-full h-full object-cover"
-          />
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
+            <img
+              src={imageUrl(e.image)}
+              alt=""
+              className="w-full h-full object-cover"
+              onLoad={() => handleImageLoad(e.image)}
+              style={{ opacity: imageLoading === e.image ? 0 : 1, transition: 'opacity 0.3s' }}
+            />
+            {imageLoading === e.image && (
+              <Loader className="w-10 h-10 text-gray-300 animate-spin absolute" />
+            )}
+          </div>
           <div
             className="absolute inset-0"
             style={{
@@ -156,13 +207,13 @@ export default function BrandSlider({ data }: { data: BrandData }) {
               >
                 {slides[current].button_text && (
                   <ButtonBlue
-                    to={slides[current].button_url}
+                    to={`${slides[current].button_url}`}
                     children={slides[current].button_text}
                   />
                 )}
                 {slides[current].button_text_2 && (
                   <ButtonWhite
-                    to={slides[current].button_url_2}
+                    to={`${slides[current].button_url_2}`}
                     children={slides[current].button_text_2}
                   />
                 )}

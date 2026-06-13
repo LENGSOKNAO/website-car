@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Search, ArrowRight, Star, ChevronRight, ChevronLeft } from 'lucide-react'
+import { Search, ArrowRight, Star, ChevronRight, ChevronLeft, Loader } from 'lucide-react'
 import { cn, imageUrl } from '@/lib/utils'
 import { api } from '@/lib/api'
 
 export default function HeroSection() {
+  const navigate = useNavigate()
   const [slides, setSlides] = useState<any[]>([])
   const [current, setCurrent] = useState(0)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    setLoading(true)
     api.sliders()
       .then((res: any) => {
         const raw = res?.data?.data ?? res?.data ?? res ?? []
@@ -24,6 +27,7 @@ export default function HeroSection() {
         setSlides(Array.from(sellerMap.values()))
       })
       .catch(() => {})
+      .finally(() => setLoading(false))
   }, [])
 
   useEffect(() => {
@@ -37,6 +41,11 @@ export default function HeroSection() {
 
   return (
     <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-dark-975">
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-dark-975">
+          <Loader className="w-10 h-10 text-gray-300 animate-spin" />
+        </div>
+      )}
       {slides.map((slide, i) => (
         <div key={slide.id ?? i} className={cn(
           'absolute inset-0 transition-all duration-700',
@@ -76,7 +85,7 @@ export default function HeroSection() {
                 onSubmit={(e) => {
                   e.preventDefault()
                   const input = (e.target as HTMLFormElement).querySelector('input')?.value
-                  if (input?.trim()) window.location.href = `/listings?search=${encodeURIComponent(input.trim())}`
+                  if (input?.trim()) navigate(`/listings?search=${encodeURIComponent(input.trim())}`)
                 }}
                 className="flex flex-col sm:flex-row gap-3 max-w-xl"
               >

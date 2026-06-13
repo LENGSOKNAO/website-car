@@ -72,7 +72,7 @@ export default function BrandsSection() {
           return (
             <Link
               key={`${seller.id}-${i}`}
-              to={`/${encodeURIComponent(seller.full_name.toLowerCase())}`}
+              to={`/brand/${encodeURIComponent(seller.full_name.toLowerCase())}`}
               className="flex flex-col items-center gap-3 shrink-0 group focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 rounded-lg"
             >
               <div className="relative">

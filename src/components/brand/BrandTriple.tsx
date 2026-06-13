@@ -1,8 +1,8 @@
-import type { BrandData } from "@/lib/constants";
+import type { BrandData, BrandSection } from "@/lib/constants";
 import ButtonWhite from "../ui/ButtonWhite";
 import { useEffect, useState, useRef } from "react";
-import { api } from "@/lib/api";
 import { imageUrl } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 interface BoxTripItem {
   badge: string;
@@ -12,42 +12,61 @@ interface BoxTripItem {
   to?: boolean;
 }
 
+function mapBoxTripItems(items: BrandSection[]): BoxTripItem[] {
+  return items.map((item) => ({
+    badge: item.name,
+    title: item.tagline,
+    description: item.description,
+    image: item.image,
+    to: item.to,
+  }));
+}
+
 export default function BrandTriple({ data }: { data: BrandData }) {
+  if (!data) return null;
   const ref = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
   const [items, setItems] = useState<BoxTripItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.boxTrips().then((res: any) => {
-      const raw = res?.data?.data ?? res?.data ?? res ?? [];
-      const list = Array.isArray(raw) ? raw : [];
-      const brandName = data.name.toLowerCase();
-      const filtered = list.filter((s: any) => {
-        const badge = (s.badge || "").toLowerCase();
-        const un = (s.user?.name || "").toLowerCase();
-        return (
-          badge === brandName ||
-          un === brandName ||
-          un === data.slug.toLowerCase()
-        );
-      });
-      if (filtered.length === 0) {
-        const loose = list.filter((s: any) => {
+    setLoading(true);
+    const boxTripsData = (data as any).boxTrips || (data as any).box_trips;
+    if (boxTripsData?.length) {
+      setItems(mapBoxTripItems(boxTripsData).slice(0, 3));
+      setLoading(false);
+    } else {
+      api.boxTrips().then((res: any) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? [];
+        const list = Array.isArray(raw) ? raw : [];
+        const brandName = data.name.toLowerCase();
+        const filtered = list.filter((s: any) => {
           const badge = (s.badge || "").toLowerCase();
           const un = (s.user?.name || "").toLowerCase();
           return (
-            badge.includes(brandName) ||
-            brandName.includes(badge) ||
-            un.includes(brandName) ||
-            brandName.includes(un)
+            badge === brandName ||
+            un === brandName ||
+            un === data.slug.toLowerCase()
           );
         });
-        setItems(loose.slice(0, 3));
-      } else {
-        setItems(filtered.slice(0, 3));
-      }
-    }).catch(() => {});
-  }, [data.name]);
+        if (filtered.length === 0) {
+          const loose = list.filter((s: any) => {
+            const badge = (s.badge || "").toLowerCase();
+            const un = (s.user?.name || "").toLowerCase();
+            return (
+              badge.includes(brandName) ||
+              brandName.includes(badge) ||
+              un.includes(brandName) ||
+              brandName.includes(un)
+            );
+          });
+          setItems(mapBoxTripItems(loose).slice(0, 3));
+        } else {
+          setItems(mapBoxTripItems(filtered).slice(0, 3));
+        }
+      }).catch(() => {}).finally(() => setLoading(false));
+    }
+  }, [data]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -58,7 +77,7 @@ export default function BrandTriple({ data }: { data: BrandData }) {
           setIsInView(false);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
     if (ref.current) {
       observer.observe(ref.current);
@@ -66,11 +85,22 @@ export default function BrandTriple({ data }: { data: BrandData }) {
     return () => observer.disconnect();
   }, []);
 
+  if (loading) {
+    return (
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 sm:px-8 lg:px-16 xl:px-24">
+        <div className="col-span-full h-[740px] flex items-center justify-center bg-white" />
+      </div>
+    );
+  }
+
   if (items.length === 0) return null;
 
   return (
-    <div className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 sm:px-8 lg:px-16 xl:px-24 ${isInView ? 'animate-slideUp' : ''}`} ref={ref}>
-       <style>{`
+    <div
+      className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 sm:px-8 lg:px-16 xl:px-24 ${isInView ? "animate-slideUp" : ""}`}
+      ref={ref}
+    >
+      <style>{`
          @keyframes slideUp {
            from { 
              opacity: 0;
@@ -106,14 +136,14 @@ export default function BrandTriple({ data }: { data: BrandData }) {
                 <p className="text-base text-white/90 mb-6 line-clamp-3">
                   {e.description}
                 </p>
-                 <div className="flex flex-col gap-3">
-                   {e.to && (
-                     <ButtonWhite
-                       to={`/listings?make=${data.slug}&condition=used`}
-                       children="Offer Detail"
-                     />
-                   )}
-                 </div>
+                <div className="flex flex-col gap-3">
+                  {e.to && (
+                    <ButtonWhite
+                      to={`/listings?make=${data.slug}&condition=used`}
+                      children="Offer Detail"
+                    />
+                  )}
+                </div>
               </div>
             </div>
           </section>
@@ -122,5 +152,3 @@ export default function BrandTriple({ data }: { data: BrandData }) {
     </div>
   );
 }
-
- 

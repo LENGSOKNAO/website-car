@@ -71,7 +71,6 @@ export default function Messages() {
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const typingTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const autoSelected = useRef(false);
 
   const sellerParam = searchParams.get("seller");
   const listingParam = searchParams.get("listing");
@@ -143,20 +142,32 @@ export default function Messages() {
           setAllUsers(
             Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [],
           );
+          setAllUsersLoaded(true);
         })
-        .catch(() => {});
+        .catch(() => setAllUsersLoaded(true));
     }
   }, [isAuthenticated, allUsersLoaded]);
 
   useEffect(() => {
-    if (!sellerParam || !loading || !allUsersLoaded || autoSelected.current)
+    if (!sellerParam || !loading || !allUsersLoaded)
       return;
     if (selectedConv) return;
-    const match = conversations.find(
+    let match = conversations.find(
       (c: any) =>
         String(c.sender_id) === sellerParam ||
         String(c.receiver_id) === sellerParam,
     );
+    if (listingParam && match) {
+      const listingMatch = conversations.find(
+        (c: any) =>
+          (String(c.sender_id) === sellerParam ||
+            String(c.receiver_id) === sellerParam) &&
+          String(c.listing_id) === listingParam,
+      );
+      if (listingMatch) {
+        match = listingMatch;
+      }
+    }
     if (match) {
       setSelectedConv(match.id);
       setSelectedUser(null);
@@ -168,9 +179,9 @@ export default function Messages() {
         setSelectedUser(sellerUser);
       }
     }
-    autoSelected.current = true;
   }, [
     sellerParam,
+    listingParam,
     conversations,
     selectedConv,
     allUsers,

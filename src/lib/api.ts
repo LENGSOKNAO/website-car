@@ -32,6 +32,11 @@ async function request<T>(
   const text = await response.text();
 
   if (!response.ok) {
+    if (response.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+      throw new Error('Unauthorized');
+    }
     let message = text;
     try {
       const parsed = JSON.parse(text);
@@ -130,7 +135,12 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  updateProfile: (data: { full_name?: string; phone?: string | null; location?: string | null; avatar_url?: string | null }) =>
+  updateProfile: (data: {
+    full_name?: string;
+    phone?: string | null;
+    location?: string | null;
+    avatar_url?: string | null;
+  }) =>
     request<{
       id: string;
       full_name: string;
@@ -146,7 +156,11 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
-  changePassword: (data: { current_password: string; new_password: string; new_password_confirmation: string }) =>
+  changePassword: (data: {
+    current_password: string;
+    new_password: string;
+    new_password_confirmation: string;
+  }) =>
     request<void>("/auth/password", {
       method: "PUT",
       body: JSON.stringify(data),
@@ -155,8 +169,7 @@ export const api = {
     request<void>("/auth/logout", {
       method: "POST",
     }),
-  savedListings: () =>
-    request<SavedListing[]>("/saved-listings"),
+  savedListings: () => request<SavedListing[]>("/saved-listings"),
   saveListing: (listingId: string) =>
     request<{ id: string }>("/saved-listings", {
       method: "POST",
@@ -166,72 +179,173 @@ export const api = {
     request<void>(`/saved-listings/${listingId}`, {
       method: "DELETE",
     }),
-  inquiries: () =>
-    request<Inquiry[]>("/inquiries"),
-  offers: () =>
-    request<Offer[]>("/offers"),
-  conversations: () =>
-    request<Conversation[]>("/conversations"),
+  inquiries: () => request<Inquiry[]>("/inquiries"),
+  offers: () => request<Offer[]>("/offers"),
+  conversations: () => request<Conversation[]>("/conversations"),
   conversationMessages: (id: string) =>
     request<Message[]>(`/conversations/${id}/messages`),
-  sendMessage: (data: { receiver_id: string; listing_id?: string; content: string }) =>
-    request<Message>("/messages/send", { method: "POST", body: JSON.stringify(data) }),
+  sendMessage: (data: {
+    receiver_id: string;
+    listing_id?: string;
+    content: string;
+  }) =>
+    request<Message>("/messages/send", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   replyConversation: (id: string, data: { content: string }) =>
-    request<Message>(`/conversations/${id}/reply`, { method: "POST", body: JSON.stringify(data) }),
+    request<Message>(`/conversations/${id}/reply`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   markConversationRead: (id: string) =>
     request<void>(`/conversations/${id}/read`, { method: "POST" }),
   editMessage: (id: string, data: { content: string }) =>
-    request<Message>(`/messages/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    request<Message>(`/messages/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
   deleteMessage: (id: string) =>
     request<void>(`/messages/${id}`, { method: "DELETE" }),
-  listings: (params: Record<string, string | number | undefined | null | boolean>) => {
+  listings: (
+    params: Record<string, string | number | undefined | null | boolean>,
+  ) => {
     const query = Object.entries(params)
-      .filter(([, v]) => v !== undefined && v !== null && v !== '')
-      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
-      .join('&')
-    return request<any>(`/listings?${query}`)
+      .filter(([, v]) => v !== undefined && v !== null && v !== "")
+      .map(
+        ([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`,
+      )
+      .join("&");
+    return request<any>(`/listings?${query}`);
   },
   listing: (id: string) => request<any>(`/listings/${id}`),
-  makes: () => request<any[]>('/makes'),
+  makes: () => request<any[]>("/makes"),
   models: (makeId: string) => request<any[]>(`/makes/${makeId}/models`),
-  sendInquiry: (data: { listing_id: string; message: string; phone_number?: string }) =>
-    request<any>('/inquiries', { method: 'POST', body: JSON.stringify(data) }),
-  makeOffer: (data: { listing_id: string; offered_price: number; payment_method: 'finance' | 'cash'; down_payment?: number; loan_term?: number; accessories?: { id: string; name: string; price: number }[] }) =>
-    request<any>('/offers', { method: 'POST', body: JSON.stringify(data) }),
-  orders: (params?: Record<string, string | number | undefined | null | boolean>) => {
-    const query = params ? '?' + Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
-        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join('&') : ''
-    return request<any>(`/orders${query}`)
+  sendInquiry: (data: {
+    listing_id: string;
+    message: string;
+    phone_number?: string;
+  }) =>
+    request<any>("/inquiries", { method: "POST", body: JSON.stringify(data) }),
+  makeOffer: (data: {
+    listing_id: string;
+    offered_price: number;
+    payment_method: "finance" | "cash";
+    down_payment?: number;
+    loan_term?: number;
+    accessories?: { id: string; name: string; price: number }[];
+  }) => request<any>("/offers", { method: "POST", body: JSON.stringify(data) }),
+  orders: (
+    params?: Record<string, string | number | undefined | null | boolean>,
+  ) => {
+    const query = params
+      ? "?" +
+        Object.entries(params)
+          .filter(([, v]) => v !== undefined && v !== null && v !== "")
+          .map(
+            ([k, v]) =>
+              `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`,
+          )
+          .join("&")
+      : "";
+    return request<any>(`/orders${query}`);
   },
   order: (id: string) => request<any>(`/orders/${id}`),
-  orderInstallments: (orderId: string, params?: Record<string, string | number | undefined | null | boolean>) => {
-    const query = params ? '?' + Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
-        .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join('&') : ''
-    return request<any>(`/orders/${orderId}/installments${query}`)
+  orderInstallments: (
+    orderId: string,
+    params?: Record<string, string | number | undefined | null | boolean>,
+  ) => {
+    const query = params
+      ? "?" +
+        Object.entries(params)
+          .filter(([, v]) => v !== undefined && v !== null && v !== "")
+          .map(
+            ([k, v]) =>
+              `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`,
+          )
+          .join("&")
+      : "";
+    return request<any>(`/orders/${orderId}/installments${query}`);
   },
   createOrder: (data: {
     listing_id: string;
     price: number;
-    payment_method: 'finance' | 'cash';
+    payment_method: "finance" | "cash";
     down_payment?: number;
     loan_term?: number;
     accessories?: { id: string; name: string; price: number }[];
     message?: string;
-  }) => request<any>('/orders', { method: 'POST', body: JSON.stringify(data) }),
+  }) => request<any>("/orders", { method: "POST", body: JSON.stringify(data) }),
+  myListings: (
+    params?: Record<string, string | number | undefined | null | boolean>,
+  ) => {
+    const query = params
+      ? "?" +
+        Object.entries(params)
+          .filter(([, v]) => v !== undefined && v !== null && v !== "")
+          .map(
+            ([k, v]) =>
+              `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`,
+          )
+          .join("&")
+      : "";
+    return request<any>(`/cars${query}`);
+  },
+  myListing: (id: string) => request<any>(`/cars/${id}`),
+  createListing: (data: any) =>
+    request<any>("/cars", { method: "POST", body: JSON.stringify(data) }),
+  updateListing: (id: string, data: any) =>
+    request<any>(`/cars/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteListing: (id: string) =>
+    request<void>(`/cars/${id}`, { method: "DELETE" }),
+  listingFormData: () => request<any>("/cars/create"),
   updateOrderStatus: (orderId: string, status: string) =>
-    request<any>(`/orders/${orderId}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
-  payInstallment: (orderId: string, data: { month_number: number; transaction_id: string }) =>
-    request<any>(`/orders/${orderId}/pay-installment`, { method: 'POST', body: JSON.stringify(data) }),
+    request<any>(`/orders/${orderId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    }),
+  payInstallment: (
+    orderId: string,
+    data: { month_number: number; transaction_id: string },
+  ) =>
+    request<any>(`/orders/${orderId}/pay-installment`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   users: (params?: Record<string, string>) => {
-    const query = params ? '?' + new URLSearchParams(params).toString() : ''
-    return request<any>(`/users${query}`)
+    const query = params ? "?" + new URLSearchParams(params).toString() : "";
+    return request<any>(`/users${query}`);
   },
   upload: (file: File) => uploadFile(file),
-  heroes: () => request<any[]>('/heroes'),
-  sliders: () => request<any[]>('/web/sliders'),
-  boxTrips: () => request<any[]>('/web/boxTrips'),
-  boxOne: () => request<any[]>('/web/boxOne'),
-  boxRight: () => request<any[]>('/web/boxRight'),
-  boxLeft: () => request<any[]>('/web/boxLeft'),
-  boxTen: () => request<any[]>('/web/boxTen'),
+  heroes: () => request<any[]>("/heroes"),
+  sliders: () => request<any[]>("/web/sliders"),
+  boxTrips: () => request<any[]>("/web/boxTrips"),
+  boxOne: () => request<any[]>("/web/boxOne"),
+  boxRight: () => request<any[]>("/web/boxRight"),
+  boxLeft: () => request<any[]>("/web/boxLeft"),
+  boxTen: () => request<any[]>("/web/boxTen"),
+  boxOneButtom: () => request<any[]>("/web/boxOneButtom"),
+  brand: (slug: string) => request<any>(`/web/brand/${slug}`),
+  sellerSales: () => request<any>("/seller/sales"),
+  sellerOrders: (params?: Record<string, string | number | undefined | null | boolean>) => {
+    const query = params
+      ? "?" +
+        Object.entries(params)
+          .filter(([, v]) => v !== undefined && v !== null && v !== "")
+          .map(
+            ([k, v]) =>
+              `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`,
+          )
+          .join("&")
+      : "";
+    return request<any>(`/seller/orders${query}`);
+  },
+  sellerOrder: (id: string) => request<any>(`/seller/orders/${id}`),
+  updateSellerOrder: (id: string, status: string) =>
+    request<any>(`/seller/orders/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+    }),
+  web: () => request<any>("/web"),
+  webItem: (id: string) => request<any>(`/web/${id}`),
 };
