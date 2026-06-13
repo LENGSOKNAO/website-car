@@ -732,35 +732,64 @@ function OrderDetailView({
                   <tbody>
                     {installments.map((inst: any) => {
                       const instIsPaid = inst.status === "paid";
+                      const isOverdue = inst.status === "overdue";
+                      const due = new Date(inst.due_at);
+                      const monthStart = new Date(due.getFullYear(), due.getMonth(), 1);
+                      const monthEnd = new Date(due.getFullYear(), due.getMonth() + 1, 0);
+                      const formatShort = (d: Date) =>
+                        d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
                       return (
                         <tr key={inst.id} className="border-b border-gray-50">
                           <td className="py-2.5 pr-3 text-gray-600">{inst.month_number}</td>
                           <td className="py-2.5 pr-3 text-gray-600">{formatDate(inst.due_at)}</td>
                           <td className="py-2.5 pr-3 text-right font-medium text-gray-900">{formatPrice(inst.amount)}</td>
-                          <td className="py-2.5 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              {instIsPaid && (
-                                <input
-                                  type="date"
-                                  value={inst.paid_at ? inst.paid_at.slice(0, 10) : new Date().toISOString().slice(0, 10)}
-                                  onChange={(e) => {
-                                    setInstallments((prev) =>
-                                      prev.map((i: any) =>
-                                        i.id === inst.id ? { ...i, paid_at: e.target.value } : i,
-                                      ),
-                                    );
+                          <td className="py-2.5">
+                            <div className="w-full max-w-xs">
+                              {/* Month slider with start/end dates */}
+                              <div className="mb-1.5">
+                                <div className="h-2.5 rounded-full bg-gray-100 relative overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full transition-all duration-500"
+                                    style={{
+                                      width: instIsPaid ? "100%" : "0%",
+                                      backgroundColor:
+                                        instIsPaid
+                                          ? "#22c55e"
+                                          : isOverdue
+                                            ? "#fb923c"
+                                            : "#e5e7eb",
+                                    }}
+                                  />
+                                </div>
+                                <div className="flex justify-between text-[9px] text-gray-400 mt-0.5">
+                                  <span>{formatShort(monthStart)}</span>
+                                  <span>{formatShort(monthEnd)}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-end gap-2">
+                                {instIsPaid && (
+                                  <input
+                                    type="date"
+                                    value={inst.paid_at ? inst.paid_at.slice(0, 10) : new Date().toISOString().slice(0, 10)}
+                                    onChange={(e) => {
+                                      setInstallments((prev) =>
+                                        prev.map((i: any) =>
+                                          i.id === inst.id ? { ...i, paid_at: e.target.value } : i,
+                                        ),
+                                      );
+                                    }}
+                                    className="text-[11px] border border-gray-200 rounded px-1.5 py-1 w-32 text-gray-600"
+                                  />
+                                )}
+                                <InstallmentStatusCheckboxes
+                                  current={inst.status}
+                                  onChange={(s) => {
+                                    const date = inst.paid_at || new Date().toISOString().slice(0, 10);
+                                    handleInstallmentChange(inst.id, s, date);
                                   }}
-                                  className="text-[11px] border border-gray-200 rounded px-1.5 py-1 w-32 text-gray-600"
+                                  disabled={installmentUpdating.has(inst.id)}
                                 />
-                              )}
-                              <InstallmentStatusCheckboxes
-                                current={inst.status}
-                                onChange={(s) => {
-                                  const date = inst.paid_at || new Date().toISOString().slice(0, 10);
-                                  handleInstallmentChange(inst.id, s, date);
-                                }}
-                                disabled={installmentUpdating.has(inst.id)}
-                              />
+                              </div>
                             </div>
                           </td>
                         </tr>
