@@ -346,10 +346,10 @@ export const api = {
       method: "PUT",
       body: JSON.stringify({ status }),
     }),
-  updateInstallment: (orderId: string, installmentId: string, status: string) =>
+  updateInstallment: (orderId: string, installmentId: string, status: string, paidAt?: string) =>
     request<any>(`/seller/orders/${orderId}/installments/${installmentId}`, {
       method: "PUT",
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, paid_at: paidAt }),
     }),
   web: () => request<any>("/web"),
   webItem: (id: string) => request<any>(`/web/${id}`),

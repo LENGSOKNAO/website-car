@@ -367,7 +367,7 @@ function OrderDetailView({
     try {
       await Promise.all(
         updated.map((inst: any) =>
-          api.updateInstallment(item.id, inst.id, inst.status),
+          api.updateInstallment(item.id, inst.id, inst.status, inst.paid_at),
         ),
       );
     } catch (err: any) {
@@ -378,7 +378,7 @@ function OrderDetailView({
     }
   }
 
-  function handleInstallmentChange(installmentId: string, newStatus: string) {
+  function handleInstallmentChange(installmentId: string, newStatus: string, paidAt?: string) {
     setInstallments((prev) => {
       const target = prev.find((i: any) => i.id === installmentId);
       if (!target) return prev;
@@ -410,7 +410,7 @@ function OrderDetailView({
           return prev;
         }
         const single = prev.map((inst: any) =>
-          inst.id === installmentId ? { ...inst, status: newStatus } : inst,
+          inst.id === installmentId ? { ...inst, status: newStatus, paid_at: newStatus === "paid" ? (paidAt || new Date().toISOString().slice(0, 10)) : null } : inst,
         );
         persistInstallments(single);
         return single;
@@ -439,7 +439,7 @@ function OrderDetailView({
         return prev;
       }
       const single = prev.map((inst: any) =>
-        inst.id === installmentId ? { ...inst, status: newStatus } : inst,
+        inst.id === installmentId ? { ...inst, status: newStatus, paid_at: newStatus === "paid" ? (paidAt || new Date().toISOString().slice(0, 10)) : null } : inst,
       );
       persistInstallments(single);
       return single;
@@ -706,20 +706,42 @@ function OrderDetailView({
                     </tr>
                   </thead>
                   <tbody>
-                    {installments.map((inst: any) => (
-                      <tr key={inst.id} className="border-b border-gray-50">
-                        <td className="py-2.5 pr-3 text-gray-600">{inst.month_number}</td>
-                        <td className="py-2.5 pr-3 text-gray-600">{formatDate(inst.due_at)}</td>
-                        <td className="py-2.5 pr-3 text-right font-medium text-gray-900">{formatPrice(inst.amount)}</td>
-                        <td className="py-2.5 text-right">
-                          <InstallmentStatusCheckboxes
-                            current={inst.status}
-                            onChange={(s) => handleInstallmentChange(inst.id, s)}
-                            disabled={installmentUpdating.has(inst.id)}
-                          />
-                        </td>
-                      </tr>
-                    ))}
+                    {installments.map((inst: any) => {
+                      const instIsPaid = inst.status === "paid";
+                      return (
+                        <tr key={inst.id} className="border-b border-gray-50">
+                          <td className="py-2.5 pr-3 text-gray-600">{inst.month_number}</td>
+                          <td className="py-2.5 pr-3 text-gray-600">{formatDate(inst.due_at)}</td>
+                          <td className="py-2.5 pr-3 text-right font-medium text-gray-900">{formatPrice(inst.amount)}</td>
+                          <td className="py-2.5 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {instIsPaid && (
+                                <input
+                                  type="date"
+                                  value={inst.paid_at ? inst.paid_at.slice(0, 10) : new Date().toISOString().slice(0, 10)}
+                                  onChange={(e) => {
+                                    setInstallments((prev) =>
+                                      prev.map((i: any) =>
+                                        i.id === inst.id ? { ...i, paid_at: e.target.value } : i,
+                                      ),
+                                    );
+                                  }}
+                                  className="text-[11px] border border-gray-200 rounded px-1.5 py-1 w-32 text-gray-600"
+                                />
+                              )}
+                              <InstallmentStatusCheckboxes
+                                current={inst.status}
+                                onChange={(s) => {
+                                  const date = inst.paid_at || new Date().toISOString().slice(0, 10);
+                                  handleInstallmentChange(inst.id, s, date);
+                                }}
+                                disabled={installmentUpdating.has(inst.id)}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
                 <div className="mt-3 flex items-center justify-between gap-4 text-xs">
