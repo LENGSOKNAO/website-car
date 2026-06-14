@@ -39,6 +39,16 @@ export default function SellerEditBanner() {
     boxTen: { label: "Banner Ten", icon: Grid3X3 },
   };
 
+  const SECTIONS = [
+    { key: "slider", label: "Slider", icon: Film },
+    { key: "boxTrips", label: "Banner Trips", icon: LayoutGrid },
+    { key: "boxone", label: "Banner One", icon: PanelRight },
+    { key: "boxonebuttom", label: "Banner One Buttom", icon: PanelRight },
+    { key: "boxRight", label: "Banner Right", icon: PanelRight },
+    { key: "boxLeft", label: "Banner Left", icon: PanelLeft },
+    { key: "boxTen", label: "Banner Ten", icon: Grid3X3 },
+  ];
+
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
@@ -108,6 +118,7 @@ export default function SellerEditBanner() {
         badge_text: badgeText,
         link_url: linkUrl,
         is_active: isActive,
+        type: bannerType,
       };
 
       Object.keys(payload).forEach((k) => {
@@ -151,15 +162,26 @@ export default function SellerEditBanner() {
               <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
             </div>
 
-            {bannerType && TYPE_LABELS[bannerType] && (
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Type</label>
-                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm bg-gray-100 text-[11px] font-medium text-gray-700 w-fit">
-                  {(() => { const Icon = TYPE_LABELS[bannerType].icon; return <Icon className="w-3 h-3" />; })()}
-                  {TYPE_LABELS[bannerType].label}
-                </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Type</label>
+              <div className="flex gap-2 flex-wrap">
+                {SECTIONS.map(({ key, label, icon: Icon }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setBannerType(key)}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-sm text-[11px] font-medium transition-colors ${
+                      bannerType === key
+                        ? "bg-gray-900 text-white"
+                        : "bg-white border border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-900"
+                    }`}
+                  >
+                    <Icon className="w-3 h-3" />
+                    {label}
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
 
             <div>
               <label htmlFor="subtitle" className="block text-xs font-medium text-gray-700 mb-1">Subtitle</label>
