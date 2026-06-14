@@ -16,15 +16,15 @@ interface BoxRightItem {
   button_url_2?: string;
 }
 
-function mapBoxRightItems(items: BrandSection[]): BoxRightItem[] {
+function mapBoxRightItems(items: (BrandSection | any)[]): BoxRightItem[] {
   return items.map((item) => ({
     badge: item.name,
     description: item.description,
     image: item.image,
-    button_text: item.button?.text,
-    button_url: item.button?.url,
-    button_text_2: item.button_2?.text,
-    button_url_2: item.button_2?.url,
+    button_text: item.button?.text ?? item.button_text,
+    button_url: item.button?.url ?? item.button_url,
+    button_text_2: item.button_2?.text ?? item.button_text_2,
+    button_url_2: item.button_2?.url ?? item.button_url_2,
   }));
 }
 

@@ -26,10 +26,10 @@ function mapSliderItems(items: any[]): SlideItem[] {
     badge: item.badge || item.user?.name || item.name,
     title: item.title || item.tagline,
     description: item.description,
-    button_text: item.button_text || "Order Now",
-    button_url: item.button_url || `/listings?make=${(item.badge || item.user?.name || item.name).toLowerCase()}`,
-    button_text_2: item.button_text_2 || "Learn More",
-    button_url_2: item.button_url_2 || `/brand/${(item.badge || item.user?.name || item.name).toLowerCase()}`,
+    button_text: item.button?.text ?? item.button_text || "Order Now",
+    button_url: item.button?.url ?? item.button_url || `/listings?make=${(item.badge || item.user?.name || item.name).toLowerCase()}`,
+    button_text_2: item.button_2?.text ?? item.button_text_2 || "Learn More",
+    button_url_2: item.button_2?.url ?? item.button_url_2 || `/brand/${(item.badge || item.user?.name || item.name).toLowerCase()}`,
   }));
 }
 
