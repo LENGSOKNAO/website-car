@@ -39,35 +39,30 @@ export default function BrandTriple({ data }: { data: BrandData }) {
 
   useEffect(() => {
     setLoading(true);
-    const boxTripsData = (data as any).boxTrips || (data as any).box_trips;
-    if (boxTripsData?.length) {
-      setItems(mapBoxTripItems(boxTripsData).slice(0, 3));
-      setLoading(false);
-    } else {
-      api.boxTrips().then((res: any) => {
-        const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        const list = Array.isArray(raw) ? raw : [];
-        const brandName = data.name.toLowerCase();
-        const filtered = list.filter((s: any) => {
+    api.boxTrips().then((res: any) => {
+      const raw = res?.data?.data ?? res?.data ?? res ?? [];
+      const list = Array.isArray(raw) ? raw : [];
+      const brandName = data.name.toLowerCase();
+      const filtered = list.filter((s: any) => {
+        const badge = (s.badge || "").toLowerCase();
+        const un = (s.user?.name || "").toLowerCase();
+        return (
+          badge === brandName ||
+          un === brandName ||
+          un === data.slug.toLowerCase()
+        );
+      });
+      if (filtered.length === 0) {
+        const loose = list.filter((s: any) => {
           const badge = (s.badge || "").toLowerCase();
           const un = (s.user?.name || "").toLowerCase();
           return (
-            badge === brandName ||
-            un === brandName ||
-            un === data.slug.toLowerCase()
+            badge.includes(brandName) ||
+            brandName.includes(badge) ||
+            un.includes(brandName) ||
+            brandName.includes(un)
           );
         });
-        if (filtered.length === 0) {
-          const loose = list.filter((s: any) => {
-            const badge = (s.badge || "").toLowerCase();
-            const un = (s.user?.name || "").toLowerCase();
-            return (
-              badge.includes(brandName) ||
-              brandName.includes(badge) ||
-              un.includes(brandName) ||
-              brandName.includes(un)
-            );
-          });
           setItems(mapBoxTripItems(loose).slice(0, 3));
         } else {
           setItems(mapBoxTripItems(filtered).slice(0, 3));

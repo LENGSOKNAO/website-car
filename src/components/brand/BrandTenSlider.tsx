@@ -48,46 +48,35 @@ export default function BrandTenSlider({ data }: { data: BrandData }) {
 
   useEffect(() => {
     setLoading(true);
-    const boxTenData = (data as any).boxTen || (data as any).box_ten;
-    if (boxTenData?.length) {
-      const mappedItems = mapBoxTenItems(boxTenData);
-      setItems(mappedItems);
-      const images: string[] = [];
-      for (let i = 0; i < mappedItems.length * 2; i++) {
-        images.push(mappedItems[i % mappedItems.length].image);
-      }
-      setSliderImages(images);
-      setLoading(false);
-    } else {
-      api.boxTen().then((res: any) => {
-        const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        const list = Array.isArray(raw) ? raw : [];
-        const brandName = data.name.toLowerCase();
-        const filtered = list.filter((s: any) => {
+    api.boxTen().then((res: any) => {
+      const raw = res?.data?.data ?? res?.data ?? res ?? [];
+      const list = Array.isArray(raw) ? raw : [];
+      const brandName = data.name.toLowerCase();
+      const filtered = list.filter((s: any) => {
+        const badge = (s.badge || "").toLowerCase();
+        const un = (s.user?.name || "").toLowerCase();
+        return (
+          badge === brandName ||
+          un === brandName ||
+          un === data.slug.toLowerCase()
+        );
+      });
+      let finalItems: BoxTenItem[] = [];
+      if (filtered.length === 0) {
+        const loose = list.filter((s: any) => {
           const badge = (s.badge || "").toLowerCase();
           const un = (s.user?.name || "").toLowerCase();
           return (
-            badge === brandName ||
-            un === brandName ||
-            un === data.slug.toLowerCase()
+            badge.includes(brandName) ||
+            brandName.includes(badge) ||
+            un.includes(brandName) ||
+            brandName.includes(un)
           );
         });
-        let finalItems: BoxTenItem[] = [];
-        if (filtered.length === 0) {
-          const loose = list.filter((s: any) => {
-            const badge = (s.badge || "").toLowerCase();
-            const un = (s.user?.name || "").toLowerCase();
-            return (
-              badge.includes(brandName) ||
-              brandName.includes(badge) ||
-              un.includes(brandName) ||
-              brandName.includes(un)
-            );
-          });
-          finalItems = mapBoxTenItems(loose);
-        } else {
-          finalItems = mapBoxTenItems(filtered);
-        }
+        finalItems = mapBoxTenItems(loose);
+      } else {
+        finalItems = mapBoxTenItems(filtered);
+      }
         setItems(finalItems);
         const images: string[] = [];
         for (let i = 0; i < finalItems.length * 2; i++) {

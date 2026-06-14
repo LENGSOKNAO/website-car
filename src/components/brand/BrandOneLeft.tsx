@@ -9,6 +9,8 @@ import { api } from "@/lib/api";
 interface BoxLeftItem {
   badge: string;
   image: string;
+  title: string;
+  description: string;
   button_text?: string;
   button_url?: string;
   button_text_2?: string;
@@ -19,6 +21,8 @@ function mapBoxLeftItems(items: (BrandSection | any)[]): BoxLeftItem[] {
   return items.map((item) => ({
     badge: item.name,
     image: item.image,
+    title: item.title,
+    description: item.description,
     button_text: item.button?.text ?? item.button_text,
     button_url: item.button?.url ?? item.button_url,
     button_text_2: item.button_2?.text ?? item.button_text_2,
@@ -40,35 +44,39 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
       setItems(mapBoxLeftItems(boxLeftData));
       setLoading(false);
     } else {
-      api.boxLeft().then((res: any) => {
-        const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        const list = Array.isArray(raw) ? raw : [];
-        const brandName = data.name.toLowerCase();
-        const filtered = list.filter((s: any) => {
-          const badge = (s.badge || "").toLowerCase();
-          const un = (s.user?.name || "").toLowerCase();
-          return (
-            badge === brandName ||
-            un === brandName ||
-            un === data.slug.toLowerCase()
-          );
-        });
-        if (filtered.length === 0) {
-          const loose = list.filter((s: any) => {
+      api
+        .boxLeft()
+        .then((res: any) => {
+          const raw = res?.data?.data ?? res?.data ?? res ?? [];
+          const list = Array.isArray(raw) ? raw : [];
+          const brandName = data.name.toLowerCase();
+          const filtered = list.filter((s: any) => {
             const badge = (s.badge || "").toLowerCase();
             const un = (s.user?.name || "").toLowerCase();
             return (
-              badge.includes(brandName) ||
-              brandName.includes(badge) ||
-              un.includes(brandName) ||
-              brandName.includes(un)
+              badge === brandName ||
+              un === brandName ||
+              un === data.slug.toLowerCase()
             );
           });
-          setItems(mapBoxLeftItems(loose));
-        } else {
-          setItems(mapBoxLeftItems(filtered));
-        }
-      }).catch(() => {}).finally(() => setLoading(false));
+          if (filtered.length === 0) {
+            const loose = list.filter((s: any) => {
+              const badge = (s.badge || "").toLowerCase();
+              const un = (s.user?.name || "").toLowerCase();
+              return (
+                badge.includes(brandName) ||
+                brandName.includes(badge) ||
+                un.includes(brandName) ||
+                brandName.includes(un)
+              );
+            });
+            setItems(mapBoxLeftItems(loose));
+          } else {
+            setItems(mapBoxLeftItems(filtered));
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
     }
   }, [data]);
 
@@ -81,7 +89,7 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
           setIsInView(false);
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
     if (ref.current) {
       observer.observe(ref.current);
@@ -92,8 +100,11 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
   if (items.length === 0 && !loading) return null;
 
   return (
-    <section className={`relative overflow-hidden ${isInView ? 'animate-slideUp' : ''}`} ref={ref}>
-       <style>{`
+    <section
+      className={`relative overflow-hidden ${isInView ? "animate-slideUp" : ""}`}
+      ref={ref}
+    >
+      <style>{`
           @keyframes slideUp {
             from { 
               opacity: 0;
@@ -144,14 +155,10 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
                   {banner.badge}
                 </p>
                 <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
-                  Engineered to
-                  <br />
-                  <span>Inspire</span>
+                  {banner.title}
                 </h2>
                 <p className="mt-6 text-base md:text-lg text-black leading-relaxed max-w-lg">
-                  Every {banner.badge} is a masterpiece of design and
-                  engineering. From the roar of the engine to the curve of the
-                  chassis — experience automotive excellence at its finest.
+                  {banner.description}
                 </p>
                 <div className="mt-10 flex gap-4">
                   {banner.button_text && (

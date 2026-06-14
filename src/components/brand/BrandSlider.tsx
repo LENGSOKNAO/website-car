@@ -43,12 +43,6 @@ export default function BrandSlider({ data }: { data: BrandData }) {
 
   useEffect(() => {
     setLoading(true);
-    const sliderData = (data as any).slider || (data as any).sliders;
-    if (sliderData?.length) {
-      setSlides(mapSliderItems(sliderData));
-      setLoading(false);
-    } else {
-      // Fallback to API call
       api.sliders().then((res: any) => {
         const raw = res?.data?.data ?? res?.data ?? res ?? [];
         const list = Array.isArray(raw) ? raw : [];

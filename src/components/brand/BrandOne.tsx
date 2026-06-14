@@ -5,7 +5,6 @@ import { useEffect, useState, useRef } from "react";
 import { imageUrl } from "@/lib/utils";
 import { Loader } from "lucide-react";
 import { api } from "@/lib/api";
-import ButtonWhite from "../ui/ButtonWhite";
 
 interface BoxOneItem {
   badge: string;
@@ -40,45 +39,39 @@ export default function BrandOne({ data }: { data: BrandData }) {
 
   useEffect(() => {
     setLoading(true);
-    const boxOneData = (data as any).boxone || (data as any).box_one;
-    if (boxOneData?.length) {
-      setItems(mapBoxOneItems(boxOneData));
-      setLoading(false);
-    } else {
-      api
-        .boxOne()
-        .then((res: any) => {
-          const raw = res?.data?.data ?? res?.data ?? res ?? [];
-          const list = Array.isArray(raw) ? raw : [];
-          const brandName = data.name.toLowerCase();
-          const filtered = list.filter((s: any) => {
+    api
+      .boxOne()
+      .then((res: any) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? [];
+        const list = Array.isArray(raw) ? raw : [];
+        const brandName = data.name.toLowerCase();
+        const filtered = list.filter((s: any) => {
+          const badge = (s.badge || "").toLowerCase();
+          const un = (s.user?.name || "").toLowerCase();
+          return (
+            badge === brandName ||
+            un === brandName ||
+            un === data.slug.toLowerCase()
+          );
+        });
+        if (filtered.length === 0) {
+          const loose = list.filter((s: any) => {
             const badge = (s.badge || "").toLowerCase();
             const un = (s.user?.name || "").toLowerCase();
             return (
-              badge === brandName ||
-              un === brandName ||
-              un === data.slug.toLowerCase()
+              badge.includes(brandName) ||
+              brandName.includes(badge) ||
+              un.includes(brandName) ||
+              brandName.includes(un)
             );
           });
-          if (filtered.length === 0) {
-            const loose = list.filter((s: any) => {
-              const badge = (s.badge || "").toLowerCase();
-              const un = (s.user?.name || "").toLowerCase();
-              return (
-                badge.includes(brandName) ||
-                brandName.includes(badge) ||
-                un.includes(brandName) ||
-                brandName.includes(un)
-              );
-            });
-            setItems(mapBoxOneItems(loose));
-          } else {
-            setItems(mapBoxOneItems(filtered));
-          }
-        })
-        .catch(() => {})
-        .finally(() => setLoading(false));
-    }
+          setItems(mapBoxOneItems(loose));
+        } else {
+          setItems(mapBoxOneItems(filtered));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [data]);
 
   useEffect(() => {
