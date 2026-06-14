@@ -1,9 +1,11 @@
 import type { BrandData, BrandSection } from "@/lib/constants";
 import ButtonBlue from "../ui/ButtonBlue";
+import ButtonWhite from "../ui/ButtonWhite";
 import { useEffect, useState, useRef } from "react";
 import { imageUrl } from "@/lib/utils";
 import { Loader } from "lucide-react";
 import { api } from "@/lib/api";
+import ButtonWhite from "../ui/ButtonWhite";
 
 interface BoxOneItem {
   badge: string;
