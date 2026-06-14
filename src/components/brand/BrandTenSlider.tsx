@@ -84,7 +84,6 @@ export default function BrandTenSlider({ data }: { data: BrandData }) {
         }
         setSliderImages(images);
       }).catch(() => {}).finally(() => setLoading(false));
-    }
   }, [data]);
 
   useEffect(() => {
@@ -343,3 +342,4 @@ export default function BrandTenSlider({ data }: { data: BrandData }) {
     </div>
   );
 }
+
