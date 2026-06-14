@@ -63,12 +63,11 @@ export default function BrandTriple({ data }: { data: BrandData }) {
             brandName.includes(un)
           );
         });
-          setItems(mapBoxTripItems(loose).slice(0, 3));
-        } else {
-          setItems(mapBoxTripItems(filtered).slice(0, 3));
-        }
-      }).catch(() => {}).finally(() => setLoading(false));
-    }
+        setItems(mapBoxTripItems(loose).slice(0, 3));
+      } else {
+        setItems(mapBoxTripItems(filtered).slice(0, 3));
+      }
+    }).catch(() => {}).finally(() => setLoading(false));
   }, [data]);
 
   useEffect(() => {
