@@ -321,11 +321,18 @@ export default function BrandTenSlider({ data }: { data: BrandData }) {
                           {e.description}
                         </p>
                         <div className="flex gap-3">
-                          <ButtonBlue
-                            to={`/listings?make=${slug}`}
-                            children="Order Now"
-                          />
-                          <ButtonWhite to={route} children="Learn More" />
+                          {e.button_text && (
+                            <ButtonBlue
+                              to={`${e.button_url}`}
+                              children={e.button_text}
+                            />
+                          )}
+                          {e.button_text_2 && (
+                            <ButtonWhite
+                              to={`${e.button_url_2}`}
+                              children={e.button_text_2}
+                            />
+                          )}
                         </div>
                       </div>
                     </div>

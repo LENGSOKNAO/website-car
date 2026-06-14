@@ -10,6 +10,10 @@ interface BoxTripItem {
   description: string;
   image: string;
   to?: boolean;
+  button_text?: string;
+  button_url?: string;
+  button_text_2?: string;
+  button_url_2?: string;
 }
 
 function mapBoxTripItems(items: BrandSection[]): BoxTripItem[] {
@@ -19,6 +23,10 @@ function mapBoxTripItems(items: BrandSection[]): BoxTripItem[] {
     description: item.description,
     image: item.image,
     to: item.to,
+    button_text: item.button?.text,
+    button_url: item.button?.url,
+    button_text_2: item.button_2?.text,
+    button_url_2: item.button_2?.url,
   }));
 }
 
@@ -137,10 +145,16 @@ export default function BrandTriple({ data }: { data: BrandData }) {
                   {e.description}
                 </p>
                 <div className="flex flex-col gap-3">
-                  {e.to && (
+                  {e.button_text && (
+                    <ButtonBlue
+                      to={`${e.button_url}`}
+                      children={e.button_text}
+                    />
+                  )}
+                  {e.button_text_2 && (
                     <ButtonWhite
-                      to={`/listings?make=${data.slug}&condition=used`}
-                      children="Offer Detail"
+                      to={`${e.button_url_2}`}
+                      children={e.button_text_2}
                     />
                   )}
                 </div>

@@ -67,6 +67,7 @@ export interface Brand {
 
 export interface BrandSection {
   name: string;
+  title: string;
   tagline: string;
   description: string;
   image: string;

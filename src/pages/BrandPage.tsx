@@ -8,6 +8,7 @@ import BrandOneLeft from "@/components/brand/BrandOneLeft";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { BrandData } from "@/lib/constants";
+import BrandOneButton from "@/components/brand/BrandOneButtom";
 
 export default function BrandPage() {
   const { name } = useParams<{ name: string }>();
@@ -37,17 +38,28 @@ export default function BrandPage() {
           .users()
           .then((res: any) => {
             const raw = res?.data?.data ?? res?.data ?? res ?? [];
-            const list = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+            const list = Array.isArray(raw)
+              ? raw
+              : Array.isArray(raw?.data)
+                ? raw.data
+                : [];
             const filtered = list.filter((u: any) => {
               const roleName = (u.role || u.type || "").toLowerCase();
               const hasRole = u.roles?.some(
                 (r: any) =>
-                  (typeof r === "string" ? r : r.name || "").toLowerCase() === "seller",
+                  (typeof r === "string" ? r : r.name || "").toLowerCase() ===
+                  "seller",
               );
-              return roleName === "seller" || roleName === "dealer" || u.is_dealer || hasRole;
+              return (
+                roleName === "seller" ||
+                roleName === "dealer" ||
+                u.is_dealer ||
+                hasRole
+              );
             });
             const found = filtered.find(
-              (s: { full_name: string }) => s.full_name.toLowerCase() === name.toLowerCase(),
+              (s: { full_name: string }) =>
+                s.full_name.toLowerCase() === name.toLowerCase(),
             );
             if (found) {
               setBrandData({
@@ -93,7 +105,7 @@ export default function BrandPage() {
       <BrandTriple data={brandData} />
       <BrandOne data={brandData} />
       <BrandBox data={brandData} />
-      <BrandOne data={brandData} />
+      <BrandOneButton data={brandData} />
       <BrandOneLeft data={brandData} />
       <BrandTenSlider data={brandData} />
     </div>

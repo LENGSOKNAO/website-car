@@ -1,5 +1,6 @@
 import type { BrandData, BrandSection } from "@/lib/constants";
 import ButtonBlue from "../ui/ButtonBlue";
+import ButtonWhite from "../ui/ButtonWhite";
 import { useEffect, useState, useRef } from "react";
 import { imageUrl } from "@/lib/utils";
 import { Loader } from "lucide-react";
@@ -8,12 +9,20 @@ import { api } from "@/lib/api";
 interface BoxLeftItem {
   badge: string;
   image: string;
+  button_text?: string;
+  button_url?: string;
+  button_text_2?: string;
+  button_url_2?: string;
 }
 
 function mapBoxLeftItems(items: BrandSection[]): BoxLeftItem[] {
   return items.map((item) => ({
     badge: item.name,
     image: item.image,
+    button_text: item.button?.text,
+    button_url: item.button?.url,
+    button_text_2: item.button_2?.text,
+    button_url_2: item.button_2?.url,
   }));
 }
 
@@ -145,10 +154,18 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
                   chassis — experience automotive excellence at its finest.
                 </p>
                 <div className="mt-10 flex gap-4">
-                  <ButtonBlue
-                    to={`/listings?make=${data.slug}`}
-                    children="Order Now"
-                  />
+                  {banner.button_text && (
+                    <ButtonBlue
+                      to={`${banner.button_url}`}
+                      children={banner.button_text}
+                    />
+                  )}
+                  {banner.button_text_2 && (
+                    <ButtonWhite
+                      to={`${banner.button_url_2}`}
+                      children={banner.button_text_2}
+                    />
+                  )}
                 </div>
               </div>
             </div>

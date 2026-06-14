@@ -10,6 +10,10 @@ interface BoxRightItem {
   badge: string;
   description: string;
   image: string;
+  button_text?: string;
+  button_url?: string;
+  button_text_2?: string;
+  button_url_2?: string;
 }
 
 function mapBoxRightItems(items: BrandSection[]): BoxRightItem[] {
@@ -17,6 +21,10 @@ function mapBoxRightItems(items: BrandSection[]): BoxRightItem[] {
     badge: item.name,
     description: item.description,
     image: item.image,
+    button_text: item.button?.text,
+    button_url: item.button?.url,
+    button_text_2: item.button_2?.text,
+    button_url_2: item.button_2?.url,
   }));
 }
 
@@ -127,8 +135,18 @@ export default function BrandBox({ data }: { data: BrandData }) {
                   {e.description}
                 </p>
                 <div className="mt-10 flex gap-4">
-                  <ButtonBlue to="" children="Order Now" />
-                  <ButtonWhite to="" children="Learn More" />
+                  {e.button_text && (
+                    <ButtonBlue
+                      to={`${e.button_url}`}
+                      children={e.button_text}
+                    />
+                  )}
+                  {e.button_text_2 && (
+                    <ButtonWhite
+                      to={`${e.button_url_2}`}
+                      children={e.button_text_2}
+                    />
+                  )}
                 </div>
               </div>
               <div className="flex-[1.5] min-h-[350px] rounded-sm lg:min-h-full relative overflow-hidden">

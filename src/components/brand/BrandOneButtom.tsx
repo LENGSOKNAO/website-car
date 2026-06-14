@@ -9,8 +9,8 @@ import { api } from "@/lib/api";
 interface BoxOneItem {
   badge: string;
   description: string;
-  title: string;
   image: string;
+  title: string;
   button_text?: string;
   button_url?: string;
   button_text_2?: string;
@@ -20,9 +20,9 @@ interface BoxOneItem {
 function mapBoxOneItems(items: BrandSection[]): BoxOneItem[] {
   return items.map((item) => ({
     badge: item.name,
-    title: item.title,
     description: item.description,
     image: item.image,
+    title: item.title,
     button_text: item.button?.text,
     button_url: item.button?.url,
     button_text_2: item.button_2?.text,
@@ -30,7 +30,7 @@ function mapBoxOneItems(items: BrandSection[]): BoxOneItem[] {
   }));
 }
 
-export default function BrandOne({ data }: { data: BrandData }) {
+export default function BrandOneButton({ data }: { data: BrandData }) {
   if (!data) return null;
   const ref = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
@@ -45,7 +45,7 @@ export default function BrandOne({ data }: { data: BrandData }) {
       setLoading(false);
     } else {
       api
-        .boxOne()
+        .boxOneButtom()
         .then((res: any) => {
           const raw = res?.data?.data ?? res?.data ?? res ?? [];
           const list = Array.isArray(raw) ? raw : [];
