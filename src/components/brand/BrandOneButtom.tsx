@@ -19,7 +19,7 @@ interface BoxOneItem {
 
 function mapBoxOneItems(items: (BrandSection | any)[]): BoxOneItem[] {
   return items.map((item) => ({
-    badge: item.name,
+    badge: item.badge ?? item.name,
     description: item.description,
     image: item.image,
     title: item.title,

@@ -17,9 +17,9 @@ interface BoxLeftItem {
   button_url_2?: string;
 }
 
-function mapBoxLeftItems(items: (BrandSection | any)[]): BoxLeftItem[] {
+function mapBoxLeftItems(items: any[]): BoxLeftItem[] {
   return items.map((item) => ({
-    badge: item.name,
+    badge: item.badge ?? item.name,
     image: item.image,
     title: item.title,
     description: item.description,
@@ -81,6 +81,43 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
   }, [data]);
 
   useEffect(() => {
+    setLoading(true);
+    api
+      .sliders()
+      .then((res: any) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? [];
+        const list = Array.isArray(raw) ? raw : [];
+        const brandName = data.name.toLowerCase();
+        const filtered = list.filter((s: any) => {
+          const badge = (s.badge || "").toLowerCase();
+          const un = (s.user?.name || "").toLowerCase();
+          return (
+            badge === brandName ||
+            un === brandName ||
+            un === data.slug.toLowerCase()
+          );
+        });
+        if (filtered.length === 0) {
+          const loose = list.filter((s: any) => {
+            const badge = (s.badge || "").toLowerCase();
+            const un = (s.user?.name || "").toLowerCase();
+            return (
+              badge.includes(brandName) ||
+              brandName.includes(badge) ||
+              un.includes(brandName) ||
+              brandName.includes(un)
+            );
+          });
+          setItems(mapBoxLeftItems(loose));
+        } else {
+          setItems(mapBoxLeftItems(filtered));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [data]);
+
+  useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -125,7 +162,7 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
         </div>
       )}
       {items.map((banner, index) => (
-        <div className={index > 0 ? "tb-8" : ""} key={index}>
+        <div className={index > 0 ? "pb-8" : ""} key={index}>
           <div className="absolute top-0 left-1/4 w-[500px] h-[500px] blur-[150px] pointer-events-none " />
           <div className="mx-auto px-4 sm:px-8 lg:px-16 xl:px-24 max-w-full">
             <div className="flex flex-col lg:flex-row items-stretch overflow-hidden min-h-[500px] lg:min-h-[650px]">

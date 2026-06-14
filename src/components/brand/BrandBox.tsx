@@ -19,7 +19,7 @@ interface BoxRightItem {
 
 function mapBoxRightItems(items: (BrandSection | any)[]): BoxRightItem[] {
   return items.map((item) => ({
-    badge: item.name,
+    badge: item.badge ?? item.name,
     description: item.description,
     title: item.title,
     image: item.image,
@@ -39,35 +39,41 @@ export default function BrandBox({ data }: { data: BrandData }) {
 
   useEffect(() => {
     setLoading(true);
-    api.boxRight().then((res: any) => {
-      const raw = res?.data?.data ?? res?.data ?? res ?? [];
-      const list = Array.isArray(raw) ? raw : [];
-      const brandName = data.name.toLowerCase();
-      const filtered = list.filter((s: any) => {
-        const badge = (s.badge || "").toLowerCase();
-        const un = (s.user?.name || "").toLowerCase();
-        return (
-          badge === brandName ||
-          un === brandName ||
-          un === data.slug.toLowerCase()
-        );
-      });
-      if (filtered.length === 0) {
-        const loose = list.filter((s: any) => {
+    const boxRightData = (data as any).boxRight || (data as any).box_right;
+    if (boxRightData?.length) {
+      setItems(mapBoxRightItems(boxRightData));
+      setLoading(false);
+    } else {
+      api.boxRight().then((res: any) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? [];
+        const list = Array.isArray(raw) ? raw : [];
+        const brandName = data.name.toLowerCase();
+        const filtered = list.filter((s: any) => {
           const badge = (s.badge || "").toLowerCase();
           const un = (s.user?.name || "").toLowerCase();
           return (
-            badge.includes(brandName) ||
-            brandName.includes(badge) ||
-            un.includes(brandName) ||
-            brandName.includes(un)
+            badge === brandName ||
+            un === brandName ||
+            un === data.slug.toLowerCase()
           );
         });
-        setItems(mapBoxRightItems(loose));
-      } else {
-        setItems(mapBoxRightItems(filtered));
-      }
-    }).catch(() => {}).finally(() => setLoading(false));
+        if (filtered.length === 0) {
+          const loose = list.filter((s: any) => {
+            const badge = (s.badge || "").toLowerCase();
+            const un = (s.user?.name || "").toLowerCase();
+            return (
+              badge.includes(brandName) ||
+              brandName.includes(badge) ||
+              un.includes(brandName) ||
+              brandName.includes(un)
+            );
+          });
+          setItems(mapBoxRightItems(loose));
+        } else {
+          setItems(mapBoxRightItems(filtered));
+        }
+      }).catch(() => {}).finally(() => setLoading(false));
+    }
   }, [data]);
 
   useEffect(() => {
@@ -122,7 +128,7 @@ export default function BrandBox({ data }: { data: BrandData }) {
               <div className="flex-[1] p-10 md:p-14 lg:p-20 flex flex-col justify-center relative z-10">
                 <div className="w-14 h-1 mb-8" />
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] mb-4">
-                  {e.badge} 
+                  {e.badge}
                 </p>
                 <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
                   {e.title}

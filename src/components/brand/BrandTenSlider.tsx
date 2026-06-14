@@ -20,7 +20,7 @@ const DRAG_MULTIPLIER = 2;
 
 function mapBoxTenItems(items: (BrandSection | any)[]): BoxTenItem[] {
   return items.map((item) => ({
-    badge: item.name,
+    badge: item.badge ?? item.name,
     title: item.tagline,
     description: item.description,
     image: item.image,

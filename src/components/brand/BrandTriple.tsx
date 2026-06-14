@@ -18,7 +18,7 @@ interface BoxTripItem {
 
 function mapBoxTripItems(items: (BrandSection | any)[]): BoxTripItem[] {
   return items.map((item) => ({
-    badge: item.name,
+    badge: item.badge ?? item.name,
     title: item.tagline,
     description: item.description,
     image: item.image,
