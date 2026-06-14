@@ -72,6 +72,8 @@ export interface BrandSection {
   description: string;
   image: string;
   to?: boolean;
+  button?: { text: string; url: string };
+  button_2?: { text: string; url: string };
 }
 
 export interface BoxSection {
@@ -80,6 +82,8 @@ export interface BoxSection {
   description: string;
   image: string;
   to?: boolean;
+  button?: { text: string; url: string };
+  button_2?: { text: string; url: string };
 }
 
 export interface  BrandData extends Brand {
