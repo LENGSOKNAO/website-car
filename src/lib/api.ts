@@ -379,4 +379,6 @@ export const api = {
   createBoxLeft: (data: any) => request<any>("/web", { method: "POST", body: JSON.stringify({ ...data, type: 'boxLeft' }) }),
   createBoxTen: (data: any) => request<any>("/web", { method: "POST", body: JSON.stringify({ ...data, type: 'boxTen' }) }),
   createBoxOneButtom: (data: any) => request<any>("/web", { method: "POST", body: JSON.stringify({ ...data, type: 'boxonebuttom' }) }),
+  updateBanner: (id: string, data: any) => request<any>(`/web/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteBanner: (id: string) => request<any>(`/web/${id}`, { method: "DELETE" }),
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Image, LogIn, Plus, Film, LayoutGrid, PanelRight, PanelLeft, Grid3X3, Columns } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Image, LogIn, Plus, Film, LayoutGrid, PanelRight, PanelLeft, Grid3X3, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import Skeleton from "@/components/ui/Skeleton";
@@ -27,6 +27,7 @@ const fetchers: Record<string, () => Promise<{ data: any }>> = {
 
 export default function SellerBanner() {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [data, setData] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<string>("sliders");
@@ -68,6 +69,19 @@ export default function SellerBanner() {
       </div>
     );
   }
+
+  const handleDelete = async (itemId: string) => {
+    if (!confirm("Delete this banner?")) return;
+    try {
+      await api.deleteBanner(itemId);
+      setData((prev) => ({
+        ...prev,
+        [activeSection]: (prev[activeSection] || []).filter((i: any) => i.id !== itemId),
+      }));
+    } catch (err: any) {
+      alert(err.message || "Failed to delete");
+    }
+  };
 
   const activeItems = data[activeSection] || [];
 
@@ -146,12 +160,22 @@ export default function SellerBanner() {
                     <p className="text-[11px] font-medium text-gray-900 truncate">{item.title || item.name || "Untitled"}</p>
                     <p className="text-[10px] text-gray-500 truncate mt-0.5">{item.badge || item.description || item.subtitle || "—"}</p>
                   </div>
-                  {item.order !== undefined && (
-                    <span className="text-[10px] text-gray-400 whitespace-nowrap">#{item.order}</span>
-                  )}
-                  {item.link && (
-                    <span className="text-[10px] text-gray-400 truncate max-w-[120px] hidden sm:block">{item.link}</span>
-                  )}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => navigate(`/seller/banner/${item.id}/edit`)}
+                      className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+                      title="Edit"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

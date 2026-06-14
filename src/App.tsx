@@ -23,6 +23,7 @@ import SellerCreateHero from "@/pages/SellerCreateHero";
 import SellerEditHero from "@/pages/SellerEditHero";
 import SellerBanner from "@/pages/SellerBanner";
 import SellerCreateBanner from "@/pages/SellerCreateBanner";
+import SellerEditBanner from "@/pages/SellerEditBanner";
 import SellerSales from "@/pages/SellerSales";
 import Orders from "@/pages/Orders";
 import Messages from "@/pages/Messages";
@@ -60,6 +61,7 @@ export default function App() {
             <Route path="/seller/heroes/:id/edit" element={<SellerEditHero />} />
             <Route path="/seller/banner" element={<SellerBanner />} />
             <Route path="/seller/banner/new" element={<SellerCreateBanner />} />
+            <Route path="/seller/banner/:id/edit" element={<SellerEditBanner />} />
             <Route path="/seller/sales" element={<SellerSales />} />
             <Route path="*" element={<NotFound />} />
             <Route path="/listings/:id" element={<ListingDetail />} />
