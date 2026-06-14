@@ -43,36 +43,35 @@ export default function BrandSlider({ data }: { data: BrandData }) {
 
   useEffect(() => {
     setLoading(true);
-      api.sliders().then((res: any) => {
-        const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        const list = Array.isArray(raw) ? raw : [];
-        const brandName = data.name.toLowerCase();
-        const filtered = list.filter((s: any) => {
+    api.sliders().then((res: any) => {
+      const raw = res?.data?.data ?? res?.data ?? res ?? [];
+      const list = Array.isArray(raw) ? raw : [];
+      const brandName = data.name.toLowerCase();
+      const filtered = list.filter((s: any) => {
+        const badge = (s.badge || "").toLowerCase();
+        const un = (s.user?.name || "").toLowerCase();
+        return (
+          badge === brandName ||
+          un === brandName ||
+          un === data.slug.toLowerCase()
+        );
+      });
+      if (filtered.length === 0) {
+        const loose = list.filter((s: any) => {
           const badge = (s.badge || "").toLowerCase();
           const un = (s.user?.name || "").toLowerCase();
           return (
-            badge === brandName ||
-            un === brandName ||
-            un === data.slug.toLowerCase()
+            badge.includes(brandName) ||
+            brandName.includes(badge) ||
+            un.includes(brandName) ||
+            brandName.includes(un)
           );
         });
-        if (filtered.length === 0) {
-          const loose = list.filter((s: any) => {
-            const badge = (s.badge || "").toLowerCase();
-            const un = (s.user?.name || "").toLowerCase();
-            return (
-              badge.includes(brandName) ||
-              brandName.includes(badge) ||
-              un.includes(brandName) ||
-              brandName.includes(un)
-            );
-          });
-          setSlides(mapSliderItems(loose));
-        } else {
-          setSlides(mapSliderItems(filtered));
-        }
-      }).catch(() => {}).finally(() => setLoading(false));
-    }
+        setSlides(mapSliderItems(loose));
+      } else {
+        setSlides(mapSliderItems(filtered));
+      }
+    }).catch(() => {}).finally(() => setLoading(false));
   }, [data]);
 
   const prev = () => setCurrent((p) => (p - 1 + slides.length) % slides.length);
