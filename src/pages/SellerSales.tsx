@@ -915,18 +915,15 @@ function OrderDetailView({
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 text-xs text-gray-500 uppercase">
-                      <th className="text-left py-2 pr-3 font-medium">#</th>
-                      <th className="text-left py-2 pr-3 font-medium">
-                        Due Date
-                      </th>
-                      <th className="text-right py-2 pr-3 font-medium">
-                        Amount
-                      </th>
-                      <th className="text-right py-2 font-medium">Status</th>
+                      <th className="text-left py-2 pr-3 font-medium w-10">#</th>
+                      <th className="text-left py-2 pr-3 font-medium">Due Date</th>
+                      <th className="text-right py-2 pr-3 font-medium">Amount</th>
+                      <th className="text-right py-2 font-medium">Date Count</th>
+                      <th className="text-right py-2 font-medium w-52">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -949,20 +946,6 @@ function OrderDetailView({
                           month: "short",
                           day: "numeric",
                         });
-                      // Progress % within the month: up to paid date, or today if pending
-                      const getProgressPct = () => {
-                        const target = inst.paid_at
-                          ? new Date(inst.paid_at)
-                          : instIsPaid
-                            ? new Date()
-                            : new Date();
-                        const totalMs = monthEnd.getTime() - monthStart.getTime();
-                        const elapsedMs = target.getTime() - monthStart.getTime();
-                        if (elapsedMs <= 0) return 0;
-                        if (elapsedMs >= totalMs) return 100;
-                        return Math.round((elapsedMs / totalMs) * 100);
-                      };
-                      const progressPct = getProgressPct();
                       return (
                         <tr key={inst.id} className="border-b border-gray-50">
                           <td className="py-2.5 pr-3 text-gray-600">
@@ -971,66 +954,62 @@ function OrderDetailView({
                           <td className="py-2.5 pr-3 text-gray-600">
                             {formatDate(inst.due_at)}
                           </td>
-                          <td className="py-2.5 pr-3  font-medium text-gray-900">
+                          <td className="py-2.5 pr-3 text-right font-medium text-gray-900">
                             {formatPrice(inst.amount)}
                           </td>
-                          <td className="py-2.5 text-right">
-                            <div className="w-full max-w-xs">
-                              {/* Month slider with start/end dates */}
-                              <div className="mb-1.5">
-                                <div className="relative">
-                                  <div className="h-3 rounded-lg bg-gray-100 overflow-hidden">
-                                    <div
-                                      className="h-full rounded-lg transition-all duration-500 ease-out"
-                                      style={{
-                                        width: `${progressPct}%`,
-                                        backgroundColor:
-                                          inst.status === "paid"
-                                            ? "#16a34a"
-                                            : inst.status === "overdue"
-                                              ? "#ea580c"
-                                              : "#9ca3af",
-                                      }}
-                                    />
-                                  </div>
-                                  <div className="flex justify-between text-[8px] text-gray-500 mt-1 font-medium">
-                                    <span>{formatShort(monthStart)}</span>
-                                    <span>{formatShort(monthEnd)}</span>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex items-center justify-end gap-2">
-                                {instIsPaid && (
-                                  <input
-                                    type="date"
-                                    value={
-                                      inst.paid_at
-                                        ? inst.paid_at.slice(0, 10)
-                                        : new Date().toISOString().slice(0, 10)
-                                    }
-                                    onChange={(e) => {
-                                      setInstallments((prev) =>
-                                        prev.map((i: any) =>
-                                          i.id === inst.id
-                                            ? { ...i, paid_at: e.target.value }
-                                            : i,
-                                        ),
-                                      );
-                                    }}
-                                    className="text-[11px] border border-gray-200 rounded px-2 py-1 w-32 text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-green-500"
-                                  />
-                                )}
-                                <InstallmentStatusCheckboxes
-                                  current={inst.status}
-                                  onChange={(s) => {
-                                    const date =
-                                      inst.paid_at ||
-                                      new Date().toISOString().slice(0, 10);
-                                    handleInstallmentChange(inst.id, s, date);
+                          <td className="py-2.5 pr-3 text-right">
+                            <div className="relative w-40">
+                              <div className="h-3 rounded-lg bg-gray-100 overflow-hidden">
+                                <div
+                                  className="h-full rounded-lg transition-all duration-500 ease-out"
+                                  style={{
+                                    width: instIsPaid ? "100%" : "0%",
+                                    backgroundColor: instIsPaid
+                                      ? "#16a34a"
+                                      : isOverdue
+                                        ? "#ea580c"
+                                        : "#d1d5db",
                                   }}
-                                  disabled={installmentUpdating.has(inst.id)}
                                 />
                               </div>
+                              <div className="flex justify-between text-[8px] text-gray-500 mt-1 font-medium">
+                                <span>{formatShort(monthStart)}</span>
+                                <span>{formatShort(monthEnd)}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-2.5 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {instIsPaid && (
+                                <input
+                                  type="date"
+                                  value={
+                                    inst.paid_at
+                                      ? inst.paid_at.slice(0, 10)
+                                      : new Date().toISOString().slice(0, 10)
+                                  }
+                                  onChange={(e) => {
+                                    setInstallments((prev) =>
+                                      prev.map((i: any) =>
+                                        i.id === inst.id
+                                          ? { ...i, paid_at: e.target.value }
+                                          : i,
+                                      ),
+                                    );
+                                  }}
+                                  className="text-[11px] border border-gray-200 rounded px-2 py-1 w-32 text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-green-500"
+                                />
+                              )}
+                              <InstallmentStatusCheckboxes
+                                current={inst.status}
+                                onChange={(s) => {
+                                  const date =
+                                    inst.paid_at ||
+                                    new Date().toISOString().slice(0, 10);
+                                  handleInstallmentChange(inst.id, s, date);
+                                }}
+                                disabled={installmentUpdating.has(inst.id)}
+                              />
                             </div>
                           </td>
                         </tr>
@@ -1038,7 +1017,96 @@ function OrderDetailView({
                     })}
                   </tbody>
                 </table>
-                <div className="mt-3 flex items-center justify-between gap-4 text-xs">
+              </div>
+
+              <div className="md:hidden space-y-3">
+                {installments.map((inst: any) => {
+                  const instIsPaid = inst.status === "paid";
+                  const isOverdue = inst.status === "overdue";
+                  const due = new Date(inst.due_at);
+                  const monthStart = new Date(
+                    due.getFullYear(),
+                    due.getMonth(),
+                    1,
+                  );
+                  const monthEnd = new Date(
+                    due.getFullYear(),
+                    due.getMonth() + 1,
+                    0,
+                  );
+                  const formatShort = (d: Date) =>
+                    d.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    });
+                  return (
+                    <div key={inst.id} className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <div>
+                          <span className="font-medium text-gray-900">M{inst.month_number}</span>
+                          <span className="ml-2 text-sm text-gray-500">{formatDate(inst.due_at)}</span>
+                        </div>
+                        <span className="font-semibold text-gray-900">{formatPrice(inst.amount)}</span>
+                      </div>
+                      <div className="mb-3">
+                        <div className="h-3 rounded-lg bg-gray-100 overflow-hidden mb-1">
+                          <div
+                            className="h-full rounded-lg transition-all duration-500 ease-out"
+                            style={{
+                              width: instIsPaid ? "100%" : "0%",
+                              backgroundColor: instIsPaid
+                                ? "#16a34a"
+                                : isOverdue
+                                  ? "#ea580c"
+                                  : "#d1d5db",
+                            }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-[10px] text-gray-500">
+                          <span>{formatShort(monthStart)}</span>
+                          <span>{formatShort(monthEnd)}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {instIsPaid && (
+                            <input
+                              type="date"
+                              value={
+                                inst.paid_at
+                                  ? inst.paid_at.slice(0, 10)
+                                  : new Date().toISOString().slice(0, 10)
+                              }
+                              onChange={(e) => {
+                                setInstallments((prev) =>
+                                  prev.map((i: any) =>
+                                    i.id === inst.id
+                                      ? { ...i, paid_at: e.target.value }
+                                      : i,
+                                  ),
+                                );
+                              }}
+                              className="text-[11px] border border-gray-200 rounded px-2 py-1 w-28 text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-green-500"
+                            />
+                          )}
+                        </div>
+                        <InstallmentStatusCheckboxes
+                          current={inst.status}
+                          onChange={(s) => {
+                            const date =
+                              inst.paid_at ||
+                              new Date().toISOString().slice(0, 10);
+                            handleInstallmentChange(inst.id, s, date);
+                          }}
+                          disabled={installmentUpdating.has(inst.id)}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2">
                     {INSTALLMENT_STATUSES.map((s) => {
                       const count = installments.filter(
@@ -1104,7 +1172,6 @@ function OrderDetailView({
                   </div>
                 </div>
               </div>
-            </div>
           )}
 
           {/* Notes */}

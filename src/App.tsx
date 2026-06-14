@@ -19,7 +19,10 @@ import NotFound from "@/pages/NotFound";
 import SellerAdmin from "@/pages/SellerAdmin";
 import SellerListings from "@/pages/SellerListings";
 import SellerHeroes from "@/pages/SellerHeroes";
+import SellerCreateHero from "@/pages/SellerCreateHero";
+import SellerEditHero from "@/pages/SellerEditHero";
 import SellerBanner from "@/pages/SellerBanner";
+import SellerCreateBanner from "@/pages/SellerCreateBanner";
 import SellerSales from "@/pages/SellerSales";
 import Orders from "@/pages/Orders";
 import Messages from "@/pages/Messages";
@@ -53,7 +56,10 @@ export default function App() {
             <Route path="/seller/admin" element={<SellerAdmin />} />
             <Route path="/seller/listings" element={<SellerListings />} />
             <Route path="/seller/heroes" element={<SellerHeroes />} />
+            <Route path="/seller/heroes/new" element={<SellerCreateHero />} />
+            <Route path="/seller/heroes/:id/edit" element={<SellerEditHero />} />
             <Route path="/seller/banner" element={<SellerBanner />} />
+            <Route path="/seller/banner/new" element={<SellerCreateBanner />} />
             <Route path="/seller/sales" element={<SellerSales />} />
             <Route path="*" element={<NotFound />} />
             <Route path="/listings/:id" element={<ListingDetail />} />

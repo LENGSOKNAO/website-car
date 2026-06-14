@@ -54,10 +54,12 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [hoveredCat, setHoveredCat] = useState<string | null>(null);
+  const [hoveredCat, setHoveredCat] = useState<number | null>(null);
   const [sellers, setSellers] = useState<any[]>([]);
   const [heroes, setHeroes] = useState<any[]>([]);
+  const [listings, setListings] = useState<any[]>([]);
   const [openHeroId, setOpenHeroId] = useState<string | null>(null);
+  const [openSellerId, setOpenSellerId] = useState<string | null>(null);
   const location = useLocation();
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -65,6 +67,8 @@ export default function Header() {
     setMobileOpen(false);
     setHoveredCat(null);
     setProfileOpen(false);
+    setOpenSellerId(null);
+    setOpenHeroId(null);
   }, [location]);
 
   useEffect(() => {
@@ -108,10 +112,17 @@ export default function Header() {
       })
       .catch(() => {});
     api
-      .heroes()
+      .publicHeroes()
       .then((res: any) => {
         const raw = res?.data?.data ?? res?.data ?? res ?? [];
         setHeroes(Array.isArray(raw) ? raw : []);
+      })
+      .catch(() => {});
+    api
+      .myListings({ per_page: 200 })
+      .then((res: any) => {
+        const raw = res?.data?.data?.data ?? res?.data?.data ?? res?.data ?? res ?? [];
+        setListings(Array.isArray(raw) ? raw : []);
       })
       .catch(() => {});
   }, []);
@@ -127,11 +138,11 @@ export default function Header() {
     };
   }, [mobileOpen]);
 
-  const pageSlug = decodeURIComponent(
-    location.pathname.split("/")[1] || "",
-  ).toLowerCase();
-  const currentSeller = sellers.find((s) => s.full_name === pageSlug) ?? null;
-  const currentSellerId = currentSeller?.id ?? null;
+  const pathParts = location.pathname.split("/").filter(Boolean);
+  const pageSlug =
+    pathParts[0] === "brand" && pathParts[1]
+      ? decodeURIComponent(pathParts[1]).toLowerCase()
+      : decodeURIComponent(pathParts[0] || "").toLowerCase();
 
   const getUserRole = (u: typeof user) => {
     if (!u) return "buyer";
@@ -156,11 +167,14 @@ export default function Header() {
   const isAdmin = role === "admin";
   const isSeller = role === "seller";
 
-  const profileLinks = isAdmin
-    ? [...adminLinks, ...sellerLinks, ...buyerLinks]
-    : isSeller
-      ? sellerLinks
-      : buyerLinks;
+  const getListing = (id: string) => listings.find((l: any) => String(l.id) === String(id));
+
+  const currentSeller = (() => {
+    const fromSlug = sellers.find((s) => s.full_name.toLowerCase() === pageSlug);
+    if (fromSlug) return fromSlug;
+    if (isSeller && user) return user;
+    return null;
+  })();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
@@ -179,9 +193,7 @@ export default function Header() {
                   to={`/brand/${encodeURIComponent(user.full_name.toLowerCase())}`}
                   className={cn(
                     "block px-3 py-1.5 text-sm font-medium rounded-[4px] transition-colors",
-                    currentSellerId === user.id
-                      ? "text-black"
-                      : "text-[#5C5E62] hover:text-black",
+                    "text-black",
                   )}
                 >
                   {user.full_name}
@@ -195,9 +207,7 @@ export default function Header() {
                       to={`/brand/${encodeURIComponent(seller.full_name.toLowerCase())}`}
                       className={cn(
                         "block px-3 py-1.5 text-sm font-medium rounded-[4px] transition-colors",
-                        currentSellerId === seller.id
-                          ? "text-black"
-                          : "text-[#5C5E62] hover:text-black",
+                        "text-[#5C5E62] hover:text-black",
                       )}
                     >
                       {seller.full_name}
@@ -248,17 +258,17 @@ export default function Header() {
                         className="fixed inset-0 z-50 bg-black/30"
                         onClick={() => setProfileOpen(false)}
                       />
-                       <motion.div
-                         initial={{ x: "100%" }}
-                         animate={{ x: 0 }}
-                         exit={{ x: "100%" }}
-                         transition={{
-                           type: "spring",
-                           damping: 28,
-                           stiffness: 260,
-                         }}
-                         className="fixed top-14 md:top-16 right-0 bottom-0 z-50 w-[300px] bg-white shadow-xl flex flex-col"
-                       >
+                      <motion.div
+                        initial={{ x: "100%" }}
+                        animate={{ x: 0 }}
+                        exit={{ x: "100%" }}
+                        transition={{
+                          type: "spring",
+                          damping: 28,
+                          stiffness: 260,
+                        }}
+                        className="fixed top-14 md:top-16 right-0 bottom-0 z-50 w-[300px] bg-white shadow-xl flex flex-col"
+                      >
                         <div className="px-4 pt-4 pb-3 border-b border-gray-100">
                           <div className="flex items-center justify-between mb-3">
                             <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
@@ -405,100 +415,70 @@ export default function Header() {
         </div>
       </div>
 
-      {currentSeller &&
-        (() => {
-          const sellerHeroes = heroes
-            .filter((h) => h.seller_id === currentSeller.id && h.is_active)
-            .sort((a, b) => a.sort_order - b.sort_order);
-          if (sellerHeroes.length === 0) return null;
-          return (
-            <div className="hidden md:block border-b border-gray-100 px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-center h-10">
-                {sellerHeroes.map((hero) => {
-                  const isHovered = hoveredCat === hero.id;
-                  const items = Array.isArray(hero.subtitle)
-                    ? hero.subtitle
-                    : [];
-                  return (
-                    <div
-                      key={hero.id}
-                      className="relative h-full"
-                      onMouseEnter={() => {
-                        clearTimeout(timeoutRef.current);
-                        setHoveredCat(hero.id);
-                      }}
-                      onMouseLeave={() => {
-                        timeoutRef.current = setTimeout(
-                          () => setHoveredCat(null),
-                          100,
-                        );
-                      }}
-                    >
-                      <button
-                        className={cn(
-                          "h-full px-4 text-xs font-medium transition-all tracking-wide relative",
-                          isHovered
-                            ? "text-black"
-                            : "text-[#5C5E62] hover:text-black",
-                        )}
-                      >
-                        {hero.title}
-                        {isHovered && (
-                          <span className="absolute -bottom-[1px] left-4 right-4 h-0.5 bg-black rounded-full" />
-                        )}
-                      </button>
-                      {isHovered && items.length > 0 && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -4 }}
-                          transition={{ duration: 0.15, ease: "easeOut" }}
-                          className="fixed left-0 right-0 top-[104px] bg-white border-b border-gray-100 shadow-lg"
-                          onMouseEnter={() => clearTimeout(timeoutRef.current)}
-                          onMouseLeave={() => {
-                            timeoutRef.current = setTimeout(
-                              () => setHoveredCat(null),
-                              100,
-                            );
-                          }}
-                        >
-                          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                            <div className="grid grid-cols-4 gap-2">
-                              {items.map((item: any, i: number) => (
-                                <div
-                                  key={i}
-                                  className="px-3 py-2.5 text-sm text-[#5C5E62] hover:text-black hover:bg-gray-50 rounded-lg transition-colors cursor-pointer"
-                                >
-                                  {item.text}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })()}
-
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 top-14 md:top-16 bg-white z-40 flex flex-col">
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-0.5">
             {isSeller && user ? (
-              <Link
-                to={`/brand/${encodeURIComponent(user.full_name.toLowerCase())}`}
-                className={cn(
-                  "block px-3 py-1.5 text-sm font-medium rounded-[4px] transition-colors",
-                  currentSellerId === user.id
-                    ? "text-black"
-                    : "text-[#5C5E62] hover:text-black",
-                )}
-              >
-                {user.full_name}
-              </Link>
+              <>
+                <Link
+                  to={`/brand/${encodeURIComponent(user.full_name.toLowerCase())}`}
+                  className={cn(
+                    "block px-3 py-1.5 text-sm font-medium rounded-[4px] transition-colors",
+                    "text-black",
+                  )}
+                >
+                  {user.full_name}
+                </Link>
+                {(() => {
+                  const sellerHeroes = heroes
+                    .filter((h) => h.seller_id === user.id && h.is_active)
+                    .sort((a, b) => a.sort_order - b.sort_order);
+                  if (sellerHeroes.length === 0) return null;
+                  return (
+                    <div className="pl-4 pb-2 space-y-0.5">
+                      {sellerHeroes.map((hero) => {
+                        const isHeroOpen = openHeroId === hero.id;
+                        const items = Array.isArray(hero.subtitle)
+                          ? hero.subtitle
+                          : [];
+                        return (
+                          <div key={hero.id}>
+                            <button
+                              onClick={() =>
+                                setOpenHeroId(isHeroOpen ? null : hero.id)
+                              }
+                              className="block w-full text-left px-4 py-2 text-xs font-semibold text-[#5C5E62] uppercase tracking-wide hover:text-black"
+                            >
+                              {hero.title}
+                            </button>
+                            {isHeroOpen && items.length > 0 && (
+                              <div className="pl-4 space-y-0.5">
+                                {items.map((item: any, i: number) => {
+                                  const subTo =
+                                    item.link ||
+                                    (item.product_id
+                                      ? `/listings/${item.product_id}`
+                                      : null);
+                                  const SubEl = subTo ? Link : "div";
+                                  return (
+                                    <SubEl
+                                      key={i}
+                                      {...(subTo ? { to: subTo } : {})}
+                                      className="block px-4 py-1.5 text-xs text-[#5C5E62] hover:text-black transition-colors"
+                                    >
+                                      {item.text}
+                                    </SubEl>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </>
             ) : (
               sellers
                 .filter((s) => s.id !== user?.id)
@@ -533,14 +513,23 @@ export default function Header() {
                                 </button>
                                 {isHeroOpen && items.length > 0 && (
                                   <div className="pl-4 space-y-0.5">
-                                    {items.map((item: any, i: number) => (
-                                      <div
-                                        key={i}
-                                        className="px-4 py-1.5 text-xs text-[#5C5E62]"
-                                      >
-                                        {item.text_more || item.text}
-                                      </div>
-                                    ))}
+                                    {items.map((item: any, i: number) => {
+                                      const subTo =
+                                        item.link ||
+                                        (item.product_id
+                                          ? `/listings/${item.product_id}`
+                                          : null);
+                                      const SubEl = subTo ? Link : "div";
+                                      return (
+                                        <SubEl
+                                          key={i}
+                                          {...(subTo ? { to: subTo } : {})}
+                                          className="block px-4 py-1.5 text-xs text-[#5C5E62] hover:text-black transition-colors"
+                                        >
+                                          {item.text}
+                                        </SubEl>
+                                      );
+                                    })}
                                   </div>
                                 )}
                               </div>
@@ -589,6 +578,119 @@ export default function Header() {
           </div>
         </div>
       )}
+
+      {currentSeller &&
+        (() => {
+          const sellerHeroes = heroes
+            .filter((h) => h.seller_id === currentSeller.id && h.is_active)
+            .sort((a, b) => a.sort_order - b.sort_order);
+          if (sellerHeroes.length === 0) return null;
+          return (
+            <div className="hidden md:block border-b border-gray-100 px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-center h-10">
+                {sellerHeroes.map((hero) => {
+                  const isHovered = hoveredCat === hero.id;
+                  const items = Array.isArray(hero.subtitle)
+                    ? hero.subtitle
+                    : [];
+                  return (
+                    <div
+                      key={hero.id}
+                      className="relative h-full"
+                      onMouseEnter={() => {
+                        clearTimeout(timeoutRef.current);
+                        timeoutRef.current = setTimeout(
+                          () => setHoveredCat(hero.id),
+                          200,
+                        );
+                      }}
+                      onMouseLeave={() => {
+                        clearTimeout(timeoutRef.current);
+                        timeoutRef.current = setTimeout(
+                          () => setHoveredCat(null),
+                          150,
+                        );
+                      }}
+                    >
+                      <button
+                        className={cn(
+                          "h-full px-4 text-xs font-medium transition-all tracking-wide relative cursor-pointer",
+                          isHovered
+                            ? "text-black"
+                            : "text-[#5C5E62] hover:text-black",
+                        )}
+                      >
+                        {hero.title}
+                        <motion.span
+                          initial={false}
+                          animate={{ scaleX: isHovered ? 1 : 0 }}
+                          transition={{ duration: 0.2, ease: "easeInOut" }}
+                          className="absolute -bottom-[1px] left-0 right-0 h-0.5 bg-black rounded-full origin-center"
+                        />
+                      </button>
+                      {isHovered && items.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          transition={{ duration: 0.15, ease: "easeOut" }}
+                          className="fixed left-0 right-0 top-[104px] bg-white border-b border-gray-100 shadow-lg pt-2"
+                          onMouseEnter={() => clearTimeout(timeoutRef.current)}
+                          onMouseLeave={() => {
+                            timeoutRef.current = setTimeout(
+                              () => setHoveredCat(null),
+                              100,
+                            );
+                          }}
+                        >
+                          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                            <div className="grid grid-cols-4 gap-2">
+                              {items.map((item: any, i: number) => {
+                                const listing = item.product_id ? getListing(item.product_id) : null;
+                                const subTo = item.link || (item.product_id ? `/listings/${item.product_id}` : null);
+                                const imageUrl = listing?.primary_image?.image_url || listing?.image_url || null;
+                                return subTo ? (
+                                  <Link
+                                    key={i}
+                                    to={subTo}
+                                    className="flex flex-col items-center gap-2 p-3 text-xs text-[#5C5E62] hover:text-black transition-colors rounded-sm hover:bg-gray-50"
+                                  >
+                                    {imageUrl ? (
+                                      <img src={imageUrl} alt="" className="w-full aspect-[4/3] object-cover rounded-sm" />
+                                    ) : (
+                                      <div className="w-full aspect-[4/3] bg-gray-100 rounded-sm flex items-center justify-center">
+                                        <Car className="size-6 text-gray-300" />
+                                      </div>
+                                    )}
+                                    <span className="font-medium text-center leading-tight hover:underline">{listing ? `${listing.make?.name ?? listing.make ?? ""} ${listing.model?.name ?? listing.model ?? ""}`.trim() || listing.title || item.text : item.text}</span>
+                                  </Link>
+                                ) : (
+                                  <div
+                                    key={i}
+                                    className="flex flex-col items-center gap-2 p-3 text-xs text-[#5C5E62] transition-colors rounded-sm"
+                                  >
+                                    {imageUrl ? (
+                                      <img src={imageUrl} alt="" className="w-full aspect-[4/3] object-cover rounded-sm" />
+                                    ) : (
+                                      <div className="w-full aspect-[4/3] bg-gray-100 rounded-sm flex items-center justify-center">
+                                        <Car className="size-6 text-gray-300" />
+                                      </div>
+                                    )}
+                                    <span className="font-medium text-center leading-tight hover:underline">{item.text}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
 
       <SettingsDrawer
         open={settingsOpen}

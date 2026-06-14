@@ -117,6 +117,8 @@ export default function SellerListings() {
     setEditingId(listing.id);
     setMenuOpenId(null);
     setEditForm({
+      make_id: listing.make_id,
+      model_id: listing.model_id,
       year: listing.year,
       price: listing.price,
       original_price: listing.original_price,
@@ -137,7 +139,12 @@ export default function SellerListings() {
   const handleSave = async (listingId: string) => {
     setSaving(listingId);
     try {
-      await api.updateListing(listingId, editForm);
+      const listing = listings.find(l => l.id === listingId);
+      await api.updateListing(listingId, {
+        ...editForm,
+        make_id: editForm.make_id || listing?.make_id,
+        model_id: editForm.model_id || listing?.model_id,
+      });
       setEditingId(null);
       fetchListings();
     } catch (err: unknown) {

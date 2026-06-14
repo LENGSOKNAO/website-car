@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Image, LogIn, Film, LayoutGrid, PanelRight, PanelLeft, Grid3X3, Columns } from "lucide-react";
+import { Image, LogIn, Plus, Film, LayoutGrid, PanelRight, PanelLeft, Grid3X3, Columns } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import Skeleton from "@/components/ui/Skeleton";
@@ -81,6 +81,12 @@ export default function SellerBanner() {
               {activeItems.length} item{activeItems.length !== 1 ? "s" : ""} in {SECTIONS.find(s => s.key === activeSection)?.label}
             </p>
           </div>
+          <Link
+            to={`/seller/banner/new?type=${activeSection}`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-sm transition-colors"
+          >
+            <Plus className="w-3 h-3" /> New Banner
+          </Link>
         </div>
 
         <div className="flex gap-2 mb-4 flex-wrap">

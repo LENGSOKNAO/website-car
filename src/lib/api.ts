@@ -294,6 +294,20 @@ export const api = {
   myListing: (id: string) => request<any>(`/cars/${id}`),
   createListing: (data: any) =>
     request<any>("/cars", { method: "POST", body: JSON.stringify(data) }),
+  createListingFormData: (data: FormData) => {
+    const headers: HeadersInit = {};
+    const token = getToken();
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return fetch(`${API_BASE}/cars`, { method: "POST", headers, body: data }).then(async res => {
+      const text = await res.text();
+      if (!res.ok) {
+        let msg = text;
+        try { const p = JSON.parse(text); msg = p.message || msg; if (p.errors) { const d = Object.values(p.errors).flat().join("; "); if (d) msg += `: ${d}`; } } catch {}
+        throw new Error(msg);
+      }
+      try { return JSON.parse(text); } catch { return text; }
+    });
+  },
   updateListing: (id: string, data: any) =>
     request<any>(`/cars/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   deleteListing: (id: string) =>
@@ -318,6 +332,11 @@ export const api = {
   },
   upload: (file: File) => uploadFile(file),
   heroes: () => request<any[]>("/heroes"),
+  publicHeroes: () => request<any[]>("/web/hero"),
+  hero: (id: number | string) => request<any>(`/heroes/${id}`),
+  createHero: (data: any) => request<any>("/heroes", { method: "POST", body: JSON.stringify(data) }),
+  updateHero: (id: number | string, data: any) => request<any>(`/heroes/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteHero: (id: number | string) => request<any>(`/heroes/${id}`, { method: "DELETE" }),
   sliders: () => request<any[]>("/web/sliders"),
   boxTrips: () => request<any[]>("/web/boxTrips"),
   boxOne: () => request<any[]>("/web/boxOne"),
@@ -353,4 +372,11 @@ export const api = {
     }),
   web: () => request<any>("/web"),
   webItem: (id: string) => request<any>(`/web/${id}`),
+  createSlider: (data: any) => request<any>("/web", { method: "POST", body: JSON.stringify({ ...data, type: 'slider' }) }),
+  createBoxTrips: (data: any) => request<any>("/web", { method: "POST", body: JSON.stringify({ ...data, type: 'boxTrips' }) }),
+  createBoxOne: (data: any) => request<any>("/web", { method: "POST", body: JSON.stringify({ ...data, type: 'boxone' }) }),
+  createBoxRight: (data: any) => request<any>("/web", { method: "POST", body: JSON.stringify({ ...data, type: 'boxRight' }) }),
+  createBoxLeft: (data: any) => request<any>("/web", { method: "POST", body: JSON.stringify({ ...data, type: 'boxLeft' }) }),
+  createBoxTen: (data: any) => request<any>("/web", { method: "POST", body: JSON.stringify({ ...data, type: 'boxTen' }) }),
+  createBoxOneButtom: (data: any) => request<any>("/web", { method: "POST", body: JSON.stringify({ ...data, type: 'boxonebuttom' }) }),
 };
