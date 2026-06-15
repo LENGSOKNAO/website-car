@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Image, LogIn, Plus, Film, LayoutGrid, PanelRight, PanelLeft, Grid3X3, Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
+import { imageUrl } from "@/lib/utils";
 import Skeleton from "@/components/ui/Skeleton";
 
 const SECTIONS = [
@@ -148,7 +149,7 @@ export default function SellerBanner() {
                   <div className="w-16 h-12 rounded-sm bg-gray-100 flex items-center justify-center shrink-0 overflow-hidden">
                     {item.image ? (
                       <img
-                        src={item.image?.startsWith("http") ? item.image : item.image}
+                        src={imageUrl(item.image)}
                         alt={item.title || ""}
                         className="w-full h-full object-cover"
                       />

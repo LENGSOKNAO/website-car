@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { BRAND_PAGES } from '@/lib/constants'
+import { imageUrl } from '@/lib/utils'
 
 export default function BrandsDetail() {
   return (
@@ -36,7 +37,7 @@ export default function BrandsDetail() {
                   <div className="sm:w-72 h-48 sm:h-auto shrink-0 overflow-hidden">
                     {slide && (
                       <img
-                        src={slide.image}
+                        src={imageUrl(slide.image)}
                         alt={brand.name}
                         className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                       />

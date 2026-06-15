@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Layout, LogIn, Plus, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
+import { imageUrl } from "@/lib/utils";
 import Skeleton from "@/components/ui/Skeleton";
 
 export default function SellerHeroes() {
@@ -145,7 +146,7 @@ export default function SellerHeroes() {
                           >
                             {listing?.primary_image?.image_url || listing?.image_url ? (
                               <img
-                                src={listing.primary_image?.image_url || listing.image_url}
+                                src={imageUrl(listing.primary_image?.image_url || listing.image_url)}
                                 alt=""
                                 className="w-5 h-4 object-cover rounded-[2px]"
                               />

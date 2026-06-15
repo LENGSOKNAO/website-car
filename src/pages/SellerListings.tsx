@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MoreVertical, Edit, Trash2, ChevronLeft, ChevronRight, Search, X, Save, Car, LogIn } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
+import { imageUrl } from "@/lib/utils";
 import type { CarListing, ListingStatus } from "@/lib/types";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -321,7 +322,7 @@ export default function SellerListings() {
                           <td className="px-3 py-2">
                             <div className="flex items-center gap-2">
                               <img
-                                src={listing.image_url || listing.primary_image?.image_url || "/placeholder-car.jpg"}
+                                src={imageUrl(listing.image_url || listing.primary_image?.image_url || "/placeholder-car.jpg")}
                                 alt={listing.make?.name + " " + listing.model?.name}
                                 className="w-12 h-9 object-cover rounded-sm border border-gray-100 bg-gray-50 shrink-0"
                               />
