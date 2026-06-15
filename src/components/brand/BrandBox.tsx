@@ -19,7 +19,7 @@ interface BoxRightItem {
 
 function mapBoxRightItems(items: (BrandSection | any)[]): BoxRightItem[] {
   return items.map((item) => ({
-    badge: item.badge ?? item.name,
+    badge: item.name,
     description: item.description,
     title: item.title,
     image: item.image,
@@ -44,35 +44,39 @@ export default function BrandBox({ data }: { data: BrandData }) {
       setItems(mapBoxRightItems(boxRightData));
       setLoading(false);
     } else {
-      api.boxRight().then((res: any) => {
-        const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        const list = Array.isArray(raw) ? raw : [];
-        const brandName = data.name.toLowerCase();
-        const filtered = list.filter((s: any) => {
-          const badge = (s.badge || "").toLowerCase();
-          const un = (s.user?.name || "").toLowerCase();
-          return (
-            badge === brandName ||
-            un === brandName ||
-            un === data.slug.toLowerCase()
-          );
-        });
-        if (filtered.length === 0) {
-          const loose = list.filter((s: any) => {
+      api
+        .boxRight()
+        .then((res: any) => {
+          const raw = res?.data?.data ?? res?.data ?? res ?? [];
+          const list = Array.isArray(raw) ? raw : [];
+          const brandName = data.name.toLowerCase();
+          const filtered = list.filter((s: any) => {
             const badge = (s.badge || "").toLowerCase();
             const un = (s.user?.name || "").toLowerCase();
             return (
-              badge.includes(brandName) ||
-              brandName.includes(badge) ||
-              un.includes(brandName) ||
-              brandName.includes(un)
+              badge === brandName ||
+              un === brandName ||
+              un === data.slug.toLowerCase()
             );
           });
-          setItems(mapBoxRightItems(loose));
-        } else {
-          setItems(mapBoxRightItems(filtered));
-        }
-      }).catch(() => {}).finally(() => setLoading(false));
+          if (filtered.length === 0) {
+            const loose = list.filter((s: any) => {
+              const badge = (s.badge || "").toLowerCase();
+              const un = (s.user?.name || "").toLowerCase();
+              return (
+                badge.includes(brandName) ||
+                brandName.includes(badge) ||
+                un.includes(brandName) ||
+                brandName.includes(un)
+              );
+            });
+            setItems(mapBoxRightItems(loose));
+          } else {
+            setItems(mapBoxRightItems(filtered));
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
     }
   }, [data]);
 

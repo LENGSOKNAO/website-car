@@ -121,7 +121,8 @@ export default function Header() {
     api
       .myListings({ per_page: 200 })
       .then((res: any) => {
-        const raw = res?.data?.data?.data ?? res?.data?.data ?? res?.data ?? res ?? [];
+        const raw =
+          res?.data?.data?.data ?? res?.data?.data ?? res?.data ?? res ?? [];
         setListings(Array.isArray(raw) ? raw : []);
       })
       .catch(() => {});
@@ -167,10 +168,13 @@ export default function Header() {
   const isAdmin = role === "admin";
   const isSeller = role === "seller";
 
-  const getListing = (id: string) => listings.find((l: any) => String(l.id) === String(id));
+  const getListing = (id: string) =>
+    listings.find((l: any) => String(l.id) === String(id));
 
   const currentSeller = (() => {
-    const fromSlug = sellers.find((s) => s.full_name.toLowerCase() === pageSlug);
+    const fromSlug = sellers.find(
+      (s) => s.full_name.toLowerCase() === pageSlug,
+    );
     if (fromSlug) return fromSlug;
     if (isSeller && user) return user;
     return null;
@@ -646,9 +650,18 @@ export default function Header() {
                           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                             <div className="grid grid-cols-4 gap-2">
                               {items.map((item: any, i: number) => {
-                                const listing = item.product_id ? getListing(item.product_id) : null;
-                                const subTo = item.link || (item.product_id ? `/listings/${item.product_id}` : null);
-                                const imageUrl = listing?.primary_image?.image_url || listing?.image_url || null;
+                                const listing = item.product_id
+                                  ? getListing(item.product_id)
+                                  : null;
+                                const subTo =
+                                  item.link ||
+                                  (item.product_id
+                                    ? `/listings/${item.product_id}`
+                                    : null);
+                                const imageUrl =
+                                  listing?.primary_image?.image_url ||
+                                  listing?.image_url ||
+                                  null;
                                 return subTo ? (
                                   <Link
                                     key={i}
@@ -656,28 +669,49 @@ export default function Header() {
                                     className="flex flex-col items-center gap-2 p-3 text-xs text-[#5C5E62] hover:text-black transition-colors rounded-sm hover:bg-gray-50"
                                   >
                                     {imageUrl ? (
-                                      <img src={imageUrl} alt="" className="w-full aspect-[4/3] object-cover rounded-sm" />
+                                      <img
+                                        src={imageUrl}
+                                        alt=""
+                                        className="w-full aspect-[4/3] object-cover rounded-sm"
+                                      />
                                     ) : (
                                       <div className="w-full aspect-[4/3] bg-gray-100 rounded-sm flex items-center justify-center">
                                         <Car className="size-6 text-gray-300" />
                                       </div>
                                     )}
-                                    <span className="font-medium text-center leading-tight hover:underline">{listing ? `${listing.make?.name ?? listing.make ?? ""} ${listing.model?.name ?? listing.model ?? ""}`.trim() || listing.title || item.text : item.text}</span>
+                                    <span className="font-medium text-center leading-tight hover:underline">
+                                      {listing
+                                        ? `${listing.make?.name ?? listing.make ?? ""} ${listing.model?.name ?? listing.model ?? ""}`.trim() ||
+                                          listing.title ||
+                                          item.text
+                                        : item.text}
+                                    </span>
                                   </Link>
                                 ) : (
-                                  <div
+                                  <Link
                                     key={i}
-                                    className="flex flex-col items-center gap-2 p-3 text-xs text-[#5C5E62] transition-colors rounded-sm"
+                                    to={subTo}
+                                    className="flex flex-col items-center gap-2 p-3 text-xs text-[#5C5E62] hover:text-black transition-colors rounded-sm hover:bg-gray-50"
                                   >
                                     {imageUrl ? (
-                                      <img src={imageUrl} alt="" className="w-full aspect-[4/3] object-cover rounded-sm" />
+                                      <img
+                                        src={imageUrl}
+                                        alt=""
+                                        className="w-full aspect-[4/3] object-cover rounded-sm"
+                                      />
                                     ) : (
                                       <div className="w-full aspect-[4/3] bg-gray-100 rounded-sm flex items-center justify-center">
                                         <Car className="size-6 text-gray-300" />
                                       </div>
                                     )}
-                                    <span className="font-medium text-center leading-tight hover:underline">{item.text}</span>
-                                  </div>
+                                    <span className="font-medium text-center leading-tight hover:underline">
+                                      {listing
+                                        ? `${listing.make?.name ?? listing.make ?? ""} ${listing.model?.name ?? listing.model ?? ""}`.trim() ||
+                                          listing.title ||
+                                          item.text
+                                        : item.text}
+                                    </span>
+                                  </Link>
                                 );
                               })}
                             </div>
