@@ -21,7 +21,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { APP_NAME } from "@/lib/constants";
 import { api } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { cn, imageUrl } from "@/lib/utils";
 import Avatar from "@/components/ui/Avatar";
 import SettingsDrawer from "@/components/layout/SettingsDrawer";
 
@@ -658,7 +658,7 @@ export default function Header() {
                                   (item.product_id
                                     ? `/listings/${item.product_id}`
                                     : null);
-                                const imageUrl =
+                                const rawImageUrl =
                                   listing?.primary_image?.image_url ||
                                   listing?.image_url ||
                                   null;
@@ -668,9 +668,9 @@ export default function Header() {
                                     to={subTo}
                                     className="flex flex-col items-center gap-2 p-3 text-xs text-[#5C5E62] hover:text-black transition-colors rounded-sm hover:bg-gray-50"
                                   >
-                                    {imageUrl ? (
+                                    {rawImageUrl ? (
                                       <img
-                                        src={imageUrl}
+                                        src={imageUrl(rawImageUrl)}
                                         alt=""
                                         className="w-full aspect-[4/3] object-cover rounded-sm"
                                       />
@@ -693,9 +693,9 @@ export default function Header() {
                                     to={subTo}
                                     className="flex flex-col items-center gap-2 p-3 text-xs text-[#5C5E62] hover:text-black transition-colors rounded-sm hover:bg-gray-50"
                                   >
-                                    {imageUrl ? (
+                                    {rawImageUrl ? (
                                       <img
-                                        src={imageUrl}
+                                        src={imageUrl(rawImageUrl)}
                                         alt=""
                                         className="w-full aspect-[4/3] object-cover rounded-sm"
                                       />
