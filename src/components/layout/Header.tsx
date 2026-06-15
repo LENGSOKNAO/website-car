@@ -126,7 +126,7 @@ export default function Header() {
         setListings(Array.isArray(raw) ? raw : []);
       })
       .catch(() => {});
-  }, []);
+  }, [pageSlug]);
 
   useEffect(() => {
     if (mobileOpen) {
@@ -171,13 +171,13 @@ export default function Header() {
   const getListing = (id: string) =>
     listings.find((l: any) => String(l.id) === String(id));
 
+  const isBrandPage = pathParts[0] === "brand" && pathParts[1];
   const currentSeller = (() => {
+    if (!isBrandPage) return null;
     const fromSlug = sellers.find(
       (s) => s.full_name.toLowerCase() === pageSlug,
     );
-    if (fromSlug) return fromSlug;
-    if (isSeller && user) return user;
-    return null;
+    return fromSlug ?? null;
   })();
 
   return (
