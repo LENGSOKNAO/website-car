@@ -63,6 +63,12 @@ export default function Header() {
   const location = useLocation();
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
+  const pathParts = location.pathname.split("/").filter(Boolean);
+  const pageSlug =
+    pathParts[0] === "brand" && pathParts[1]
+      ? decodeURIComponent(pathParts[1]).toLowerCase()
+      : decodeURIComponent(pathParts[0] || "").toLowerCase();
+
   useEffect(() => {
     setMobileOpen(false);
     setHoveredCat(null);
@@ -138,12 +144,6 @@ export default function Header() {
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
-
-  const pathParts = location.pathname.split("/").filter(Boolean);
-  const pageSlug =
-    pathParts[0] === "brand" && pathParts[1]
-      ? decodeURIComponent(pathParts[1]).toLowerCase()
-      : decodeURIComponent(pathParts[0] || "").toLowerCase();
 
   const getUserRole = (u: typeof user) => {
     if (!u) return "buyer";
