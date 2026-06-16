@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { ArrowRight } from 'lucide-react'
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 
 export default function CTABanner() {
   return (
@@ -15,14 +15,18 @@ export default function CTABanner() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-2xl md:text-4xl font-bold text-white leading-tight">Ready to Find Your Dream Car?</h2>
-          <p className="mt-3 text-sm text-blue-200">Join thousands of satisfied customers. Start browsing today.</p>
+          <h2 className="text-2xl md:text-4xl font-bold text-white leading-tight">
+            Ready to Find Your Dream Car?
+          </h2>
+          <p className="mt-3 text-sm text-blue-200">
+            Join thousands of satisfied customers. Start browsing today.
+          </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               to="/listings"
               className="bg-white text-blue-700 px-6 py-3 rounded-sm font-semibold transition-all hover:bg-blue-50 flex items-center gap-2 text-sm shadow-lg"
             >
-              Browse Inventory <ArrowRight className="w-4 h-4" />
+              Inventory <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               to="/sell"
@@ -34,5 +38,5 @@ export default function CTABanner() {
         </motion.div>
       </div>
     </section>
-  )
+  );
 }

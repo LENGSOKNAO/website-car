@@ -22,19 +22,13 @@ export default function Home() {
       transition={{ duration: 0.3 }}
     >
       <HeroSection />
-      <NewArrivalsBar />
-      <BrowseByType />
       <BrandsSection />
-      <StatsTrust />
-      {/* <ProductsShowcase /> */}
-      <StepsSection />
+      <BrowseByType />
       <TradeInBanner />
       <FeaturesGrid />
       <ReviewsSection />
-      <AwardsBar />
       <FAQSection />
       <CTABanner />
-      <SubscribeSection />
     </motion.div>
   );
 }
