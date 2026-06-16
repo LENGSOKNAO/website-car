@@ -258,7 +258,7 @@ export default function ListingDetail() {
   if (loading) {
     return (
       <div className="min-h-screen lg:h-screen bg-white flex flex-col lg:flex-row">
-        <div className="min-h-[60vh] lg:flex-1 lg:min-h-0 bg-gray-100 animate-pulse shrink-0" />
+        <div className="h-screen lg:flex-1 lg:min-h-0 bg-gray-100 animate-pulse shrink-0" />
         <div className="lg:w-[440px] p-4 sm:p-6 lg:p-8 space-y-6">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-7 w-full" />
@@ -443,7 +443,7 @@ export default function ListingDetail() {
       {/* Main: Full-screen image + Sidebar */}
       <div className="flex-1 flex flex-col lg:flex-row min-h-0">
         {/* Left: Full-screen image */}
-        <div className="min-h-[60vh] lg:flex-1 lg:min-h-0 shrink-0">
+        <div className="h-screen lg:flex-1 lg:min-h-0 shrink-0">
           <CarGallery
             images={images}
             title={`${d.year} ${d.make?.name} ${d.model?.name}`}
