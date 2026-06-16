@@ -229,21 +229,26 @@ export default function Header() {
 
           <nav className="hidden md:flex items-center absolute left-1/2 -translate-x-1/2">
             <div className="flex items-center gap-1">
-              {currentSeller ? (
-                <Link
-                  to={`/brand/${encodeURIComponent(currentSeller.full_name.toLowerCase())}`}
-                  className="block px-3 py-1.5 text-sm font-medium rounded-[4px] text-black"
-                >
-                  {currentSeller.full_name}
-                </Link>
-              ) : isSeller && user ? (
+              {isSeller && user ? (
                 <Link
                   to={`/brand/${encodeURIComponent(user.full_name.toLowerCase())}`}
                   className="block px-3 py-1.5 text-sm font-medium rounded-[4px] text-black"
                 >
                   {user.full_name}
                 </Link>
-              ) : null}
+              ) : (
+                sellers
+                  .filter((s) => s.id !== user?.id)
+                  .map((seller) => (
+                    <Link
+                      key={seller.id}
+                      to={`/brand/${encodeURIComponent(seller.full_name.toLowerCase())}`}
+                      className="block px-3 py-1.5 text-sm font-medium rounded-[4px] text-[#5C5E62] hover:text-black"
+                    >
+                      {seller.full_name}
+                    </Link>
+                  ))
+              )}
             </div>
           </nav>
 
