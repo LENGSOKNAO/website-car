@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { imageUrl } from "@/lib/utils";
 import { Loader } from "lucide-react";
 import { api } from "@/lib/api";
+import ImageWithLoading from "@/components/ui/ImageWithLoading";
 
 interface BoxOneItem {
   badge: string;
@@ -121,14 +122,12 @@ export default function BrandOneButton({ data }: { data: BrandData }) {
       {items.map((banner, index) => (
         <div className={index > 0 ? "pb-5" : ""} key={index}>
           <div className="absolute inset-0">
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
-              <img
-                src={imageUrl(banner.image)}
-                alt={banner.badge}
-                className="w-full h-full object-cover"
-              />
-              <Loader className="w-10 h-10 text-gray-300 animate-spin" />
-            </div>
+            <ImageWithLoading
+              src={imageUrl(banner.image)}
+              alt={banner.badge}
+              fill
+              priority
+            />
             <div
               className="absolute inset-0"
               style={{

@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
+import ImageWithLoading from '@/components/ui/ImageWithLoading'
 import img1 from '@/assets/slider/bugati/tourbillon-modelpage-02-scrollvideo-desktop.jpg'
 import img2 from '@/assets/slider/tesla/Homepage-Card-Model-3-Desktop-US_PR_MX.avif'
 import img3 from '@/assets/slider/porsch/filters_format(webp)_quality(80).webp'
@@ -46,11 +47,12 @@ export default function ShowcaseGrid() {
               className="group bg-white"
             >
               <div className="relative aspect-[4/3] overflow-hidden">
-                <img
+                <ImageWithLoading
                   src={car.img}
                   alt={`${car.brand} ${car.model}`}
-                  loading={i === 0 ? 'eager' : 'lazy'}
-                  className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
+                  fill
+                  className="transition-all duration-700 group-hover:scale-105"
+                  priority={i === 0}
                 />
                 <div className={`absolute top-3 left-0 ${car.color} px-3 py-1 text-[10px] font-bold text-white uppercase tracking-wider`}>
                   {car.tag}

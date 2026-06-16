@@ -3,6 +3,7 @@ import ButtonWhite from "../ui/ButtonWhite";
 import { useEffect, useState, useRef } from "react";
 import { imageUrl } from "@/lib/utils";
 import { api } from "@/lib/api";
+import ImageWithLoading from "@/components/ui/ImageWithLoading";
 
 interface BoxTripItem {
   badge: string;
@@ -120,10 +121,11 @@ export default function BrandTriple({ data }: { data: BrandData }) {
       {items.map((e, index) => (
         <div key={index} className="group">
           <section className="relative h-[740px] w-full overflow-hidden rounded-sm">
-            <img
+            <ImageWithLoading
               src={imageUrl(e.image)}
               alt={e.badge}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              fill
+              className="transition-transform duration-700 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 

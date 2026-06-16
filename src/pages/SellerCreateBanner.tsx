@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Image, LogIn, X, Loader2, Upload, Film, LayoutGrid, PanelRight, PanelLeft, Grid3X3 } from "lucide-react";
+import { Image, LogIn, X, Loader2, Upload, Film, LayoutGrid, PanelRight, PanelLeft, Grid3X3, Link as LinkIcon, Save } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import ImageWithLoading from "@/components/ui/ImageWithLoading";
 
 const SECTIONS = [
   { key: "sliders", label: "Slider", icon: Film },
@@ -35,8 +36,6 @@ export default function SellerCreateBanner() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [type, setType] = useState(initialType);
   const [title, setTitle] = useState("");
-  const [subtitle, setSubtitle] = useState("");
-  const [tagline, setTagline] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -47,13 +46,21 @@ export default function SellerCreateBanner() {
   const [buttonText2, setButtonText2] = useState("");
   const [buttonUrl2, setButtonUrl2] = useState("");
   const [badgeText, setBadgeText] = useState("");
-  const [linkUrl, setLinkUrl] = useState("");
+
   const [isActive, setIsActive] = useState(true);
+  const [listings, setListings] = useState<any[]>([]);
+  const [buttonProductId, setButtonProductId] = useState("");
+  const [buttonProductId2, setButtonProductId2] = useState("");
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
+      return;
     }
+    api.myListings({ per_page: 200 }).then((res: any) => {
+      const data = res?.data?.data?.data ?? res?.data?.data ?? res?.data ?? res ?? [];
+      setListings(Array.isArray(data) ? data : []);
+    }).catch(() => {});
   }, [isAuthenticated, navigate]);
 
   if (!isAuthenticated) {
@@ -81,8 +88,6 @@ export default function SellerCreateBanner() {
 
       const payload: Record<string, any> = {
         title,
-        subtitle,
-        tagline,
         description,
         image_url: finalImageUrl,
         button_text: buttonText,
@@ -90,7 +95,7 @@ export default function SellerCreateBanner() {
         button_text_2: buttonText2,
         button_url_2: buttonUrl2,
         badge_text: badgeText,
-        link_url: linkUrl,
+
         is_active: isActive,
         sort_order: 0,
       };
@@ -157,16 +162,6 @@ export default function SellerCreateBanner() {
             </div>
 
             <div>
-              <label htmlFor="subtitle" className="block text-xs font-medium text-gray-700 mb-1">Subtitle</label>
-              <Input id="subtitle" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
-            </div>
-
-            <div>
-              <label htmlFor="tagline" className="block text-xs font-medium text-gray-700 mb-1">Tagline</label>
-              <Input id="tagline" value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Short tagline" />
-            </div>
-
-            <div>
               <label htmlFor="description" className="block text-xs font-medium text-gray-700 mb-1">Description</label>
               <textarea
                 id="description"
@@ -184,7 +179,7 @@ export default function SellerCreateBanner() {
                 className="relative flex cursor-pointer flex-col items-center gap-2 rounded-sm border-2 border-dashed border-gray-200 p-6 transition-colors hover:border-gray-400"
               >
                 {(imagePreview || imageUrl) ? (
-                  <img src={imagePreview ?? imageUrl} alt="Preview" className="max-h-32 object-contain rounded-sm" />
+                  <ImageWithLoading src={imagePreview ?? imageUrl} alt="Preview" className="max-h-32 object-contain rounded-sm" />
                 ) : (
                   <>
                     <Upload className="size-6 text-gray-300" />
@@ -215,31 +210,90 @@ export default function SellerCreateBanner() {
               <Input id="badgeText" value={badgeText} onChange={(e) => setBadgeText(e.target.value)} placeholder="Trusted by 10K+" />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="buttonText" className="block text-xs font-medium text-gray-700 mb-1">Button 1 Text</label>
-                <Input id="buttonText" value={buttonText} onChange={(e) => setButtonText(e.target.value)} placeholder="Learn More" />
+            <div className="border border-gray-200 rounded-sm p-4 space-y-4 bg-white">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                <div className="size-1.5 rounded-full bg-gray-900" />
+                <span className="text-[11px] font-semibold text-gray-700 uppercase tracking-widest">Button 1</span>
               </div>
-              <div>
-                <label htmlFor="buttonUrl" className="block text-xs font-medium text-gray-700 mb-1">Button 1 URL</label>
-                <Input id="buttonUrl" value={buttonUrl} onChange={(e) => setButtonUrl(e.target.value)} placeholder="https://..." />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-gray-600">Text</label>
+                  <Input value={buttonText} onChange={(e) => setButtonText(e.target.value)} placeholder="Learn More" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-gray-600">URL</label>
+                  <div className="relative">
+                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
+                    <Input
+                      value={buttonUrl}
+                      onChange={(e) => { setButtonUrl(e.target.value); setButtonProductId(""); }}
+                      placeholder="https://..."
+                      className="pl-9"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-gray-600">Product</label>
+                <select
+                  value={buttonProductId}
+                  onChange={(e) => {
+                    setButtonProductId(e.target.value);
+                    if (e.target.value) setButtonUrl(`/listings/${e.target.value}`);
+                  }}
+                  className="w-full rounded-sm border border-gray-300 px-4 py-2.5 text-sm text-gray-800 bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 appearance-none"
+                >
+                  <option value="">—</option>
+                  {listings.map((l: any) => (
+                    <option key={l.id} value={l.id}>
+                      {l.title || `${l.make?.name ?? l.make ?? ""} ${l.model?.name ?? l.model ?? ""} ${l.year ?? ""}`.trim() || l.id}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="buttonText2" className="block text-xs font-medium text-gray-700 mb-1">Button 2 Text</label>
-                <Input id="buttonText2" value={buttonText2} onChange={(e) => setButtonText2(e.target.value)} placeholder="Browse Models" />
+            <div className="border border-gray-200 rounded-sm p-4 space-y-4 bg-white">
+              <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                <div className="size-1.5 rounded-full bg-gray-900" />
+                <span className="text-[11px] font-semibold text-gray-700 uppercase tracking-widest">Button 2</span>
               </div>
-              <div>
-                <label htmlFor="buttonUrl2" className="block text-xs font-medium text-gray-700 mb-1">Button 2 URL</label>
-                <Input id="buttonUrl2" value={buttonUrl2} onChange={(e) => setButtonUrl2(e.target.value)} placeholder="https://..." />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-gray-600">Text</label>
+                  <Input value={buttonText2} onChange={(e) => setButtonText2(e.target.value)} placeholder="Browse Models" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-gray-600">URL</label>
+                  <div className="relative">
+                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
+                    <Input
+                      value={buttonUrl2}
+                      onChange={(e) => { setButtonUrl2(e.target.value); setButtonProductId2(""); }}
+                      placeholder="https://..."
+                      className="pl-9"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-
-            <div>
-              <label htmlFor="linkUrl" className="block text-xs font-medium text-gray-700 mb-1">Link URL</label>
-              <Input id="linkUrl" value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://..." />
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-gray-600">Product</label>
+                <select
+                  value={buttonProductId2}
+                  onChange={(e) => {
+                    setButtonProductId2(e.target.value);
+                    if (e.target.value) setButtonUrl2(`/listings/${e.target.value}`);
+                  }}
+                  className="w-full rounded-sm border border-gray-300 px-4 py-2.5 text-sm text-gray-800 bg-white hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 appearance-none"
+                >
+                  <option value="">—</option>
+                  {listings.map((l: any) => (
+                    <option key={l.id} value={l.id}>
+                      {l.title || `${l.make?.name ?? l.make ?? ""} ${l.model?.name ?? l.model ?? ""} ${l.year ?? ""}`.trim() || l.id}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -253,12 +307,22 @@ export default function SellerCreateBanner() {
               <label htmlFor="isActive" className="text-xs font-medium text-gray-700">Active</label>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="ghost" onClick={() => navigate("/seller/banner")}>
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="outline" className="rounded-sm px-6 py-2.5" onClick={() => navigate("/seller/banner")}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Create"}
+              <Button type="submit" disabled={isSubmitting} className="rounded-sm px-6 py-2.5">
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4.5 h-4.5 animate-spin mr-2" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4.5 h-4.5 mr-2" />
+                    Save
+                  </>
+                )}
               </Button>
             </div>
           </form>

@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Car, Loader, ChevronDown } from "lucide-react";
+import { Car, ChevronDown } from "lucide-react";
 import type { CarListing } from "@/lib/types";
-import { formatPrice, cn, imageUrl } from "@/lib/utils";
+import { formatPrice, imageUrl } from "@/lib/utils";
+import ImageWithLoading from "@/components/ui/ImageWithLoading";
 
 interface CarCardProps {
   listing: CarListing;
@@ -12,7 +12,6 @@ interface CarCardProps {
 
 export default function CarCard({ listing, index = 0 }: CarCardProps) {
   const img = listing.primary_image || listing.images?.[0];
-  const [imgLoaded, setImgLoaded] = useState(false);
   const price = Number(listing.price);
   const origPrice = listing.original_price
     ? Number(listing.original_price)
@@ -29,22 +28,12 @@ export default function CarCard({ listing, index = 0 }: CarCardProps) {
     >
       <Link to={`/listings/${listing.id}`} className="block h-full">
         {img ? (
-          <>
-            {!imgLoaded && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
-                <Loader className="w-10 h-10 text-gray-300 animate-spin" />
-              </div>
-            )}
-            <img
-              src={imageUrl(img.image_url)}
-              alt=""
-              onLoad={() => setImgLoaded(true)}
-              className={cn(
-                "w-full h-full object-cover",
-                !imgLoaded && "hidden",
-              )}
-            />
-          </>
+          <ImageWithLoading
+            src={imageUrl(img.image_url)}
+            alt=""
+            fill
+            priority={index === 0}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-50">
             <Car className="w-20 h-20 text-gray-300" />

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Search, ArrowRight, Star, ChevronRight, ChevronLeft, Loader } from 'lucide-react'
 import { cn, imageUrl } from '@/lib/utils'
 import { api } from '@/lib/api'
+import ImageWithLoading from '@/components/ui/ImageWithLoading'
 
 export default function HeroSection() {
   const navigate = useNavigate()
@@ -51,8 +52,7 @@ export default function HeroSection() {
           'absolute inset-0 transition-all duration-700',
           i === current ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
         )}>
-          <img src={imageUrl(slide.image)} alt={slide.title ?? ''}
-            className="w-full h-full object-cover" />
+          <ImageWithLoading src={imageUrl(slide.image)} alt={slide.title ?? ''} fill className="w-full h-full object-cover" priority={i === current} />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(70deg, black 0%, black 10%, transparent 80%)' }} />
           <div className="absolute inset-0 bg-dark-975/30" />
         </div>

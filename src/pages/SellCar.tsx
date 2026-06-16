@@ -6,6 +6,7 @@ import Input from '@/components/ui/Input'
 import Select from '@/components/ui/Select'
 import { api } from '@/lib/api'
 import { FUEL_TYPES, TRANSMISSIONS, CONDITIONS } from '@/lib/constants'
+import ImageWithLoading from '@/components/ui/ImageWithLoading'
 
 interface Make {
   id: string
@@ -336,7 +337,7 @@ export default function SellCar() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-4">
                   {previews.map((img, i) => (
                     <div key={i} className="group relative aspect-[4/3] overflow-hidden rounded-xl border border-dark-700">
-                      <img src={img.preview} alt={`Car photo ${i + 1}`} className="size-full object-cover" />
+                      <ImageWithLoading src={img.preview} alt={`Car photo ${i + 1}`} fill className="size-full object-cover" />
                       <div className="absolute inset-0 flex items-start justify-between bg-black/0 p-1.5 transition-colors group-hover:bg-black/40">
                         <button
                           type="button"
@@ -456,7 +457,7 @@ export default function SellCar() {
                     <div className="flex gap-2 flex-wrap">
                       {previews.map((img, i) => (
                         <div key={i} className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 ${primaryIndex === i ? 'border-blue-500' : 'border-dark-700'}`}>
-                          <img src={img.preview} alt="" className="size-full object-cover" />
+                          <ImageWithLoading src={img.preview} alt="" fill className="size-full object-cover" />
                         </div>
                       ))}
                     </div>

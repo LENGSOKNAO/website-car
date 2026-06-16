@@ -92,9 +92,6 @@ export default function SellerBanner() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-base font-semibold text-gray-900 tracking-tight">Banners</h1>
-            <p className="text-[11px] text-gray-500 mt-0.5">
-              {activeItems.length} item{activeItems.length !== 1 ? "s" : ""} in {SECTIONS.find(s => s.key === activeSection)?.label}
-            </p>
           </div>
           <Link
             to={`/seller/banner/new?type=${activeSection}`}
@@ -159,7 +156,6 @@ export default function SellerBanner() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[11px] font-medium text-gray-900 truncate">{item.title || item.name || "Untitled"}</p>
-                    <p className="text-[10px] text-gray-500 truncate mt-0.5">{item.badge || item.description || item.subtitle || "—"}</p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button

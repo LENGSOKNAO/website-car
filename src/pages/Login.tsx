@@ -60,6 +60,9 @@ export default function Login() {
               </button>
             </div>
           </div>
+          <div className="text-right">
+            <Link to="/forgot-password" className="text-sm text-blue-600 font-semibold hover:underline">Forgot Password?</Link>
+          </div>
           <Button type="submit" loading={loading} className="w-full justify-center">Sign In</Button>
           <p className="text-center text-sm text-gray-500">
             Don't have an account?{' '}

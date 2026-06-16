@@ -18,6 +18,7 @@ import BrandPage from "@/pages/BrandPage";
 import NotFound from "@/pages/NotFound";
 import SellerAdmin from "@/pages/SellerAdmin";
 import SellerListings from "@/pages/SellerListings";
+import SellerCreateListing from "@/pages/SellerCreateListing";
 import SellerHeroes from "@/pages/SellerHeroes";
 import SellerCreateHero from "@/pages/SellerCreateHero";
 import SellerEditHero from "@/pages/SellerEditHero";
@@ -56,6 +57,7 @@ export default function App() {
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/seller/admin" element={<SellerAdmin />} />
             <Route path="/seller/listings" element={<SellerListings />} />
+            <Route path="/seller/listings/new" element={<SellerCreateListing />} />
             <Route path="/seller/heroes" element={<SellerHeroes />} />
             <Route path="/seller/heroes/new" element={<SellerCreateHero />} />
             <Route path="/seller/heroes/:id/edit" element={<SellerEditHero />} />

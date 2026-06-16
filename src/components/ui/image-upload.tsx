@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Button from '@/components/ui/Button';
+import ImageWithLoading from '@/components/ui/ImageWithLoading';
 import Card from '@/components/ui/Card';
 
 interface ImageUploadProps {
@@ -61,23 +62,15 @@ export const ImageUpload = ({
     <div className="space-y-4">
       {/* Preview */}
       {previewUrl || selectedFile ? (
-        <Card padding="lg" className="bg-dark-800">
-          <div className="flex items-center justify-center p-6">
-            {previewUrl ? (
-              <img
-                src={previewUrl}
-                alt="Preview"
-                className="max-w-full h-auto rounded"
-                style={{ maxHeight: '200px', objectFit: 'contain' }}
-              />
-            ) : (
-              <img
-                src={URL.createObjectURL(selectedFile!)}
-                alt="Preview"
-                className="max-w-full h-auto rounded"
-                style={{ maxHeight: '200px', objectFit: 'contain' }}
-              />
-            )}
+        <Card padding="lg" className="bg-dark-800 p-6">
+          <div className="flex items-center justify-center" style={{ minHeight: '200px' }}>
+            <ImageWithLoading
+              src={previewUrl || URL.createObjectURL(selectedFile!)}
+              alt="Preview"
+              className="rounded"
+              width="100%"
+              height={200}
+            />
           </div>
         </Card>
       ) : (

@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import type { SavedListing } from "@/lib/types";
 import { formatPrice, imageUrl } from "@/lib/utils";
+import ImageWithLoading from "@/components/ui/ImageWithLoading";
 
 export default function Wishlist() {
   const { isAuthenticated } = useAuth();
@@ -91,10 +92,10 @@ export default function Wishlist() {
                   className="group relative bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
                 >
                   <Link to={`/listings/${listing.id}`} className="block">
-                    <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
-                      {img ? (
-                        <img src={imageUrl(img.image_url)} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      ) : (
+<div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
+                       {img ? (
+                         <ImageWithLoading src={imageUrl(img.image_url)} alt="" fill className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Car className="w-12 h-12 text-gray-300" />
                         </div>

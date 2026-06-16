@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { imageUrl } from "@/lib/utils";
 import { Loader } from "lucide-react";
 import { api } from "@/lib/api";
+import ImageWithLoading from "@/components/ui/ImageWithLoading";
 
 interface BoxRightItem {
   badge: string;
@@ -156,23 +157,18 @@ export default function BrandBox({ data }: { data: BrandData }) {
                 </div>
               </div>
               <div className="flex-[1.5] min-h-[350px] rounded-sm lg:min-h-full relative overflow-hidden">
-                <div className="absolute inset-0">
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
-                    <img
-                      src={imageUrl(e.image)}
-                      alt={e.badge}
-                      className="w-full h-full object-cover"
-                    />
-                    <Loader className="w-10 h-10 text-gray-300 animate-spin" />
-                  </div>
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background: `linear-gradient(70deg, black 0%, black 10%, transparent 80%)`,
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-dark-975/30" />
-                </div>
+                <ImageWithLoading
+                  src={imageUrl(e.image)}
+                  alt={e.badge}
+                  fill
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `linear-gradient(70deg, black 0%, black 10%, transparent 80%)`,
+                  }}
+                />
+                <div className="absolute inset-0 bg-dark-975/30" />
                 <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-dark-900/60" />
               </div>
             </div>

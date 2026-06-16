@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { imageUrl } from "@/lib/utils";
 import { Loader } from "lucide-react";
 import { api } from "@/lib/api";
+import ImageWithLoading from "@/components/ui/ImageWithLoading";
 
 interface BoxLeftItem {
   badge: string;
@@ -168,14 +169,11 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
             <div className="flex flex-col lg:flex-row items-stretch overflow-hidden min-h-[500px] lg:min-h-[650px]">
               <div className="flex-[1.5] min-h-[350px] lg:min-h-full rounded-sm relative overflow-hidden">
                 <div className="absolute inset-0">
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
-                    <img
-                      src={imageUrl(banner.image)}
-                      alt={banner.badge}
-                      className="w-full h-full object-cover"
-                    />
-                    <Loader className="w-10 h-10 text-gray-300 animate-spin" />
-                  </div>
+                  <ImageWithLoading
+                    src={imageUrl(banner.image)}
+                    alt={banner.badge}
+                    fill
+                  />
                   <div
                     className="absolute inset-0"
                     style={{

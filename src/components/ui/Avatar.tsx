@@ -1,29 +1,23 @@
-import { useState } from 'react'
 import { cn, getInitials, imageUrl } from '@/lib/utils'
-import Skeleton from '@/components/ui/Skeleton'
+import ImageWithLoading from '@/components/ui/ImageWithLoading'
 
 interface AvatarProps {
   src?: string | null; name: string; size?: 'sm' | 'md' | 'lg'; className?: string; status?: 'online' | 'offline'
 }
 
-const sizes = { sm: 'w-8 h-8 text-xs', md: 'w-10 h-10 text-sm', lg: 'w-14 h-14 text-lg' }
+const sizes: Record<string, string> = { sm: 'w-8 h-8 text-xs', md: 'w-10 h-10 text-sm', lg: 'w-14 h-14 text-lg' }
+const sizeNums: Record<string, number> = { sm: 32, md: 40, lg: 56 }
 
 export default function Avatar({ src, name, size = 'md', className, status }: AvatarProps) {
-  const [loaded, setLoaded] = useState(false)
-  const [erred, setErred] = useState(false)
-
-  if (src && !erred) {
+  if (src) {
     return (
       <div className="relative inline-flex">
-        {!loaded && (
-          <Skeleton className={cn('rounded-full', sizes[size])} />
-        )}
-        <img
+        <ImageWithLoading
           src={imageUrl(src)}
-          alt=""
-          onLoad={() => setLoaded(true)}
-          onError={() => setErred(true)}
-          className={cn('rounded-full object-cover ring-2 ring-dark-800', sizes[size], className, !loaded && 'hidden')}
+          alt={name}
+          className={cn('rounded-full ring-2 ring-dark-800', sizes[size], className)}
+          width={sizeNums[size]}
+          height={sizeNums[size]}
         />
         {status && <span className={cn('absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full ring-2 ring-dark-975', status === 'online' ? 'bg-emerald-500' : 'bg-dark-500')} />}
       </div>

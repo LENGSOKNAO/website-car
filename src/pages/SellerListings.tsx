@@ -1,16 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { MoreVertical, Edit, Trash2, ChevronLeft, ChevronRight, Search, X, Save, Car, LogIn } from "lucide-react";
+import { MoreVertical, Edit, Trash2, ChevronLeft, ChevronRight, Search, X, Save, Car, LogIn, Plus, Upload, Star, LayoutGrid } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { imageUrl } from "@/lib/utils";
-import type { CarListing, ListingStatus } from "@/lib/types";
+import type { CarListing, ListingImage, ListingStatus } from "@/lib/types";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Combobox from "@/components/ui/Combobox";
 import Select from "@/components/ui/Select";
 import Badge from "@/components/ui/Badge";
 import Skeleton from "@/components/ui/Skeleton";
+import ImageWithLoading from "@/components/ui/ImageWithLoading";
 
 const PER_PAGE = 50;
 
@@ -20,9 +22,6 @@ const STATUS_OPTIONS: { value: ListingStatus; label: string }[] = [
   { value: "coming_soon", label: "Coming Soon" },
 ];
 
-const CONDITIONS = ["New", "Excellent", "Good", "Fair", "Poor"];
-const FUEL_TYPES = ["Gasoline", "Diesel", "Electric", "Hybrid", "Plug-in Hybrid"];
-const TRANSMISSIONS = ["Automatic", "Manual", "CVT", "Dual-Clutch"];
 const COLORS = ["Black", "White", "Silver", "Gray", "Blue", "Red", "Green", "Brown", "Gold", "Other"];
 
 function PageButton({ n, current, onClick }: { n: number; current: number; onClick: (n: number) => void }) {
@@ -84,12 +83,27 @@ export default function SellerListings() {
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<CarListing>>({});
+  const [editPrevTotal, setEditPrevTotal] = useState<string>("1");
   const [saving, setSaving] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ListingStatus | "all">("all");
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+
+  const [existingImages, setExistingImages] = useState<ListingImage[]>([]);
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+  const [deleteImageIds, setDeleteImageIds] = useState<string[]>([]);
+  const [primaryNewIndex, setPrimaryNewIndex] = useState(-1);
+
+  const [makes, setMakes] = useState<{ id: string; name: string }[]>([]);
+  const [allModels, setAllModels] = useState<{ id: string; name: string; make_id: string }[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<{ id: string; name: string }[]>([]);
+  const [conditionOptions, setConditionOptions] = useState<{ id: string; name: string }[]>([]);
+  const [fuelTypeOptions, setFuelTypeOptions] = useState<{ id: string; name: string }[]>([]);
+  const [transmissionOptions, setTransmissionOptions] = useState<{ id: string; name: string }[]>([]);
+  const navigate = useNavigate();
 
   const fetchListings = useCallback(async () => {
     setLoading(true);
@@ -114,39 +128,128 @@ export default function SellerListings() {
     fetchListings();
   }, [fetchListings]);
 
-  const handleEdit = (listing: CarListing) => {
+  useEffect(() => {
+    Promise.all([
+      api.makes(),
+      api.models(),
+      api.categories(),
+      api.conditions(),
+      api.fuelTypes(),
+      api.transmissions(),
+    ]).then(([makesRes, modelsRes, catRes, condRes, fuelRes, transRes]) => {
+      const m = makesRes?.data?.data; setMakes(Array.isArray(m) ? m : []);
+      const md = modelsRes?.data?.data; setAllModels(Array.isArray(md) ? md : []);
+      const cat = catRes?.data?.data; setCategoryOptions(Array.isArray(cat) ? cat : []);
+      const c = condRes?.data?.data; setConditionOptions(Array.isArray(c) ? c : []);
+      const f = fuelRes?.data?.data; setFuelTypeOptions(Array.isArray(f) ? f : []);
+      const t = transRes?.data?.data; setTransmissionOptions(Array.isArray(t) ? t : []);
+    }).catch(() => {});
+  }, []);
+
+  const handleEdit = async (listing: CarListing) => {
     setEditingId(listing.id);
     setMenuOpenId(null);
-    setEditForm({
-      make_id: listing.make_id,
-      model_id: listing.model_id,
-      year: listing.year,
-      price: listing.price,
-      original_price: listing.original_price,
-      mileage: listing.mileage,
-      fuel_type: listing.fuel_type,
-      transmission: listing.transmission,
-      engine_size: listing.engine_size,
-      color: listing.color,
-      interior_color: listing.interior_color,
-      condition: listing.condition,
-      vin: listing.vin,
-      description: listing.description,
-      location: listing.location,
-      status: listing.status,
-    });
+    setNewImageFiles([]);
+    setNewImagePreviews([]);
+    setDeleteImageIds([]);
+    setPrimaryNewIndex(-1);
+    try {
+      const res = await api.myListing(listing.id);
+      const full = res.data?.data;
+      if (full) {
+        setExistingImages(full.images || []);
+        setEditForm({
+          make_id: full.make_id,
+          model_id: full.model_id,
+          category_id: full.category_id,
+          year: full.year,
+          price: full.price,
+          original_price: full.original_price,
+          mileage: full.mileage,
+          fuel_type: full.fuel_type,
+          transmission: full.transmission,
+          engine_size: full.engine_size,
+          color: full.color,
+          interior_color: full.interior_color,
+          condition: full.condition,
+          vin: full.vin,
+          description: full.description,
+          location: full.location,
+          status: full.status,
+        });
+      } else {
+        setExistingImages(listing.images || []);
+        setEditForm({
+          make_id: listing.make_id,
+          model_id: listing.model_id,
+          category_id: listing.category_id,
+          year: listing.year,
+          price: listing.price,
+          original_price: listing.original_price,
+          mileage: listing.mileage,
+          fuel_type: listing.fuel_type,
+          transmission: listing.transmission,
+          engine_size: listing.engine_size,
+          color: listing.color,
+          interior_color: listing.interior_color,
+          condition: listing.condition,
+          vin: listing.vin,
+          description: listing.description,
+          location: listing.location,
+          status: listing.status,
+        });
+      }
+    } catch {
+      setExistingImages(listing.images || []);
+      setEditForm({
+        make_id: listing.make_id,
+        model_id: listing.model_id,
+        category_id: listing.category_id,
+        year: listing.year,
+        price: listing.price,
+        original_price: listing.original_price,
+        mileage: listing.mileage,
+        fuel_type: listing.fuel_type,
+        transmission: listing.transmission,
+        engine_size: listing.engine_size,
+        color: listing.color,
+        interior_color: listing.interior_color,
+        condition: listing.condition,
+        vin: listing.vin,
+        description: listing.description,
+        location: listing.location,
+        status: listing.status,
+      });
+    }
   };
 
   const handleSave = async (listingId: string) => {
     setSaving(listingId);
     try {
       const listing = listings.find(l => l.id === listingId);
-      await api.updateListing(listingId, {
-        ...editForm,
-        make_id: editForm.make_id || listing?.make_id,
-        model_id: editForm.model_id || listing?.model_id,
+      const fd = new FormData();
+      Object.entries(editForm).forEach(([k, v]) => {
+        if (v !== undefined && v !== null && v !== "") fd.append(k, String(v));
       });
+      fd.set("make_id", editForm.make_id || listing?.make_id || "");
+      fd.set("model_id", editForm.model_id || listing?.model_id || "");
+      if (editForm.original_price === null || editForm.original_price === undefined) fd.delete("original_price");
+      deleteImageIds.forEach(id => fd.append("delete_image_ids[]", id));
+      newImageFiles.forEach(file => fd.append("new_images[]", file));
+      const primaryExisting = existingImages.findIndex(img => img.is_primary);
+      if (primaryExisting >= 0) {
+        fd.append("primary_image_id", existingImages[primaryExisting].id);
+      }
+      if (primaryNewIndex >= 0 && primaryNewIndex < newImageFiles.length) {
+        fd.append("primary_new_index", primaryNewIndex.toString());
+      }
+      await api.updateListingFormData(listingId, fd);
       setEditingId(null);
+      setExistingImages([]);
+      setNewImageFiles([]);
+      setNewImagePreviews([]);
+      setDeleteImageIds([]);
+      setPrimaryNewIndex(-1);
       fetchListings();
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Failed to save");
@@ -158,8 +261,44 @@ export default function SellerListings() {
   const handleCancel = () => {
     setEditingId(null);
     setEditForm({});
+    setExistingImages([]);
+    setNewImageFiles([]);
+    setNewImagePreviews([]);
+    setDeleteImageIds([]);
+    setPrimaryNewIndex(-1);
   };
 
+  const handleEditFiles = (files: FileList | null) => {
+    if (!files) return;
+    const newFiles = Array.from(files);
+    setNewImageFiles(prev => [...prev, ...newFiles]);
+    setNewImagePreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))]);
+  };
+
+  const handleEditDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    handleEditFiles(e.dataTransfer.files);
+  };
+
+  const handleEditDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const removeEditImage = (id: string) => {
+    const existing = existingImages.find(img => img.id === id);
+    if (existing) {
+      setDeleteImageIds(prev => [...prev, id]);
+    } else {
+      const newIdx = newImagePreviews.findIndex(p => p === id);
+      if (newIdx >= 0) {
+        URL.revokeObjectURL(newImagePreviews[newIdx]);
+        setNewImageFiles(prev => prev.filter((_, j) => j !== newIdx));
+        setNewImagePreviews(prev => prev.filter((_, j) => j !== newIdx));
+        if (primaryNewIndex === newIdx) setPrimaryNewIndex(-1);
+        if (primaryNewIndex > newIdx) setPrimaryNewIndex(primaryNewIndex - 1);
+      }
+    }
+  };
   const handleDelete = async (listingId: string) => {
     setMenuOpenId(null);
     if (!confirm("Are you sure you want to delete this listing?")) return;
@@ -223,6 +362,13 @@ export default function SellerListings() {
             <h1 className="text-base font-semibold text-gray-900 tracking-tight">Listings</h1>
             <p className="text-[11px] text-gray-500 mt-0.5">{listings.length} vehicle{listings.length !== 1 ? "s" : ""}</p>
           </div>
+          <Link
+            to="/seller/listings/new"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-sm transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Create Listing
+          </Link>
         </div>
 
         <AnimatePresence>
@@ -313,6 +459,7 @@ export default function SellerListings() {
                     {listings.map((listing) => {
                       const isEditing = editingId === listing.id;
                       return (
+                        <>
                         <tr
                           key={listing.id}
                           className={`transition-colors ${
@@ -388,122 +535,270 @@ export default function SellerListings() {
                             )}
                           </td>
                         </tr>
+                        {isEditing && (
+                          <tr key={`${listing.id}-edit`}>
+                            <td colSpan={10} className="p-0 border-b border-gray-200">
+                              <AnimatePresence>
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="p-4 sm:p-6">
+                                  <div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-200">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 rounded-sm bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center shadow-sm">
+                                        <Car className="w-4 h-4 text-white" />
+                                      </div>
+                                      <div>
+                                        <h3 className="text-sm font-semibold text-gray-900">Edit Listing</h3>
+                                        <p className="text-[11px] text-gray-500">Update your vehicle details</p>
+                                      </div>
+                                    </div>
+                                    <Button variant="ghost" size="sm" onClick={handleCancel}>
+                                      <X className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                  <div className="space-y-6">
+                                    <div className="space-y-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-0.5 h-4 bg-gray-900 rounded-full" />
+                                        <h4 className="text-xs font-semibold text-gray-900">Vehicle Information</h4>
+                                      </div>
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        <Input
+                                          label="Year"
+                                          type="number"
+                                          value={editForm.year || ""}
+                                          onChange={(e) => setEditForm({ ...editForm, year: parseInt(e.target.value) })}
+                                        />
+                                        <Input
+                                          label="Mileage"
+                                          type="number"
+                                          value={editForm.mileage || ""}
+                                          onChange={(e) => setEditForm({ ...editForm, mileage: parseInt(e.target.value) || null })}
+                                        />
+                                        <Combobox
+                                          label="Condition"
+                                          value={editForm.condition || ""}
+                                          onChange={(v) => setEditForm({ ...editForm, condition: v })}
+                                          options={conditionOptions.map(c => ({ value: c.name, label: c.name }))}
+                                          placeholder="Select condition"
+                                        />
+                                        <Combobox
+                                          label="Category"
+                                          value={editForm.category_id || ""}
+                                          onChange={(v) => setEditForm({ ...editForm, category_id: v })}
+                                          options={categoryOptions.map(c => ({ value: c.id, label: c.name }))}
+                                          placeholder="Select category"
+                                        />
+                                        <Input
+                                          label="VIN"
+                                          value={editForm.vin || ""}
+                                          onChange={(e) => setEditForm({ ...editForm, vin: e.target.value })}
+                                        />
+                                        <Input
+                                          label="Location"
+                                          value={editForm.location || ""}
+                                          onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                                        />
+                                      </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-0.5 h-4 bg-gray-900 rounded-full" />
+                                        <h4 className="text-xs font-semibold text-gray-900">Pricing &amp; Details</h4>
+                                      </div>
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        <Input
+                                          label="Price ($)"
+                                          type="number"
+                                          value={editForm.price || ""}
+                                          onChange={(e) => setEditForm({ ...editForm, price: parseInt(e.target.value) })}
+                                        />
+                                        <Input
+                                          label="Original Price ($)"
+                                          type="number"
+                                          value={editForm.original_price || ""}
+                                          onChange={(e) => setEditForm({ ...editForm, original_price: parseInt(e.target.value) || null })}
+                                        />
+                                        <Input
+                                          label="Total (Inventory)"
+                                          type="number"
+                                          min="1"
+                                          value={editForm.total || "1"}
+                                          onChange={(e) => setEditForm({ ...editForm, total: parseInt(e.target.value) || 1 })}
+                                        />
+                                        <Combobox
+                                          label="Fuel Type"
+                                          value={editForm.fuel_type || ""}
+                                          onChange={(v) => setEditForm({ ...editForm, fuel_type: v })}
+                                          options={fuelTypeOptions.map(f => ({ value: f.name, label: f.name }))}
+                                          placeholder="Select fuel type"
+                                        />
+                                        <Combobox
+                                          label="Transmission"
+                                          value={editForm.transmission || ""}
+                                          onChange={(v) => setEditForm({ ...editForm, transmission: v })}
+                                          options={transmissionOptions.map(t => ({ value: t.name, label: t.name }))}
+                                          placeholder="Select transmission"
+                                        />
+                                        <Input
+                                          label="Engine Size"
+                                          value={editForm.engine_size || ""}
+                                          onChange={(e) => setEditForm({ ...editForm, engine_size: e.target.value })}
+                                        />
+                                        <Combobox
+                                          label="Color"
+                                          value={editForm.color || ""}
+                                          onChange={(v) => setEditForm({ ...editForm, color: v })}
+                                          options={COLORS.map(c => ({ value: c, label: c }))}
+                                          placeholder="Select color"
+                                        />
+                                        <Input
+                                          label="Interior Color"
+                                          value={editForm.interior_color || ""}
+                                          onChange={(e) => setEditForm({ ...editForm, interior_color: e.target.value })}
+                                        />
+                                        <Combobox
+                                          label="Status"
+                                          value={editForm.status || ""}
+                                          onChange={(v) => {
+                                            const currentTotal = editForm.total?.toString() || "1";
+                                            if (v === "out_of_stock" || v === "coming_soon") {
+                                              setEditPrevTotal(currentTotal);
+                                              setEditForm({ ...editForm, status: v as ListingStatus, total: 0 });
+                                            } else if (v === "in_stock" && currentTotal === "0") {
+                                              setEditForm({ ...editForm, status: v as ListingStatus, total: parseInt(editPrevTotal || "1") });
+                                            } else {
+                                              setEditForm({ ...editForm, status: v as ListingStatus });
+                                            }
+                                          }}
+                                          options={STATUS_OPTIONS.map(s => ({ value: s.value, label: s.label }))}
+                                          placeholder="Select status"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
+                                        <textarea
+                                          rows={3}
+                                          value={editForm.description || ""}
+                                          onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                                          className="block w-full rounded-sm border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 hover:border-gray-400 resize-none transition-all duration-200"
+                                        />
+                                      </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-0.5 h-4 bg-gray-900 rounded-full" />
+                                        <h4 className="text-xs font-semibold text-gray-900">Photos</h4>
+                                      </div>
+                                      <div
+                                        onDrop={handleEditDrop}
+                                        onDragOver={handleEditDragOver}
+                                        onClick={() => document.getElementById("edit-photo-input")?.click()}
+                                        className="border-2 border-dashed border-gray-200 rounded-sm p-6 text-center hover:border-gray-400 hover:bg-gray-50 transition-colors cursor-pointer focus-within:ring-2 focus-within:ring-blue-500/30"
+                                      >
+                                        {existingImages.filter(img => !deleteImageIds.includes(img.id)).length + newImageFiles.length === 0 ? (
+                                          <>
+                                            <Upload className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                                            <p className="text-sm font-medium text-gray-700">Click to upload or drag and drop</p>
+                                            <p className="text-xs text-gray-400 mt-0.5">PNG, JPG up to 10MB each</p>
+                                          </>
+                                        ) : (
+                                          <div className="space-y-4">
+                                            <div className="flex flex-wrap gap-3 justify-center">
+{existingImages.filter(img => !deleteImageIds.includes(img.id)).map((img, idx) => (
+                                                <div key={img.id} className="group relative w-28 h-28 rounded-sm overflow-hidden border border-gray-200 shadow-sm">
+<ImageWithLoading src={imageUrl(img.image_url)} alt="" fill className="size-full object-cover" />
+                                                  <div className="absolute inset-0 flex items-start justify-between bg-black/0 p-1 transition-colors group-hover:bg-black/40">
+                                                    <button
+                                                      type="button"
+                                                      onClick={(e) => { e.stopPropagation(); setExistingImages(prev => prev.map(i => ({ ...i, is_primary: i.id === img.id }))); }}
+                                                      className={`p-1 rounded-sm ${img.is_primary ? "text-yellow-400" : "text-white/60"} hover:text-yellow-400 transition-colors`}
+                                                    >
+                                                      <Star className={`size-3.5 ${img.is_primary ? "fill-yellow-400" : ""}`} />
+                                                    </button>
+                                                    <button
+                                                      type="button"
+                                                      onClick={(e) => { e.stopPropagation(); removeEditImage(img.id); }}
+                                                      className="p-1 rounded-sm text-white/60 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                                                    >
+                                                      <X className="size-3.5" />
+                                                    </button>
+                                                  </div>
+                                                  {img.is_primary && (
+                                                    <span className="absolute bottom-1 left-1 rounded-sm bg-gray-900/80 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+                                                      Primary
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              ))}
+{newImagePreviews.slice(0, 4).map((preview, i) => (
+                                                <div key={preview} className="group relative w-28 h-28 rounded-sm overflow-hidden border border-gray-200 shadow-sm">
+<ImageWithLoading src={preview} alt="" fill className="size-full object-cover" />
+                                                  <div className="absolute inset-0 flex items-start justify-between bg-black/0 p-1 transition-colors group-hover:bg-black/40">
+                                                    <button
+                                                      type="button"
+                                                      onClick={(e) => { e.stopPropagation(); setExistingImages(prev => prev.map(img => ({ ...img, is_primary: false }))); setPrimaryNewIndex(primaryNewIndex === i ? -1 : i); }}
+                                                      className={`p-1 rounded-sm ${primaryNewIndex === i ? "text-yellow-400" : "text-white/60"} hover:text-yellow-400 transition-colors`}
+                                                    >
+                                                      <Star className={`size-3.5 ${primaryNewIndex === i ? "fill-yellow-400" : ""}`} />
+                                                    </button>
+                                                    <button
+                                                      type="button"
+                                                      onClick={(e) => { e.stopPropagation(); removeEditImage(preview); }}
+                                                      className="p-1 rounded-sm text-white/60 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                                                    >
+                                                      <X className="size-3.5" />
+                                                    </button>
+                                                  </div>
+                                                  {primaryNewIndex === i && (
+                                                    <span className="absolute bottom-1 left-1 rounded-sm bg-gray-900/80 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+                                                      Primary
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              ))}
+                                              {existingImages.filter(img => !deleteImageIds.includes(img.id)).length + newImageFiles.length > 4 && (
+                                                <div className="w-28 h-28 rounded-sm border border-gray-200 bg-gray-100 flex items-center justify-center">
+                                                  <span className="text-sm font-medium text-gray-500">+{existingImages.filter(img => !deleteImageIds.includes(img.id)).length + newImageFiles.length - 4}</span>
+                                                </div>
+                                              )}
+                                            </div>
+                                            <p className="text-xs text-gray-500">{existingImages.filter(img => !deleteImageIds.includes(img.id)).length + newImageFiles.length} photo{(existingImages.filter(img => !deleteImageIds.includes(img.id)).length + newImageFiles.length) !== 1 ? "s" : ""} selected — click to add more</p>
+                                          </div>
+                                        )}
+                                        <input
+                                          id="edit-photo-input"
+                                          type="file"
+                                          accept="image/*"
+                                          multiple
+                                          className="hidden"
+                                          onChange={(e) => { handleEditFiles(e.target.files); e.target.value = ""; }}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex justify-end gap-3 mt-6 pt-5 border-t border-gray-200">
+                                    <Button variant="outline" size="sm" onClick={handleCancel}>Cancel</Button>
+                                    <Button size="sm" onClick={() => handleSave(editingId)} loading={saving === editingId}>
+                                      <Save className="w-3.5 h-3.5" /> Save Changes
+                                    </Button>
+                                  </div>
+                                </div>
+                              </motion.div>
+                              </AnimatePresence>
+                            </td>
+                          </tr>
+                        )}
+                        </>
                       );
                     })}
                   </tbody>
                 </table>
               </div>
-
-              <AnimatePresence>
-                {editingId && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="border-t border-gray-200 overflow-hidden"
-                  >
-                    <div className="px-3 py-3 bg-gray-50/80">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-[10px] font-semibold text-gray-900 uppercase tracking-wider">Edit Listing</h3>
-                        <Button variant="ghost" size="sm" onClick={handleCancel}>
-                          <X className="w-3 h-3" />
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                        <Input
-                          label="Year"
-                          type="number"
-                          value={editForm.year || ""}
-                          onChange={(e) => setEditForm({ ...editForm, year: parseInt(e.target.value) })}
-                        />
-                        <Input
-                          label="Price ($)"
-                          type="number"
-                          value={editForm.price || ""}
-                          onChange={(e) => setEditForm({ ...editForm, price: parseInt(e.target.value) })}
-                        />
-                        <Input
-                          label="Original Price ($)"
-                          type="number"
-                          value={editForm.original_price || ""}
-                          onChange={(e) => setEditForm({ ...editForm, original_price: parseInt(e.target.value) || null })}
-                        />
-                        <Input
-                          label="Mileage"
-                          type="number"
-                          value={editForm.mileage || ""}
-                          onChange={(e) => setEditForm({ ...editForm, mileage: parseInt(e.target.value) || null })}
-                        />
-                        <Select
-                          label="Fuel Type"
-                          value={editForm.fuel_type || ""}
-                          onChange={(e) => setEditForm({ ...editForm, fuel_type: e.target.value })}
-                          options={FUEL_TYPES.map(f => ({ value: f, label: f }))}
-                        />
-                        <Select
-                          label="Transmission"
-                          value={editForm.transmission || ""}
-                          onChange={(e) => setEditForm({ ...editForm, transmission: e.target.value })}
-                          options={TRANSMISSIONS.map(t => ({ value: t, label: t }))}
-                        />
-                        <Input
-                          label="Engine"
-                          value={editForm.engine_size || ""}
-                          onChange={(e) => setEditForm({ ...editForm, engine_size: e.target.value })}
-                        />
-                        <Select
-                          label="Color"
-                          value={editForm.color || ""}
-                          onChange={(e) => setEditForm({ ...editForm, color: e.target.value })}
-                          options={COLORS.map(c => ({ value: c, label: c }))}
-                        />
-                        <Input
-                          label="Interior"
-                          value={editForm.interior_color || ""}
-                          onChange={(e) => setEditForm({ ...editForm, interior_color: e.target.value })}
-                        />
-                        <Select
-                          label="Condition"
-                          value={editForm.condition || ""}
-                          onChange={(e) => setEditForm({ ...editForm, condition: e.target.value })}
-                          options={CONDITIONS.map(c => ({ value: c, label: c }))}
-                        />
-                        <Input
-                          label="VIN"
-                          value={editForm.vin || ""}
-                          onChange={(e) => setEditForm({ ...editForm, vin: e.target.value })}
-                        />
-                        <Input
-                          label="Location"
-                          value={editForm.location || ""}
-                          onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
-                        />
-                        <Select
-                          label="Status"
-                          value={editForm.status || ""}
-                          onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                          options={STATUS_OPTIONS}
-                        />
-                        <div className="col-span-full">
-                          <label className="block text-[10px] font-medium text-gray-700 mb-0.5">Description</label>
-                          <textarea
-                            rows={2}
-                            value={editForm.description || ""}
-                            onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                            className="block w-full rounded-sm border border-gray-200 bg-white px-2 py-1.5 text-[11px] text-gray-800 placeholder:text-gray-400 transition-colors focus:outline-none focus:border-gray-400 hover:border-gray-300 resize-none"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex justify-end gap-2 mt-3 pt-2 border-t border-gray-200">
-                        <Button variant="outline" size="sm" onClick={handleCancel}>Cancel</Button>
-                        <Button size="sm" onClick={() => handleSave(editingId)} loading={saving === editingId}>
-                          <Save className="w-3 h-3" /> Save
-                        </Button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               <div className="px-3 py-2 border-t border-gray-200 flex items-center justify-between bg-gray-50/50">
                 <p className="text-[11px] text-gray-500">

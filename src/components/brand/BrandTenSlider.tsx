@@ -4,6 +4,7 @@ import ButtonWhite from "../ui/ButtonWhite";
 import type { BrandData, BrandSection } from "@/lib/constants";
 import { imageUrl } from "@/lib/utils";
 import { api } from "@/lib/api";
+import ImageWithLoading from "@/components/ui/ImageWithLoading";
 
 interface BoxTenItem {
   badge: string;
@@ -286,11 +287,11 @@ export default function BrandTenSlider({ data }: { data: BrandData }) {
                   className="flex-shrink-0 w-[315.5px] md:w-[740px] lg:w-[880px] xl:w-[1000px]"
                 >
                   <div className="relative h-[520px]  lg:h-[620px] rounded-sm  overflow-hidden bg-white shadow-2xl shadow-black/10 ring-1 ring-black/[0.06] transition-shadow duration-500">
-                    <img
+                    <ImageWithLoading
                       src={imageUrl(e.image)}
                       alt={`${name} ${(index % originalCount) + 1}`}
-                      loading="lazy"
-                      className="w-full h-full object-cover pointer-events-none transition-transform duration-700 hover:scale-105"
+                      fill
+                      className="pointer-events-none transition-transform duration-700 hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/80 via-neutral-950/20 to-transparent" />
                     <div className="absolute inset-0 bg-gradient-to-r from-neutral-950/30 via-transparent to-transparent" />

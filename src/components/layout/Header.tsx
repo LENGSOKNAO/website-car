@@ -135,6 +135,43 @@ export default function Header() {
   }, [pageSlug]);
 
   useEffect(() => {
+    const productIds = new Set<string>();
+    for (const h of heroes) {
+      if (Array.isArray(h.subtitle)) {
+        for (const s of h.subtitle) {
+          if (s.product_id) productIds.add(s.product_id);
+        }
+      }
+    }
+    if (productIds.size > 0) {
+      const existing = new Set(listings.map((l: any) => l.id));
+      const missing = [...productIds].filter((id) => !existing.has(id));
+      if (missing.length > 0) {
+        Promise.all(
+          missing.map((id) =>
+            api.listing(id).catch(() => null)
+          )
+        ).then((results) => {
+          const fetched: any[] = [];
+          for (const r of results) {
+            if (r?.data?.data) fetched.push(r.data.data);
+            else if (r?.data) fetched.push(r.data);
+          }
+          if (fetched.length > 0) {
+            setListings((prev: any[]) => {
+              const prevMap = new Map(prev.map((l: any) => [l.id, l]));
+              for (const f of fetched) {
+                if (f?.id) prevMap.set(f.id, f);
+              }
+              return [...prevMap.values()];
+            });
+          }
+        });
+      }
+    }
+  }, [heroes]);
+
+  useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = "hidden";
     } else {
@@ -463,11 +500,12 @@ export default function Header() {
                                     (item.product_id
                                       ? `/listings/${item.product_id}`
                                       : null);
-                                  const SubEl = subTo ? Link : "div";
+                                  const ext = subTo?.startsWith("http://") || subTo?.startsWith("https://");
+                                  const SubEl = subTo ? (ext ? "a" : Link) : "div";
                                   return (
                                     <SubEl
                                       key={i}
-                                      {...(subTo ? { to: subTo } : {})}
+                                      {...(subTo ? (ext ? { href: subTo, target: "_blank", rel: "noopener noreferrer" } : { to: subTo }) : {})}
                                       className="block px-4 py-1.5 text-xs text-[#5C5E62] hover:text-black transition-colors"
                                     >
                                       {item.text}
@@ -523,11 +561,12 @@ export default function Header() {
                                         (item.product_id
                                           ? `/listings/${item.product_id}`
                                           : null);
-                                      const SubEl = subTo ? Link : "div";
+                                      const ext = subTo?.startsWith("http://") || subTo?.startsWith("https://");
+                                      const SubEl = subTo ? (ext ? "a" : Link) : "div";
                                       return (
                                         <SubEl
                                           key={i}
-                                          {...(subTo ? { to: subTo } : {})}
+                                          {...(subTo ? (ext ? { href: subTo, target: "_blank", rel: "noopener noreferrer" } : { to: subTo }) : {})}
                                           className="block px-4 py-1.5 text-xs text-[#5C5E62] hover:text-black transition-colors"
                                         >
                                           {item.text}
@@ -658,61 +697,59 @@ export default function Header() {
                                   (item.product_id
                                     ? `/listings/${item.product_id}`
                                     : null);
+                                const ext = subTo?.startsWith("http://") || subTo?.startsWith("https://");
+                                const listingImages =
+                                  Array.isArray(listing?.images)
+                                    ? listing.images
+                                    : listing?.images
+                                      ? [listing.images]
+                                      : [];
                                 const rawImageUrl =
                                   listing?.primary_image?.image_url ||
                                   listing?.image_url ||
+                                  listingImages[0]?.image_url ||
                                   null;
                                 return subTo ? (
-                                  <Link
-                                    key={i}
-                                    to={subTo}
-                                    className="flex flex-col items-center gap-2 p-3 text-xs text-[#5C5E62] hover:text-black transition-colors rounded-sm hover:bg-gray-50"
-                                  >
-                                    {rawImageUrl ? (
-                                      <img
-                                        src={imageUrl(rawImageUrl)}
-                                        alt=""
-                                        className="w-full aspect-[4/3] object-cover rounded-sm"
-                                      />
-                                    ) : (
+                                  ext ? (
+                                    <a
+                                      key={i}
+                                      href={subTo}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex flex-col items-center gap-2 p-3 text-xs text-[#5C5E62] hover:text-black transition-colors rounded-sm hover:bg-gray-50"
+                                    >
                                       <div className="w-full aspect-[4/3] bg-gray-100 rounded-sm flex items-center justify-center">
                                         <Car className="size-6 text-gray-300" />
                                       </div>
-                                    )}
-                                    <span className="font-medium text-center leading-tight hover:underline">
-                                      {listing
-                                        ? `${listing.make?.name ?? listing.make ?? ""} ${listing.model?.name ?? listing.model ?? ""}`.trim() ||
-                                          listing.title ||
-                                          item.text
-                                        : item.text}
-                                    </span>
-                                  </Link>
-                                ) : (
-                                  <Link
-                                    key={i}
-                                    to={subTo}
-                                    className="flex flex-col items-center gap-2 p-3 text-xs text-[#5C5E62] hover:text-black transition-colors rounded-sm hover:bg-gray-50"
-                                  >
-                                    {rawImageUrl ? (
-                                      <img
-                                        src={imageUrl(rawImageUrl)}
-                                        alt=""
-                                        className="w-full aspect-[4/3] object-cover rounded-sm"
-                                      />
-                                    ) : (
-                                      <div className="w-full aspect-[4/3] bg-gray-100 rounded-sm flex items-center justify-center">
-                                        <Car className="size-6 text-gray-300" />
-                                      </div>
-                                    )}
-                                    <span className="font-medium text-center leading-tight hover:underline">
-                                      {listing
-                                        ? `${listing.make?.name ?? listing.make ?? ""} ${listing.model?.name ?? listing.model ?? ""}`.trim() ||
-                                          listing.title ||
-                                          item.text
-                                        : item.text}
-                                    </span>
-                                  </Link>
-                                );
+                                      <span className="font-medium text-center leading-tight hover:underline">{item.text}</span>
+                                    </a>
+                                  ) : (
+                                    <Link
+                                      key={i}
+                                      to={subTo}
+                                      className="flex flex-col items-center gap-2 p-3 text-xs text-[#5C5E62] hover:text-black transition-colors rounded-sm hover:bg-gray-50"
+                                    >
+                                      {rawImageUrl ? (
+                                        <img
+                                          src={imageUrl(rawImageUrl)}
+                                          alt=""
+                                          className="w-full aspect-[4/3] object-cover rounded-sm"
+                                        />
+                                      ) : (
+                                        <div className="w-full aspect-[4/3] bg-gray-100 rounded-sm flex items-center justify-center">
+                                          <Car className="size-6 text-gray-300" />
+                                        </div>
+                                      )}
+                                      <span className="font-medium text-center leading-tight hover:underline">
+                                        {listing
+                                          ? `${listing.make?.name ?? listing.make ?? ""} ${listing.model?.name ?? listing.model ?? ""}`.trim() ||
+                                            listing.title ||
+                                            item.text
+                                          : item.text}
+                                      </span>
+                                    </Link>
+                                  )
+                                ) : null;
                               })}
                             </div>
                           </div>

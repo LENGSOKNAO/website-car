@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Fuel, Gauge, Calendar, ChevronLeft, ChevronRight, Star } from 'lucide-react'
 import { BRAND_PAGES } from '@/lib/constants'
+import ImageWithLoading from '@/components/ui/ImageWithLoading'
 import img1 from '@/assets/slider/bugati/tourbillon-modelpage-02-scrollvideo-desktop.jpg'
 import img2 from '@/assets/slider/tesla/Homepage-Card-Model-3-Desktop-US_PR_MX.avif'
 import img3 from '@/assets/slider/porsch/filters_format(webp)_quality(80).webp'
@@ -57,7 +58,7 @@ export default function FeaturedCars() {
           transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
           className="absolute inset-0"
         >
-          <img src={car.img} alt={car.model} className="w-full h-full object-cover" />
+          <ImageWithLoading src={car.img} alt={car.model} fill className="w-full h-full object-cover" priority />
         </motion.div>
       </AnimatePresence>
 

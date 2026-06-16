@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { BRANDS, BRAND_PAGES } from "@/lib/constants";
+import ImageWithLoading from "@/components/ui/ImageWithLoading";
 
 export default function BrandsShowcase() {
   return (
@@ -47,11 +48,11 @@ export default function BrandsShowcase() {
                   className="group relative block aspect-[4/5] rounded-sm overflow-hidden bg-dark-900 border border-dark-800"
                 >
                   {image && (
-                    <img
+                    <ImageWithLoading
                       src={image}
                       alt={brand.name}
-                      loading="lazy"
-                      className="absolute inset-0 w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                      fill
+                      className="transition-all duration-700 group-hover:scale-110"
                     />
                   )}
 

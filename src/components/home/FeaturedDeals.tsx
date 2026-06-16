@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Fuel, Gauge, Calendar, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import ImageWithLoading from '@/components/ui/ImageWithLoading'
 import img1 from '@/assets/slider/bugati/tourbillon-modelpage-02-scrollvideo-desktop.jpg'
 import img2 from '@/assets/slider/tesla/Homepage-Card-Model-3-Desktop-US_PR_MX.avif'
 import img3 from '@/assets/slider/porsch/filters_format(webp)_quality(80).webp'
@@ -68,11 +69,12 @@ export default function FeaturedDeals() {
               className="group relative rounded-sm overflow-hidden border border-dark-800 bg-dark-900"
             >
               <div className="relative aspect-[4/3] overflow-hidden">
-                <img
+                <ImageWithLoading
                   src={deal.img}
                   alt={`${deal.brand} ${deal.model}`}
-                  loading={i === 0 ? 'eager' : 'lazy'}
-                  className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
+                  fill
+                  className="transition-all duration-700 group-hover:scale-110"
+                  priority={i === 0}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-dark-900 via-dark-900/20 to-transparent" />
                 <div className={cn(

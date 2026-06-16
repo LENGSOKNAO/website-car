@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { ChevronLeft, ChevronRight, Loader } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { ListingImage } from '@/lib/types'
 import { cn, imageUrl } from '@/lib/utils'
+import ImageWithLoading from '@/components/ui/ImageWithLoading'
 
 interface CarGalleryProps {
   images: ListingImage[]
@@ -12,7 +13,6 @@ interface CarGalleryProps {
 
 export default function CarGallery({ images, title, variant = 'default', interval = 4000 }: CarGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0)
-  const [mainLoaded, setMainLoaded] = useState(false)
   const isHero = variant === 'hero'
 
   const next = useCallback(() => {
@@ -50,21 +50,16 @@ export default function CarGallery({ images, title, variant = 'default', interva
         'relative overflow-hidden bg-gray-100 group',
         isHero ? 'flex-1 min-h-0' : 'aspect-[16/9] rounded-xl'
       )}>
-        {!mainLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Loader className="w-8 h-8 text-gray-400 animate-spin" />
-          </div>
-        )}
-        <img
+        <ImageWithLoading
           src={imageUrl(images[activeIndex].image_url)}
-          alt=""
-          onLoad={() => setMainLoaded(true)}
-          className={cn('w-full h-full object-cover', !mainLoaded && 'hidden')}
+          alt={title}
+          fill
+          className="w-full h-full"
         />
         {images.length > 1 && (
           <>
             <button
-              onClick={() => { prev(); setMainLoaded(false) }}
+              onClick={prev}
               className={cn(
                 'absolute top-1/2 -translate-y-1/2 flex items-center justify-center transition-opacity',
                 isHero
@@ -75,7 +70,7 @@ export default function CarGallery({ images, title, variant = 'default', interva
               <ChevronLeft className={isHero ? 'w-6 h-6' : 'w-5 h-5'} />
             </button>
             <button
-              onClick={() => { next(); setMainLoaded(false) }}
+              onClick={next}
               className={cn(
                 'absolute top-1/2 -translate-y-1/2 flex items-center justify-center transition-opacity',
                 isHero
@@ -92,7 +87,7 @@ export default function CarGallery({ images, title, variant = 'default', interva
               {images.map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => { goTo(i); setMainLoaded(false) }}
+                  onClick={() => goTo(i)}
                   className={cn(
                     'rounded-full transition-all cursor-pointer',
                     i === activeIndex
@@ -116,7 +111,12 @@ export default function CarGallery({ images, title, variant = 'default', interva
                 i === activeIndex ? 'border-blue-600 opacity-100' : 'border-transparent opacity-60 hover:opacity-80'
               }`}
             >
-              <img src={imageUrl(img.image_url)} alt="" className="w-full h-full object-cover" />
+              <ImageWithLoading
+                src={imageUrl(img.image_url)}
+                alt=""
+                fill
+                className="w-full h-full"
+              />
             </button>
           ))}
         </div>

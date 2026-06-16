@@ -165,6 +165,16 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(data),
     }),
+  forgotPassword: (email: string) =>
+    request<{ message: string }>("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: (data: { token: string; email: string; password: string; password_confirmation: string }) =>
+    request<{ message: string }>("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   logout: () =>
     request<void>("/auth/logout", {
       method: "POST",
@@ -220,7 +230,12 @@ export const api = {
   },
   listing: (id: string) => request<any>(`/listings/${id}`),
   makes: () => request<any[]>("/makes"),
-  models: (makeId: string) => request<any[]>(`/makes/${makeId}/models`),
+  models: () => request<any[]>("/models"),
+  modelsByMake: (makeId: string) => request<any[]>(`/makes/${makeId}/models`),
+  categories: () => request<any[]>("/categories"),
+  conditions: () => request<any[]>("/conditions"),
+  fuelTypes: () => request<any[]>("/fuel-types"),
+  transmissions: () => request<any[]>("/transmissions"),
   sendInquiry: (data: {
     listing_id: string;
     message: string;
@@ -298,7 +313,12 @@ export const api = {
     const headers: HeadersInit = {};
     const token = getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
-    return fetch(`${API_BASE}/cars`, { method: "POST", headers, body: data }).then(async res => {
+    return fetch(`${API_BASE}/cars`, { method: "POST", headers, body: data, redirect: 'manual' }).then(async res => {
+      if (res.type === 'opaqueredirect' || res.status === 0) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        throw new Error('Unauthorized');
+      }
       const text = await res.text();
       if (!res.ok) {
         let msg = text;
@@ -310,6 +330,26 @@ export const api = {
   },
   updateListing: (id: string, data: any) =>
     request<any>(`/cars/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  updateListingFormData: (id: string, data: FormData) => {
+    const headers: HeadersInit = {};
+    const token = getToken();
+    if (token) headers.Authorization = `Bearer ${token}`;
+    data.append("_method", "PUT");
+    return fetch(`${API_BASE}/cars/${id}`, { method: "POST", headers, body: data, redirect: 'manual' }).then(async res => {
+      if (res.type === 'opaqueredirect' || res.status === 0) {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        throw new Error('Unauthorized');
+      }
+      const text = await res.text();
+      if (!res.ok) {
+        let msg = text;
+        try { const p = JSON.parse(text); msg = p.message || msg; if (p.errors) { const d = Object.values(p.errors).flat().join("; "); if (d) msg += `: ${d}`; } } catch {}
+        throw new Error(msg);
+      }
+      try { return JSON.parse(text); } catch { return text; }
+    });
+  },
   deleteListing: (id: string) =>
     request<void>(`/cars/${id}`, { method: "DELETE" }),
   listingFormData: () => request<any>("/cars/create"),
