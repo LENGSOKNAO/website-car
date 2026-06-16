@@ -28,6 +28,7 @@ export default function ImageWithLoading({
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
   const imgRef = useRef<HTMLImageElement>(null)
+  const prevSrc = useRef(src)
 
   useEffect(() => {
     if (imgRef.current?.complete) {
@@ -36,9 +37,14 @@ export default function ImageWithLoading({
   }, [])
 
   useEffect(() => {
+    if (src && src !== prevSrc.current) {
+      setIsLoaded(false)
+      setHasError(false)
+    }
     if (!src) {
       setHasError(true)
     }
+    prevSrc.current = src
   }, [src])
 
   const handleLoad = () => {
