@@ -63,8 +63,22 @@ const API_BASE = 'https://store-car-seven.vercel.app'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+const PLACEHOLDER =
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">' +
+      '<rect width="800" height="600" fill="#e5e7eb"/>' +
+      '<path d="M320 250 L400 150 L480 250 Z" fill="#d1d5db"/>' +
+      '<rect x="280" y="250" width="240" height="140" rx="8" fill="#d1d5db"/>' +
+      '<circle cx="340" cy="320" r="18" fill="#9ca3af"/>' +
+      '<circle cx="460" cy="320" r="18" fill="#9ca3af"/>' +
+      '<rect x="310" y="370" width="40" height="20" rx="4" fill="#9ca3af"/>' +
+      '<rect x="450" y="370" width="40" height="20" rx="4" fill="#9ca3af"/>' +
+      '</svg>',
+  )
+
 export function imageUrl(url: string | null | undefined): string {
-  if (!url) return ''
+  if (!url) return PLACEHOLDER
   if (url.startsWith('http://') || url.startsWith('https://')) return url
   if (UUID_RE.test(url)) return `/api/files/${url}`
   if (url.startsWith('/api/')) return url

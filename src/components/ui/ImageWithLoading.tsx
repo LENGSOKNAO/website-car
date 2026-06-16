@@ -25,7 +25,8 @@ export default function ImageWithLoading({
   onLoad,
   onError,
 }: ImageWithLoadingProps) {
-  const [isLoaded, setIsLoaded] = useState(false)
+  const isPlaceholder = src.startsWith('data:image/svg+xml')
+  const [isLoaded, setIsLoaded] = useState(isPlaceholder)
   const [hasError, setHasError] = useState(false)
   const imgRef = useRef<HTMLImageElement>(null)
   const prevSrc = useRef(src)
@@ -37,12 +38,9 @@ export default function ImageWithLoading({
   }, [])
 
   useEffect(() => {
-    if (src && src !== prevSrc.current) {
-      setIsLoaded(false)
+    if (src !== prevSrc.current) {
+      setIsLoaded(src.startsWith('data:image/svg+xml'))
       setHasError(false)
-    }
-    if (!src) {
-      setHasError(true)
     }
     prevSrc.current = src
   }, [src])
