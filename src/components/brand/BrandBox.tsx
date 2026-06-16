@@ -40,44 +40,24 @@ export default function BrandBox({ data }: { data: BrandData }) {
 
   useEffect(() => {
     setLoading(true);
+    const sellerId = (data as any).id;
     const boxRightData = (data as any).boxRight || (data as any).box_right;
     if (boxRightData?.length) {
       setItems(mapBoxRightItems(boxRightData));
       setLoading(false);
     } else {
-      api
-        .boxRight()
-        .then((res: any) => {
-          const raw = res?.data?.data ?? res?.data ?? res ?? [];
-          const list = Array.isArray(raw) ? raw : [];
-          const brandName = data.name.toLowerCase();
-          const filtered = list.filter((s: any) => {
-            const badge = (s.badge || "").toLowerCase();
-            const un = (s.user?.name || "").toLowerCase();
-            return (
-              badge === brandName ||
-              un === brandName ||
-              un === data.slug.toLowerCase()
-            );
-          });
-          if (filtered.length === 0) {
-            const loose = list.filter((s: any) => {
-              const badge = (s.badge || "").toLowerCase();
-              const un = (s.user?.name || "").toLowerCase();
-              return (
-                badge.includes(brandName) ||
-                brandName.includes(badge) ||
-                un.includes(brandName) ||
-                brandName.includes(un)
-              );
-            });
-            setItems(mapBoxRightItems(loose));
-          } else {
-            setItems(mapBoxRightItems(filtered));
-          }
-        })
-        .catch(() => {})
-        .finally(() => setLoading(false));
+      api.boxRight().then((res: any) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? [];
+        const list = Array.isArray(raw) ? raw : [];
+        const brandName = data.name.toLowerCase();
+        const own = list.filter((s: any) => {
+          if (sellerId != null && s.user?.id != null) return s.user.id == sellerId;
+          const badge = (s.badge || "").toLowerCase();
+          const un = (s.user?.name || "").toLowerCase();
+          return badge === brandName || un === brandName || un === data.slug.toLowerCase();
+        });
+        setItems(mapBoxRightItems(own));
+      }).catch(() => {}).finally(() => setLoading(false));
     }
   }, [data]);
 

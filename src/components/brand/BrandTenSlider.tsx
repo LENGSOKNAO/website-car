@@ -49,42 +49,25 @@ export default function BrandTenSlider({ data }: { data: BrandData }) {
 
   useEffect(() => {
     setLoading(true);
+    const sellerId = (data as any).id;
     api.boxTen().then((res: any) => {
       const raw = res?.data?.data ?? res?.data ?? res ?? [];
       const list = Array.isArray(raw) ? raw : [];
       const brandName = data.name.toLowerCase();
-      const filtered = list.filter((s: any) => {
+      const own = list.filter((s: any) => {
+        if (sellerId != null && s.user?.id != null) return s.user.id == sellerId;
         const badge = (s.badge || "").toLowerCase();
         const un = (s.user?.name || "").toLowerCase();
-        return (
-          badge === brandName ||
-          un === brandName ||
-          un === data.slug.toLowerCase()
-        );
+        return badge === brandName || un === brandName || un === data.slug.toLowerCase();
       });
-      let finalItems: BoxTenItem[] = [];
-      if (filtered.length === 0) {
-        const loose = list.filter((s: any) => {
-          const badge = (s.badge || "").toLowerCase();
-          const un = (s.user?.name || "").toLowerCase();
-          return (
-            badge.includes(brandName) ||
-            brandName.includes(badge) ||
-            un.includes(brandName) ||
-            brandName.includes(un)
-          );
-        });
-        finalItems = mapBoxTenItems(loose);
-      } else {
-        finalItems = mapBoxTenItems(filtered);
+      const finalItems = mapBoxTenItems(own);
+      setItems(finalItems);
+      const images: string[] = [];
+      for (let i = 0; i < finalItems.length * 2; i++) {
+        images.push(finalItems[i % finalItems.length].image);
       }
-        setItems(finalItems);
-        const images: string[] = [];
-        for (let i = 0; i < finalItems.length * 2; i++) {
-          images.push(finalItems[i % finalItems.length].image);
-        }
-        setSliderImages(images);
-      }).catch(() => {}).finally(() => setLoading(false));
+      setSliderImages(images);
+    }).catch(() => {}).finally(() => setLoading(false));
   }, [data]);
 
   useEffect(() => {

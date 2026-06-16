@@ -41,34 +41,18 @@ export default function BrandTriple({ data }: { data: BrandData }) {
 
   useEffect(() => {
     setLoading(true);
+    const sellerId = (data as any).id;
     api.boxTrips().then((res: any) => {
       const raw = res?.data?.data ?? res?.data ?? res ?? [];
       const list = Array.isArray(raw) ? raw : [];
       const brandName = data.name.toLowerCase();
-      const filtered = list.filter((s: any) => {
+      const own = list.filter((s: any) => {
+        if (sellerId != null && s.user?.id != null) return s.user.id == sellerId;
         const badge = (s.badge || "").toLowerCase();
         const un = (s.user?.name || "").toLowerCase();
-        return (
-          badge === brandName ||
-          un === brandName ||
-          un === data.slug.toLowerCase()
-        );
+        return badge === brandName || un === brandName || un === data.slug.toLowerCase();
       });
-      if (filtered.length === 0) {
-        const loose = list.filter((s: any) => {
-          const badge = (s.badge || "").toLowerCase();
-          const un = (s.user?.name || "").toLowerCase();
-          return (
-            badge.includes(brandName) ||
-            brandName.includes(badge) ||
-            un.includes(brandName) ||
-            brandName.includes(un)
-          );
-        });
-        setItems(mapBoxTripItems(loose).slice(0, 3));
-      } else {
-        setItems(mapBoxTripItems(filtered).slice(0, 3));
-      }
+      setItems(mapBoxTripItems(own).slice(0, 3));
     }).catch(() => {}).finally(() => setLoading(false));
   }, [data]);
 

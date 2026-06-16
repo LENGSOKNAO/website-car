@@ -40,44 +40,24 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
 
   useEffect(() => {
     setLoading(true);
+    const sellerId = (data as any).id;
     const boxLeftData = (data as any).boxLeft || (data as any).box_left;
     if (boxLeftData?.length) {
       setItems(mapBoxLeftItems(boxLeftData));
       setLoading(false);
     } else {
-      api
-        .boxLeft()
-        .then((res: any) => {
-          const raw = res?.data?.data ?? res?.data ?? res ?? [];
-          const list = Array.isArray(raw) ? raw : [];
-          const brandName = data.name.toLowerCase();
-          const filtered = list.filter((s: any) => {
-            const badge = (s.badge || "").toLowerCase();
-            const un = (s.user?.name || "").toLowerCase();
-            return (
-              badge === brandName ||
-              un === brandName ||
-              un === data.slug.toLowerCase()
-            );
-          });
-          if (filtered.length === 0) {
-            const loose = list.filter((s: any) => {
-              const badge = (s.badge || "").toLowerCase();
-              const un = (s.user?.name || "").toLowerCase();
-              return (
-                badge.includes(brandName) ||
-                brandName.includes(badge) ||
-                un.includes(brandName) ||
-                brandName.includes(un)
-              );
-            });
-            setItems(mapBoxLeftItems(loose));
-          } else {
-            setItems(mapBoxLeftItems(filtered));
-          }
-        })
-        .catch(() => {})
-        .finally(() => setLoading(false));
+      api.boxLeft().then((res: any) => {
+        const raw = res?.data?.data ?? res?.data ?? res ?? [];
+        const list = Array.isArray(raw) ? raw : [];
+        const brandName = data.name.toLowerCase();
+        const own = list.filter((s: any) => {
+          if (sellerId != null && s.user?.id != null) return s.user.id == sellerId;
+          const badge = (s.badge || "").toLowerCase();
+          const un = (s.user?.name || "").toLowerCase();
+          return badge === brandName || un === brandName || un === data.slug.toLowerCase();
+        });
+        setItems(mapBoxLeftItems(own));
+      }).catch(() => {}).finally(() => setLoading(false));
     }
   }, [data]);
 
