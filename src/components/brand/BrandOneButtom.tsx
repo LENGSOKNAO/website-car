@@ -40,6 +40,7 @@ export default function BrandOneButton({ data }: { data: BrandData }) {
 
   useEffect(() => {
     setLoading(true);
+    const sellerId = (data as any).id
     api
       .boxOneButtom()
       .then((res: any) => {
@@ -47,6 +48,7 @@ export default function BrandOneButton({ data }: { data: BrandData }) {
         const list = Array.isArray(raw) ? raw : [];
         const brandName = data.name.toLowerCase();
         const filtered = list.filter((s: any) => {
+          if (sellerId && s.user?.id && s.user.id === sellerId) return true
           const badge = (s.badge || "").toLowerCase();
           const un = (s.user?.name || "").toLowerCase();
           return (
@@ -57,6 +59,7 @@ export default function BrandOneButton({ data }: { data: BrandData }) {
         });
         if (filtered.length === 0) {
           const loose = list.filter((s: any) => {
+            if (sellerId && s.user?.id && s.user.id === sellerId) return true
             const badge = (s.badge || "").toLowerCase();
             const un = (s.user?.name || "").toLowerCase();
             return (
