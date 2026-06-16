@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import type { BrandData, BrandSection } from "@/lib/constants";
 import ButtonBlue from "../ui/ButtonBlue";
 import ButtonWhite from "../ui/ButtonWhite";
+import ImageWithLoading from "@/components/ui/ImageWithLoading";
 
 interface SlideItem {
   id: string;
@@ -37,7 +38,6 @@ export default function BrandSlider({ data }: { data: BrandData }) {
   const [slides, setSlides] = useState<SlideItem[]>([]);
   const [current, setCurrent] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [imageLoading, setImageLoading] = useState<string | null>(null);
 
   if (!data) return null;
 
@@ -90,10 +90,6 @@ export default function BrandSlider({ data }: { data: BrandData }) {
 
   if (slides.length === 0 && !loading) return null;
 
-  const handleImageLoad = (src: string) => {
-    setImageLoading(prev => prev === src ? null : prev);
-  };
-
   return (
     <section
       className={`relative min-h-[85vh] flex items-center overflow-hidden ${isInView ? "animate-slideUp" : ""}`}
@@ -127,17 +123,13 @@ export default function BrandSlider({ data }: { data: BrandData }) {
             i === current ? "opacity-100 scale-100" : "opacity-0 scale-105",
           )}
         >
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
-            <img
+          <div className="absolute inset-0">
+            <ImageWithLoading
               src={imageUrl(e.image)}
               alt=""
-              className="w-full h-full object-cover"
-              onLoad={() => handleImageLoad(e.image)}
-              style={{ opacity: imageLoading === e.image ? 0 : 1, transition: 'opacity 0.3s' }}
+              fill
+              priority={i === current}
             />
-            {imageLoading === e.image && (
-              <Loader className="w-10 h-10 text-gray-300 animate-spin absolute" />
-            )}
           </div>
           <div
             className="absolute inset-0"

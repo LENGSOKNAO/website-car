@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { imageUrl } from "@/lib/utils";
 import { api } from "@/lib/api";
 import ImageWithLoading from "@/components/ui/ImageWithLoading";
+import ButtonBlue from "../ui/ButtonBlue";
 
 interface BoxTripItem {
   badge: string;
@@ -129,8 +130,8 @@ export default function BrandTriple({ data }: { data: BrandData }) {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-            <div className="relative w-full h-full px-6 py-8">
-              <div className="absolute bottom-5 left-5 right-0 p-6">
+            <div className="absolute inset-0 p-6 flex flex-col justify-end">
+              <div className="p-6">
                 <p className="text-xs font-semibold uppercase text-white tracking-[0.1em] mb-2">
                   {e.badge}
                 </p>

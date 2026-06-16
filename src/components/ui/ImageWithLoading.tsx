@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { ImageOff } from 'lucide-react'
+import { ImageOff, Loader } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ImageWithLoadingProps {
@@ -61,7 +61,8 @@ export default function ImageWithLoading({
       }
     >
       {!isLoaded && !hasError && (
-        <div className="absolute inset-0 bg-gray-100 overflow-hidden">
+        <div className="absolute inset-0 bg-gray-100 overflow-hidden flex items-center justify-center z-10">
+          <Loader className="w-8 h-8 text-gray-400 animate-spin" />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
         </div>
       )}

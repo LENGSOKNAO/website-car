@@ -82,43 +82,6 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
   }, [data]);
 
   useEffect(() => {
-    setLoading(true);
-    api
-      .sliders()
-      .then((res: any) => {
-        const raw = res?.data?.data ?? res?.data ?? res ?? [];
-        const list = Array.isArray(raw) ? raw : [];
-        const brandName = data.name.toLowerCase();
-        const filtered = list.filter((s: any) => {
-          const badge = (s.badge || "").toLowerCase();
-          const un = (s.user?.name || "").toLowerCase();
-          return (
-            badge === brandName ||
-            un === brandName ||
-            un === data.slug.toLowerCase()
-          );
-        });
-        if (filtered.length === 0) {
-          const loose = list.filter((s: any) => {
-            const badge = (s.badge || "").toLowerCase();
-            const un = (s.user?.name || "").toLowerCase();
-            return (
-              badge.includes(brandName) ||
-              brandName.includes(badge) ||
-              un.includes(brandName) ||
-              brandName.includes(un)
-            );
-          });
-          setItems(mapBoxLeftItems(loose));
-        } else {
-          setItems(mapBoxLeftItems(filtered));
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [data]);
-
-  useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -173,6 +136,7 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
                     src={imageUrl(banner.image)}
                     alt={banner.badge}
                     fill
+                    priority
                   />
                   <div
                     className="absolute inset-0"

@@ -161,6 +161,7 @@ export default function BrandBox({ data }: { data: BrandData }) {
                   src={imageUrl(e.image)}
                   alt={e.badge}
                   fill
+                  priority
                 />
                 <div
                   className="absolute inset-0"
