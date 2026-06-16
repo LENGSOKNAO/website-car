@@ -129,8 +129,8 @@ export default function BrandOneLeft({ data }: { data: BrandData }) {
         <div className={index > 0 ? "pt-8" : ""} key={index}>
           <div className="absolute top-0 left-1/4 w-[500px] h-[500px] blur-[150px] pointer-events-none " />
           <div className="mx-auto px-4 sm:px-8 lg:px-16 xl:px-24 max-w-full">
-            <div className="flex flex-row items-stretch overflow-hidden min-h-[650px]">
-              <div className="flex-[1.5] min-h-full rounded-sm relative overflow-hidden">
+            <div className="flex flex-col lg:flex-row items-stretch overflow-hidden min-h-[500px] lg:min-h-[650px]">
+              <div className="flex-[1.5] min-h-[350px] lg:min-h-full rounded-sm relative overflow-hidden">
                 <div className="absolute inset-0">
                   <ImageWithLoading
                     src={imageUrl(banner.image)}

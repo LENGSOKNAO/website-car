@@ -129,7 +129,7 @@ export default function BrandBox({ data }: { data: BrandData }) {
         <div key={i} className={i > 0 ? "pt-8" : ""}>
           <div className="absolute top-0 left-1/4 w-[500px] h-[500px] blur-[150px] pointer-events-none" />
           <div className="mx-auto px-4 sm:px-8 lg:px-16 xl:px-24 max-w-full">
-            <div className="flex flex-row items-stretch overflow-hidden min-h-[650px]">
+            <div className="flex flex-col lg:flex-row items-stretch overflow-hidden min-h-[500px] lg:min-h-[650px]">
               <div className="flex-[1] p-10 md:p-14 lg:p-20 flex flex-col justify-center relative z-10">
                 <div className="w-14 h-1 mb-8" />
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] mb-4">
@@ -156,7 +156,7 @@ export default function BrandBox({ data }: { data: BrandData }) {
                   )}
                 </div>
               </div>
-              <div className="flex-[1.5] min-h-full rounded-sm relative overflow-hidden">
+              <div className="flex-[1.5] min-h-[350px] rounded-sm lg:min-h-full relative overflow-hidden">
                 <ImageWithLoading
                   src={imageUrl(e.image)}
                   alt={e.badge}

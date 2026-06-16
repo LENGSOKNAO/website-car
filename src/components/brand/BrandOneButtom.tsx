@@ -96,7 +96,7 @@ export default function BrandOneButton({ data }: { data: BrandData }) {
 
   return (
     <section
-      className={`relative h-[90vh] flex items-end overflow-hidden ${isInView ? "animate-slideUp" : ""}`}
+      className={`relative h-[60vh] sm:h-[70vh]  md:h-[80vh] lg:h-[90vh] flex items-end overflow-hidden ${isInView ? "animate-slideUp" : ""}`}
       ref={ref}
     >
       <style>{`
@@ -148,7 +148,7 @@ export default function BrandOneButton({ data }: { data: BrandData }) {
               <p className="mt-3 sm:mt-4 text-sm sm:text-base md:text-lg text-dark-300 max-w-lg leading-relaxed">
                 {banner.description}
               </p>
-              <div className="mt-5 sm:mt-6 md:mt-8 flex flex-row gap-3 sm:gap-4">
+              <div className="mt-5 sm:mt-6 md:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
                 {banner.button_text && (
                   <ButtonBlue
                     to={`${banner.button_url}`}

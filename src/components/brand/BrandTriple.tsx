@@ -91,7 +91,7 @@ export default function BrandTriple({ data }: { data: BrandData }) {
 
   if (loading) {
     return (
-      <div className="grid gap-6 grid-cols-3 sm:px-8 lg:px-16 xl:px-24">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 sm:px-8 lg:px-16 xl:px-24">
         <div className="col-span-full h-[740px] flex items-center justify-center bg-white" />
       </div>
     );
@@ -101,7 +101,7 @@ export default function BrandTriple({ data }: { data: BrandData }) {
 
   return (
     <div
-      className={`grid gap-6 grid-cols-3 sm:px-8 lg:px-16 xl:px-24 ${isInView ? "animate-slideUp" : ""}`}
+      className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 sm:px-8 lg:px-16 xl:px-24 ${isInView ? "animate-slideUp" : ""}`}
       ref={ref}
     >
       <style>{`

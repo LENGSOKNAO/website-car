@@ -79,6 +79,7 @@ const PLACEHOLDER =
 
 export function imageUrl(url: string | null | undefined): string {
   if (!url) return PLACEHOLDER
+  if (url.startsWith(API_BASE + '/api/')) return url.slice(API_BASE.length)
   if (url.startsWith('http://') || url.startsWith('https://')) return url
   if (UUID_RE.test(url)) return `/api/files/${url}`
   if (url.startsWith('/api/')) return url
