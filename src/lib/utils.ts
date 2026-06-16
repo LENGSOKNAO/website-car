@@ -66,7 +66,8 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export function imageUrl(url: string | null | undefined): string {
   if (!url) return ''
   if (url.startsWith('http://') || url.startsWith('https://')) return url
-  if (UUID_RE.test(url)) return `${API_BASE}/api/v1/files/${url}`
+  if (UUID_RE.test(url)) return `/api/files/${url}`
+  if (url.startsWith('/api/')) return url
   if (url.startsWith('/')) return `${API_BASE}${url}`
   return `${API_BASE}/${url}`
 }
