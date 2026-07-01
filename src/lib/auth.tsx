@@ -153,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (data: { full_name: string; email: string; password: string; password_confirmation: string }) => {
     const res = await api.register(data)
     if (!res?.data) throw new Error('Invalid register response')
-    const { token, user: userData } = res.data as any
+    const { token, user: userData } = res.data.data as any
     if (!token) throw new Error('No token received')
     if (!userData) throw new Error('No user received')
     localStorage.setItem('token', token)
